@@ -36,7 +36,7 @@ float3 Renderer::Trace( Ray& ray )
 	}
 	case RENDER_MODES_SHADED: 
 	{
-		return mPointLight.Intensity(mScene, I, N) * albedo;
+		return mDirLight.Intensity(mScene, I, N) * albedo;
 		break;
 	}
 	default: break;

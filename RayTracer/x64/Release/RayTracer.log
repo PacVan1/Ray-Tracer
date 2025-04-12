@@ -1,17 +1,4 @@
-﻿  template.cpp
-  imgui.cpp
-  imgui_draw.cpp
-  imgui_impl_glfw.cpp
-  imgui_impl_opengl3.cpp
-  imgui_tables.cpp
-  imgui_widgets.cpp
-  opengl.cpp
-  surface.cpp
-  tmpl8math.cpp
-  lights.cpp
-  renderer.cpp
-  Generating Code...
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(44,1): warning C4715: 'Tmpl8::Renderer::Trace': not all control paths return a value
+﻿  lights.cpp
      Creating library C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Ray Tracer.lib and object C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Ray Tracer.exp
   RayTracer.vcxproj -> C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Ray Tracer.exe
   'pwsh.exe' is not recognized as an internal or external command,

@@ -16,11 +16,12 @@ namespace Tmpl8
 class Renderer final : public TheApp
 {
 public: 
-	float4*		mAccumulator;
-	Scene		mScene;
-	Camera		mCamera;
-	PointLight	mPointLight;
-	int			mRenderMode;
+	float4*				mAccumulator;
+	Scene				mScene;
+	Camera				mCamera;
+	PointLight			mPointLight;
+	DirectionalLight	mDirLight; 
+	int					mRenderMode;
 
 public:
 	float3 Trace( Ray& ray );
