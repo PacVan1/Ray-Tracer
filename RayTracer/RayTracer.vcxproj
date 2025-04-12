@@ -139,6 +139,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\template\tmpl8math.cpp" />
+    <ClCompile Include="lights.cpp" />
     <ClCompile Include="renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -158,6 +159,7 @@
     <ClInclude Include="..\template\scene.h" />
     <ClInclude Include="..\template\surface.h" />
     <ClInclude Include="..\template\tmpl8math.h" />
+    <ClInclude Include="lights.h" />
     <ClInclude Include="renderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -37,6 +37,9 @@
     <ClCompile Include="..\template\tmpl8math.cpp">
       <Filter>template</Filter>
     </ClCompile>
+    <ClCompile Include="lights.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -90,6 +93,9 @@
     <ClInclude Include="..\template\surface.h">
       <Filter>template</Filter>
     </ClInclude>
+    <ClInclude Include="lights.h">
+      <Filter>additional</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
@@ -97,6 +103,9 @@
     </Filter>
     <Filter Include="template\imgui">
       <UniqueIdentifier>{d8ca4ebb-c160-474a-8183-876f967ab117}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="additional">
+      <UniqueIdentifier>{3fab4d46-6e11-4c65-8384-b97814d20949}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

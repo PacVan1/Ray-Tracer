@@ -1,31 +1,41 @@
 #pragma once
 
+#include "lights.h" 
+
+enum renderModes : uint8_t
+{
+	RENDER_MODES_NORMALS,
+	RENDER_MODES_DEPTH,
+	RENDER_MODES_ALBEDO,
+	RENDER_MODES_SHADED
+};
+
 namespace Tmpl8
 {
 
-class Renderer : public TheApp
+class Renderer final : public TheApp
 {
+public: 
+	float4*		mAccumulator;
+	Scene		mScene;
+	Camera		mCamera;
+	PointLight	mPointLight;
+	int			mRenderMode;
+
 public:
-	// game flow methods
-	void Init();
 	float3 Trace( Ray& ray );
-	void Tick( float deltaTime );
-	void UI();
-	void Shutdown() { /* implement if you want to do things on shutdown */ }
-	// input handling
-	void MouseUp( int button ) { /* implement if you want to detect mouse button presses */ }
-	void MouseDown( int button ) { /* implement if you want to detect mouse button presses */ }
-	void MouseMove( int x, int y ) { mousePos.x = x, mousePos.y = y; }
-	void MouseWheel( float y ) { /* implement if you want to handle the mouse wheel */ }
-	void KeyUp( int key ) { /* implement if you want to handle keys */ }
-	void KeyDown( int key ) { /* implement if you want to handle keys */ }
-	// data members
-	int2 mousePos;
-	float4* accumulator;
-	Scene scene;
-	Camera camera;
-	bool animating = true;
-	float anim_time = 0;
+
+	void Init() override;
+	void Tick( float deltaTime ) override;
+	void UI() override;
+	void Shutdown() override {}
+
+	void MouseUp( int button ) override {}
+	void MouseDown( int button ) override {}
+	void MouseMove( int x, int y ) override {}
+	void MouseWheel( float y ) override {}
+	void KeyUp( int key ) override {}
+	void KeyDown( int key ) override {}
 };
 
 } // namespace Tmpl8

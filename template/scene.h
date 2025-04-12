@@ -611,37 +611,37 @@ public:
 		const float3 spos = sphere.pos;
 		const float3 ro = ray.O, rd = ray.D;
 		// TODO: the room is actually just an AABB; use slab test
-		static const __m128 x4min = _mm_setr_ps( 3, 1, 3, 1e30f );
-		static const __m128 x4max = _mm_setr_ps( -2.99f, -2, -3.99f, 1e30f );
-		static const __m128 idmin = _mm_castsi128_ps( _mm_setr_epi32( 4, 6, 8, -1 ) );
-		static const __m128 idmax = _mm_castsi128_ps( _mm_setr_epi32( 5, 7, 9, -1 ) );
-		static const __m128 zero4 = _mm_setzero_ps();
-		const __m128 selmask = _mm_cmpge_ps( ray.D4, zero4 );
-		const __m128i idx4 = _mm_castps_si128( _mm_blendv_ps( idmin, idmax, selmask ) );
-		const __m128 x4 = _mm_blendv_ps( x4min, x4max, selmask );
-		const __m128 d4 = _mm_sub_ps( zero4, _mm_mul_ps( _mm_add_ps( ray.O4, x4 ), ray.rD4 ) );
-		const __m128 mask4 = _mm_cmple_ps( d4, zero4 );
-		const __m128 t4 = _mm_blendv_ps( d4, _mm_set1_ps( 1e34f ), mask4 );
-		/* first: unconditional */  ray.t = t4.m128_f32[0], ray.objIdx = idx4.m128i_i32[0];
-		if (t4.m128_f32[1] < ray.t) ray.t = t4.m128_f32[1], ray.objIdx = idx4.m128i_i32[1];
-		if (t4.m128_f32[2] < ray.t) ray.t = t4.m128_f32[2], ray.objIdx = idx4.m128i_i32[2];
+		//static const __m128 x4min = _mm_setr_ps( 3, 1, 3, 1e30f );
+		//static const __m128 x4max = _mm_setr_ps( -2.99f, -2, -3.99f, 1e30f );
+		//static const __m128 idmin = _mm_castsi128_ps( _mm_setr_epi32( 4, 6, 8, -1 ) );
+		//static const __m128 idmax = _mm_castsi128_ps( _mm_setr_epi32( 5, 7, 9, -1 ) );
+		//static const __m128 zero4 = _mm_setzero_ps();
+		//const __m128 selmask = _mm_cmpge_ps( ray.D4, zero4 );
+		//const __m128i idx4 = _mm_castps_si128( _mm_blendv_ps( idmin, idmax, selmask ) );
+		//const __m128 x4 = _mm_blendv_ps( x4min, x4max, selmask );
+		//const __m128 d4 = _mm_sub_ps( zero4, _mm_mul_ps( _mm_add_ps( ray.O4, x4 ), ray.rD4 ) );
+		//const __m128 mask4 = _mm_cmple_ps( d4, zero4 );
+		//const __m128 t4 = _mm_blendv_ps( d4, _mm_set1_ps( 1e34f ), mask4 );
+		///* first: unconditional */  ray.t = t4.m128_f32[0], ray.objIdx = idx4.m128i_i32[0];
+		//if (t4.m128_f32[1] < ray.t) ray.t = t4.m128_f32[1], ray.objIdx = idx4.m128i_i32[1];
+		//if (t4.m128_f32[2] < ray.t) ray.t = t4.m128_f32[2], ray.objIdx = idx4.m128i_i32[2];
 	#ifdef FOURLIGHTS
 		// efficient four-quad intersection by Jesse Vrooman
-		const __m128 t = _mm_div_ps( _mm_add_ps( _mm_set1_ps( ray.O.y ),
-			_mm_set1_ps( -1.5 ) ), _mm_xor_ps( _mm_set1_ps( ray.D.y ), _mm_set1_ps( -0.0 ) ) );
-		const __m128 Ix = _mm_add_ps( _mm_add_ps( _mm_set1_ps( ray.O.x ),
-			_mm_set_ps( 1, -1, -1, 1 ) ), _mm_mul_ps( t, _mm_set1_ps( ray.D.x ) ) );
-		const __m128 Iz = _mm_add_ps( _mm_add_ps( _mm_set1_ps( ray.O.z ),
-			_mm_set_ps( 1, 1, -1, -1 ) ), _mm_mul_ps( t, _mm_set1_ps( ray.D.z ) ) );
-		const static __m128 size = _mm_set1_ps( 0.25f );
-		const static __m128 nsize = _mm_xor_ps( _mm_set1_ps( 0.25f ), _mm_set1_ps( -0.0 ) );
-		const __m128 maskedT = _mm_and_ps( t, _mm_and_ps(
-			_mm_and_ps( _mm_cmpgt_ps( Ix, nsize ), _mm_cmplt_ps( Ix, size ) ),
-			_mm_and_ps( _mm_cmpgt_ps( Iz, nsize ), _mm_cmplt_ps( Iz, size ) ) ) );
-		if (maskedT.m128_f32[3] > 0) ray.t = maskedT.m128_f32[3], ray.objIdx = 0;
-		if (maskedT.m128_f32[2] > 0) ray.t = maskedT.m128_f32[2], ray.objIdx = 0;
-		if (maskedT.m128_f32[1] > 0) ray.t = maskedT.m128_f32[1], ray.objIdx = 0;
-		if (maskedT.m128_f32[0] > 0) ray.t = maskedT.m128_f32[0], ray.objIdx = 0;
+		//const __m128 t = _mm_div_ps( _mm_add_ps( _mm_set1_ps( ray.O.y ),
+		//	_mm_set1_ps( -1.5 ) ), _mm_xor_ps( _mm_set1_ps( ray.D.y ), _mm_set1_ps( -0.0 ) ) );
+		//const __m128 Ix = _mm_add_ps( _mm_add_ps( _mm_set1_ps( ray.O.x ),
+		//	_mm_set_ps( 1, -1, -1, 1 ) ), _mm_mul_ps( t, _mm_set1_ps( ray.D.x ) ) );
+		//const __m128 Iz = _mm_add_ps( _mm_add_ps( _mm_set1_ps( ray.O.z ),
+		//	_mm_set_ps( 1, 1, -1, -1 ) ), _mm_mul_ps( t, _mm_set1_ps( ray.D.z ) ) );
+		//const static __m128 size = _mm_set1_ps( 0.25f );
+		//const static __m128 nsize = _mm_xor_ps( _mm_set1_ps( 0.25f ), _mm_set1_ps( -0.0 ) );
+		//const __m128 maskedT = _mm_and_ps( t, _mm_and_ps(
+		//	_mm_and_ps( _mm_cmpgt_ps( Ix, nsize ), _mm_cmplt_ps( Ix, size ) ),
+		//	_mm_and_ps( _mm_cmpgt_ps( Iz, nsize ), _mm_cmplt_ps( Iz, size ) ) ) );
+		//if (maskedT.m128_f32[3] > 0) ray.t = maskedT.m128_f32[3], ray.objIdx = 0;
+		//if (maskedT.m128_f32[2] > 0) ray.t = maskedT.m128_f32[2], ray.objIdx = 0;
+		//if (maskedT.m128_f32[1] > 0) ray.t = maskedT.m128_f32[1], ray.objIdx = 0;
+		//if (maskedT.m128_f32[0] > 0) ray.t = maskedT.m128_f32[0], ray.objIdx = 0;
 	#else
 		quad.Intersect( ray );
 	#endif
@@ -659,19 +659,25 @@ public:
 		}
 		{
 			// SIMD sphere intersection code by Jesse Vrooman
-			const static __m128 s4 = _mm_setr_ps( 0, 2.5f, -3.07f, 1 );
-			const __m128 oc = _mm_sub_ps( ray.O4, s4 );
-			const float b = _mm_dp_ps( oc, ray.D4, 0x71 ).m128_f32[0];
-			const float d = b * b - (_mm_dp_ps( oc, oc, 0x71 ).m128_f32[0] - 64.0f);
-			if (d > 0)
-			{
-				const float t = sqrtf( d ) - b;
-				const bool hit = t < ray.t && t > 0;
-				if (hit) { ray.t = t, ray.objIdx = 2; }
-			};
+			//const static __m128 s4 = _mm_setr_ps( 0, 2.5f, -3.07f, 1 );
+			//const __m128 oc = _mm_sub_ps( ray.O4, s4 );
+			//const float b = _mm_dp_ps( oc, ray.D4, 0x71 ).m128_f32[0];
+			//const float d = b * b - (_mm_dp_ps( oc, oc, 0x71 ).m128_f32[0] - 64.0f);
+			//if (d > 0)
+			//{
+			//	const float t = sqrtf( d ) - b;
+			//	const bool hit = t < ray.t && t > 0;
+			//	if (hit) { ray.t = t, ray.objIdx = 2; }
+			//};
 		}
 		cube.Intersect( ray );
 		torus.Intersect( ray );
+		//plane[0].Intersect(ray);  
+		//plane[1].Intersect(ray);  
+		plane[2].Intersect(ray);  
+		//plane[3].Intersect(ray);  
+		//plane[4].Intersect(ray);  
+		//plane[5].Intersect(ray);  
 	}
 	bool IsOccluded( const Ray& ray ) const
 	{
