@@ -1,0 +1,17 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\1. Basics\x64\Debug\) contains files shared from another project (1. Basics.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  template.cpp
+  imgui.cpp
+  imgui_draw.cpp
+  imgui_impl_glfw.cpp
+  imgui_impl_opengl3.cpp
+  imgui_tables.cpp
+  imgui_widgets.cpp
+  opengl.cpp
+  surface.cpp
+  tmpl8math.cpp
+  renderer.cpp
+  Generating Code...
+     Creating library C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\1. Basics\x64\Ray Tracer_debug.lib and object C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\1. Basics\x64\Ray Tracer_debug.exp
+  basics.vcxproj -> C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\1. Basics\x64\Ray Tracer_debug.exe
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.
