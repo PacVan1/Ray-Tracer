@@ -3,6 +3,7 @@
 // IGAD/NHTV/BUAS/UU - Jacco Bikker - 2006-2024
 
 #include "precomp.h"
+#include "renderer.h" 
 
 #pragma comment( linker, "/subsystem:windows /ENTRY:mainCRTStartup" )
 
@@ -135,7 +136,7 @@ void main()
 	InitRenderTarget( SCRWIDTH, SCRHEIGHT );
 	Surface* screen = new Surface( SCRWIDTH, SCRHEIGHT );
 	app = new Renderer();
-	app->screen = screen;
+	app->mScreen = screen;
 	app->Init();
 	// prep imgui
 	ImGui::CreateContext();
@@ -166,7 +167,7 @@ void main()
 		// send the rendering result to the screen using OpenGL
 		if (frameNr++ > 1)
 		{
-			if (app->screen) renderTarget->CopyFrom( app->screen );
+			if (app->mScreen) renderTarget->CopyFrom( app->mScreen);
 			shader->Bind();
 			shader->SetInputTexture( 0, "c", renderTarget );
 			DrawQuad();
@@ -175,9 +176,9 @@ void main()
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
-			app->uiUpdated = true;
+			app->mUiUpdated = true;
 			app->UI(); // app->uiUpdated will be false if Render::UI() was not implemented
-			if (app->uiUpdated)
+			if (app->mUiUpdated)
 			{
 				ImGui::Render();
 				ImGui_ImplOpenGL3_RenderDrawData( ImGui::GetDrawData() );

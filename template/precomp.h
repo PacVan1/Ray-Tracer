@@ -319,24 +319,22 @@ inline uint RGBF32_to_RGB8( const float4* v )
 class TheApp
 {
 public:
+	bool		mUiUpdated;
+	Surface*	mScreen = nullptr;
+
+public:
 	virtual void Init() = 0;
-	virtual void Tick( float deltaTime ) = 0;
-	virtual void UI() { uiUpdated = false; }
-	virtual void Shutdown() = 0;
-	virtual void MouseUp( int button ) = 0;
-	virtual void MouseDown( int button ) = 0;
-	virtual void MouseMove( int x, int y ) = 0;
-	virtual void MouseWheel( float y ) = 0;
-	virtual void KeyUp( int key ) = 0;
-	virtual void KeyDown( int key ) = 0;
-	bool uiUpdated;
-	Surface* screen = 0;
+	virtual void Tick( float deltaTime ) {}
+	virtual void UI() { mUiUpdated = false; }
+	virtual void Shutdown() {}
+	virtual void MouseUp( int button ) {}
+	virtual void MouseDown( int button ) {}
+	virtual void MouseMove( int x, int y ) {}
+	virtual void MouseWheel( float y ) {}
+	virtual void KeyUp( int key ) {}
+	virtual void KeyDown( int key ) {}
 };
 
 bool IsKeyDown( const uint key );
-
-#include "scene.h"
-#include "camera.h"
-#include "renderer.h"
 
 // EOF

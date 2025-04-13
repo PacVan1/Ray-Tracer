@@ -1,26 +1,37 @@
 #include "precomp.h"
+#include "renderer.h"
 
-void Renderer::Init()
+void Renderer::Tick( float deltaTime )
 {
-	mRenderMode = RENDER_MODES_SHADED;  
+	mTimer.reset(); 
+	
+#pragma omp parallel for schedule(dynamic)
+	for (int y = 0; y < SCRHEIGHT; y++)
+	{
+		for (int x = 0; x < SCRWIDTH; x++)
+		{
+			float4 pixel = float4( Trace( mCamera.GetPrimaryRay( (float)x, (float)y ) ), 0 );
+			
+			mScreen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8( &pixel );
+			mAccumulator[x + y * SCRWIDTH] = pixel; 
+		}
+	}
 
-	mPointLight.mColor	= RED;
-	mSpotLight.mColor	= GREEN;
-	mDirLight.mColor	= BLUE; 
+	PerformanceReport();
 
-	mSpotLight.mPosition	= float3( 0.0f, 2.0f, 1.0f );
-	mSpotLight.mLookAt		= float3( 0.0f, 0.0f, 1.0f );
-	mSpotLight.mStrength	= 2.0f; 
-
-	// create fp32 rgb pixel buffer to render to
-	mAccumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * 16 );
-	memset( mAccumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
+	mCamera.HandleInput( deltaTime );
 }
 
-float3 Renderer::Trace( Ray& ray )
+void Renderer::SetRenderMode(int const renderMode)
+{
+	mRenderMode = renderMode;
+	ResetAccumulator();
+}
+
+float3 Renderer::Trace( Ray& ray ) const
 {
 	mScene.FindNearest( ray );
-	if (ray.objIdx == -1) return 0; // or a fancy sky color
+	if (ray.objIdx == -1) return BLACK; // or a fancy sky color
 	float3 const intersection = ray.O + ray.t * ray.D;
 	float3 const normal = mScene.GetNormal( ray.objIdx, intersection, ray.D );
 	float3 const albedo = mScene.GetAlbedo( ray.objIdx, intersection);
@@ -29,68 +40,79 @@ float3 Renderer::Trace( Ray& ray )
 	{
 	case RENDER_MODES_NORMALS:
 	{
-		return (normal + 1) * 0.5f;
-		break; 
+		return (normal + 1) * 0.5f; 
 	}
 	case RENDER_MODES_DEPTH:
 	{
 		return 0.1f * float3(ray.t, ray.t, ray.t);
-		break;
 	}
 	case RENDER_MODES_ALBEDO:
 	{
 		return albedo; 
-		break;
 	}
 	case RENDER_MODES_SHADED: 
 	{
 		return CalcDirectLight(mScene, intersection, normal) * albedo;
-		break;
 	}
-	default: break;
+	default: return BLACK;
 	}
 }
 
 float3 Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
-	float3 result = 0.0f; 
+	float3 result = BLACK;  
 	result += mPointLight.Intensity(scene, intersection, normal); 
 	result += mDirLight.Intensity(scene, intersection, normal); 
 	result += mSpotLight.Intensity(scene, intersection, normal);
 	return result; 
 }
 
-void Renderer::Tick( float deltaTime )
+void Renderer::ResetAccumulator() const
 {
-	// pixel loop
-	Timer t;
-	// lines are executed as OpenMP parallel tasks (disabled in DEBUG)
-#pragma omp parallel for schedule(dynamic)
-	for (int y = 0; y < SCRHEIGHT; y++)
-	{
-		// trace a primary ray for each pixel on the line
-		for (int x = 0; x < SCRWIDTH; x++)
-		{
-			float4 pixel = float4( Trace( mCamera.GetPrimaryRay( (float)x, (float)y ) ), 0 );
-			// translate accumulator contents to rgb32 pixels
-			screen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8( &pixel );
-			mAccumulator[x + y * SCRWIDTH] = pixel; 
-		}
-	}
-	// performance report - running average - ms, MRays/s
-	static float avg = 10, alpha = 1;
-	avg = (1 - alpha) * avg + alpha * t.elapsed() * 1000;
-	if (alpha > 0.05f) alpha *= 0.5f;
-	float fps = 1000.0f / avg, rps = (SCRWIDTH * SCRHEIGHT) / avg;
-	printf( "%5.2fms (%.1ffps) - %.1fMrays/s\n", avg, fps, rps / 1000 );
-	// handle user input
-	mCamera.HandleInput( deltaTime );
+	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));
+}
+
+void Renderer::PerformanceReport()
+{
+	mAvg = (1 - mAlpha) * mAvg + mAlpha * mTimer.elapsed() * 1000;
+	if (mAlpha > 0.05f) mAlpha *= 0.5f;
+	mFps = 1000.0f / mAvg;
+	mRps = (SCRWIDTH * SCRHEIGHT) / mAvg; 
 }
 
 void Renderer::UI()
 {
-	// ray query on mouse
-	//Ray r = mCamera.GetPrimaryRay( (float)mousePos.x, (float)mousePos.y );
-	//mScene.FindNearest( r );
-	//ImGui::Text( "Object id: %i", r.objIdx );
+	mUi.General();
+}
+
+void Renderer::Init()
+{
+	InitUi();
+	InitAccumulator(); 
+
+	SetRenderMode(INIT_RENDER_MODE);  
+
+	mPointLight.mColor	= RED;
+	mSpotLight.mColor	= GREEN;
+	mDirLight.mColor	= BLUE; 
+
+	mSpotLight.mPosition	= float3( 0.0f, 2.0f, 1.0f );
+	mSpotLight.mLookAt		= float3( 0.0f, 0.0f, 1.0f );
+	mSpotLight.mStrength	= 2.0f;
+}
+
+inline void Renderer::InitUi()
+{
+	mUi.mRenderer = this; 
+}
+
+inline void Renderer::InitAccumulator()
+{
+	mAccumulator = static_cast<float4*>(MALLOC64(SCRWIDTH * SCRHEIGHT * sizeof(float4)));
+	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4)); 
+}
+
+void Renderer::Shutdown()
+{
+	delete[] mAccumulator;  
 }
