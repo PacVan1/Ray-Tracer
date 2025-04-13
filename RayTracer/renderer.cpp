@@ -4,6 +4,14 @@ void Renderer::Init()
 {
 	mRenderMode = RENDER_MODES_SHADED;  
 
+	mPointLight.mColor	= RED;
+	mSpotLight.mColor	= GREEN;
+	mDirLight.mColor	= BLUE; 
+
+	mSpotLight.mPosition	= float3( 0.0f, 2.0f, 1.0f );
+	mSpotLight.mLookAt		= float3( 0.0f, 0.0f, 1.0f );
+	mSpotLight.mStrength	= 2.0f; 
+
 	// create fp32 rgb pixel buffer to render to
 	mAccumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * 16 );
 	memset( mAccumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
@@ -13,15 +21,15 @@ float3 Renderer::Trace( Ray& ray )
 {
 	mScene.FindNearest( ray );
 	if (ray.objIdx == -1) return 0; // or a fancy sky color
-	float3 const I = ray.O + ray.t * ray.D;
-	float3 const N = mScene.GetNormal( ray.objIdx, I, ray.D );
-	float3 const albedo = mScene.GetAlbedo( ray.objIdx, I );
+	float3 const intersection = ray.O + ray.t * ray.D;
+	float3 const normal = mScene.GetNormal( ray.objIdx, intersection, ray.D );
+	float3 const albedo = mScene.GetAlbedo( ray.objIdx, intersection);
 
 	switch (mRenderMode)
 	{
 	case RENDER_MODES_NORMALS:
 	{
-		return (N + 1) * 0.5f;
+		return (normal + 1) * 0.5f;
 		break; 
 	}
 	case RENDER_MODES_DEPTH:
@@ -36,11 +44,20 @@ float3 Renderer::Trace( Ray& ray )
 	}
 	case RENDER_MODES_SHADED: 
 	{
-		return mDirLight.Intensity(mScene, I, N) * albedo;
+		return CalcDirectLight(mScene, intersection, normal) * albedo;
 		break;
 	}
 	default: break;
 	}
+}
+
+float3 Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const
+{
+	float3 result = 0.0f; 
+	result += mPointLight.Intensity(scene, intersection, normal); 
+	result += mDirLight.Intensity(scene, intersection, normal); 
+	result += mSpotLight.Intensity(scene, intersection, normal);
+	return result; 
 }
 
 void Renderer::Tick( float deltaTime )

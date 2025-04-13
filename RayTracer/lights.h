@@ -24,3 +24,22 @@ public:
 	[[nodiscard]] float3	Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 };
 
+class SpotLight
+{
+public:
+	float3	mPosition;
+	float3	mLookAt; 
+	float3	mDirection;
+	float3	mColor;
+	float	mStrength;
+
+private: 
+	float	mInnerScalar;
+	float	mOuterScalar;
+	float	mEpsilon;
+
+public:
+							SpotLight();
+	[[nodiscard]] float3	Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
+	void					DirectionFromLookAt();
+};
