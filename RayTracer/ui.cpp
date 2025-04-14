@@ -26,8 +26,21 @@ void Ui::General() const
 	{
 		mRenderer->SetRenderMode(renderMode); 
 	}
+
+	ImGui::Checkbox("TIR", &mRenderer->mTIR); 
+
+	DebugViewer(); 
 }
 
-void Ui::Lights() const
+void Ui::DebugViewer() const
 {
+	ImGui::Checkbox("Active", &mRenderer->mDebugViewerActive);
+	ImGui::DragFloat("Zoom", &mRenderer->mDebugViewer.mZoom, 0.1f, 1.0f, SCRHEIGHT);
+	ImGui::DragFloat2("Position", mRenderer->mDebugViewer.mPosition.cell, 0.05f);
+	if (ImGui::SliderInt("Every", &mRenderer->mDebugViewer.mEvery, 1, 15)) 
+	{
+		mRenderer->mDebugViewer.mSelectionCount = floor(SCRWIDTH / mRenderer->mDebugViewer.mEvery);
+		mRenderer->mDebugViewer.mSelected = min(mRenderer->mDebugViewer.mSelectionCount, mRenderer->mDebugViewer.mSelected); 
+	}
+	ImGui::SliderInt("Selected", &mRenderer->mDebugViewer.mSelected, 0, mRenderer->mDebugViewer.mSelectionCount); 
 }

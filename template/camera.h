@@ -7,11 +7,11 @@ public:
 	Camera()
 	{
 		// setup a basic view frustum
-		camPos = float3( 0, 0, -2 );
-		camTarget = float3( 0, 0, -1 );
-		topLeft = float3( -aspect, 1, 0 );
-		topRight = float3( aspect, 1, 0 );
-		bottomLeft = float3( -aspect, -1, 0 );
+		camPos		= float3( 0, 0.0f, -2 );
+		camTarget	= float3( 0, 0, -1 );
+		topLeft		= float3( -aspect, 1, 0 );
+		topRight	= float3( aspect, 1, 0 );
+		bottomLeft	= float3( -aspect, -1, 0 );
 	}
 	Ray GetPrimaryRay( const float x, const float y )
 	{

@@ -4,7 +4,8 @@
 #include "materials.h" 
 #include "ui.h" 
 #include "scene.h"
-#include "camera.h" 
+#include "camera.h"
+#include "debug.h" 
 
 enum renderModes : uint8_t
 {
@@ -26,9 +27,15 @@ class Renderer final : public TheApp
 public:
 	inline static float		sEps;
 
+public:
+	DebugViewer2D			mDebugViewer; 
+	bool					mDebugViewerActive = true;
+	bool					mTIR = false;
+
 private:
+	Ui						mUi;
+
 	float4*					mAccumulator;
-	Ui						mUi;  
 	Scene					mScene;
 	Camera					mCamera;
 	DirectionalLight		mDirLight;
@@ -39,7 +46,7 @@ private:
 	Dielectric				mDielectric; 
 
 	int						mRenderMode;
-	int						mMaxBounces; 
+	int						mMaxBounces;
 
 	Timer mTimer; 
 	float mAvg = 10, mFps, mRps, mAlpha = 1;
@@ -56,11 +63,16 @@ public:
 
 private:
 	[[nodiscard]] float3	Trace(Ray& ray, int const bounces = 0) const;
+	[[nodiscard]] float3	TraceDebug(Ray& ray, int debug = 0, int const bounces = 0); 
+	[[nodiscard]] float3	TraceNormals(Ray& ray) const; 
+	[[nodiscard]] float3	TraceDepth(Ray& ray) const; 
+	[[nodiscard]] float3	TraceAlbedo(Ray& ray) const; 
 	[[nodiscard]] float3	CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 	void					ResetAccumulator() const; 
 	void					PerformanceReport(); 
 
 	void					UI() override;
+	void					RenderDebugViewer(); 
 
 	void					Init() override;
 	void					Shutdown() override;

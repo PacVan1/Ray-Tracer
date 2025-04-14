@@ -297,6 +297,15 @@ public:
 };
 
 // helper function for conversion of f32 colors to int
+inline uint RGBF32_to_RGB8(const float3& v)
+{
+	uint r = (uint)(255.0f * min(1.0f, v.x));
+	uint g = (uint)(255.0f * min(1.0f, v.y));
+	uint b = (uint)(255.0f * min(1.0f, v.z));
+	return (r << 16) + (g << 8) + b;
+}
+
+// helper function for conversion of f32 colors to int
 inline uint RGBF32_to_RGB8( const float4* v )
 {
 #ifdef _MSC_VER_

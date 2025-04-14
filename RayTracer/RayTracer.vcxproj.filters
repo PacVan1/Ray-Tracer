@@ -42,6 +42,7 @@
     </ClCompile>
     <ClCompile Include="ui.cpp" />
     <ClCompile Include="materials.cpp" />
+    <ClCompile Include="debug.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -103,6 +104,10 @@
       <Filter>additional</Filter>
     </ClInclude>
     <ClInclude Include="materials.h" />
+    <ClInclude Include="debug.h" />
+    <ClInclude Include="settings.h">
+      <Filter>additional</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">

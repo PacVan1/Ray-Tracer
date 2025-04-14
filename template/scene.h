@@ -353,7 +353,7 @@ public:
 			if (d1 < 0) return;
 			d1 = sqrt( d1 * 0.5 ), d2 = c1 / d1;
 		}
-		double t = 1e20;
+		double t = 1e34f;
 		h = d1 * d1 - z + d2;
 		if (h > 0)
 		{
@@ -423,7 +423,7 @@ public:
 			if (d1 < 0.0) return false;
 			d1 = sqrtf( d1 * 0.5f ), d2 = c1 / d1;
 		}
-		float t = 1e20f;
+		float t = 1e34f;
 		h = d1 * d1 - z + d2;
 		if (h > 0)
 		{
@@ -497,7 +497,6 @@ public:
 		plane[4] = Plane( 8, float3( 0, 0, 1 ), 3 );			// 8: front wall
 		plane[5] = Plane( 9, float3( 0, 0, -1 ), 3.99f );		// 9: back wall
 		torus = Torus( 10, 0.8f, 0.25f );						// 10: torus
-		SetTime( 0 );
 		// Note: once we have triangle support we should get rid of the class
 		// hierarchy: virtuals reduce performance somewhat.
 	}
@@ -673,8 +672,8 @@ public:
 			//	if (hit) { ray.t = t, ray.objIdx = 2; }
 			//};
 		}
-		cube.Intersect( ray );
-		torus.Intersect( ray );
+		//cube.Intersect( ray );
+		//torus.Intersect( ray );
 		//plane[0].Intersect(ray);  
 		//plane[1].Intersect(ray);  
 		plane[2].Intersect(ray);  
@@ -684,7 +683,7 @@ public:
 	}
 	bool IsOccluded( const Ray& ray ) const
 	{
-		if (cube.IsOccluded( ray )) return true;
+		//if (cube.IsOccluded( ray )) return true;
 		const float3 oc = ray.O - sphere.pos;
 		const float b = dot( oc, ray.D ), c = dot( oc, oc ) - (0.6f * 0.6f);
 		const float d = b * b - c;
@@ -699,7 +698,7 @@ public:
 	#else
 		if (quad.IsOccluded( ray )) return true;
 	#endif
-		if (torus.IsOccluded( ray )) return true;
+		//if (torus.IsOccluded( ray )) return true;
 		return false; // skip planes and rounded corners
 	}
 	float3 GetNormal( const int objIdx, const float3 I, const float3 wo ) const
