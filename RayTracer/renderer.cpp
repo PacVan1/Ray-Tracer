@@ -52,6 +52,13 @@ float3 Renderer::Trace( Ray& ray ) const
 	}
 	case RENDER_MODES_SHADED: 
 	{
+		if (ray.objIdx == mScene.sphere.objIdx)
+		{
+			float3 const reflectedDir = reflect(ray.D, normal);
+			Ray reflected = Ray(intersection + reflectedDir * sEps, reflectedDir);
+			return Trace(reflected);  
+		}
+
 		return CalcDirectLight(mScene, intersection, normal) * albedo;
 	}
 	default: return BLACK;
