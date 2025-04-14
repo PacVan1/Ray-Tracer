@@ -160,6 +160,7 @@
     <ClInclude Include="..\template\scene.h" />
     <ClInclude Include="..\template\surface.h" />
     <ClInclude Include="..\template\tmpl8math.h" />
+    <ClInclude Include="color.h" />
     <ClInclude Include="lights.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="ui.h" />

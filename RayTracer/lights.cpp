@@ -1,6 +1,8 @@
 #include "precomp.h"
 #include "lights.h"
 
+#include "Renderer.h" 
+
 PointLight::PointLight() :
 	mPosition(0.0f),
 	mColor(1.0f),
@@ -12,6 +14,8 @@ float3 PointLight::Intensity(Scene const& scene, float3 const& intersection, flo
 	float3 dir			= mPosition - intersection; 
 	float const dist	= length(dir);
 	dir					= normalize(dir); 
+
+	if (scene.IsOccluded({ intersection + -dir * Renderer::sEps, -dir })) return BLACK;
 
 	float const cosa		= max(0.0f, dot(normal, dir));
 	float const attenuation = 1.0f / (dist * dist); 
@@ -27,6 +31,8 @@ DirectionalLight::DirectionalLight() :
 
 float3 DirectionalLight::Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
+	if (scene.IsOccluded({ intersection + -mDirection * Renderer::sEps, -mDirection })) return BLACK;
+
 	float const cosa = max(0.0f, dot(normal, -mDirection));
 	return cosa * mColor * mStrength;
 }
@@ -49,6 +55,8 @@ float3 SpotLight::Intensity(Scene const& scene, float3 const& intersection, floa
 	float3 dir			= mPosition - intersection; 
 	float const dist	= length(dir);
 	dir					= normalize(dir);
+
+	if (scene.IsOccluded({ intersection + -dir * Renderer::sEps, -dir })) return BLACK;
 
 	float const theta		= dot(dir, -mDirection);
 	float const intensity	= clamp((theta - mOuterScalar) / mEpsilon, 0.0f, 1.0f);

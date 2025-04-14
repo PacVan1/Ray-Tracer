@@ -677,7 +677,7 @@ public:
 		plane[2].Intersect(ray);  
 		//plane[3].Intersect(ray);  
 		//plane[4].Intersect(ray);  
-		plane[5].Intersect(ray);  
+		//plane[5].Intersect(ray);  
 	}
 	bool IsOccluded( const Ray& ray ) const
 	{
@@ -692,7 +692,7 @@ public:
 			if (hit) return true;
 		}
 	#ifdef FOURLIGHTS
-		for (int i = 0; i < 4; i++) if (quad[i].IsOccluded( ray )) return true;
+		//for (int i = 0; i < 4; i++) if (quad[i].IsOccluded( ray )) return true;
 	#else
 		if (quad.IsOccluded( ray )) return true;
 	#endif

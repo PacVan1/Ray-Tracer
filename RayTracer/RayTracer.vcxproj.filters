@@ -98,6 +98,9 @@
       <Filter>additional</Filter>
     </ClInclude>
     <ClInclude Include="ui.h" />
+    <ClInclude Include="color.h">
+      <Filter>additional</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">

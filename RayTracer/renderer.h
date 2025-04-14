@@ -13,22 +13,17 @@ enum renderModes : uint8_t
 	RENDER_MODES_SHADED
 };
 
-auto const RED		= float3(1.0f, 0.0f, 0.0f); 
-auto const GREEN	= float3(0.0f, 1.0f, 0.0f); 
-auto const BLUE		= float3(0.0f, 0.0f, 1.0f); 
-auto const YELLOW	= float3(1.0f, 1.0f, 0.0f); 
-auto const PURPLE	= float3(1.0f, 0.0f, 1.0f); 
-auto const CYAN		= float3(0.0f, 1.0f, 1.0f); 
-auto const BLACK	= float3(0.0f, 0.0f, 0.0f); 
-auto const WHITE	= float3(1.0f, 1.0f, 1.0f); 
-
-int constexpr INIT_RENDER_MODE = RENDER_MODES_SHADED;
+int constexpr	INIT_RENDER_MODE	= RENDER_MODES_SHADED;
+float constexpr INIT_EPS			= 1e-3f; 
 
 namespace Tmpl8
 {
 
 class Renderer final : public TheApp
 {
+public:
+	inline static float		sEps;
+
 private:
 	float4*					mAccumulator;
 	Ui						mUi;  

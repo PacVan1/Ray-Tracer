@@ -337,4 +337,6 @@ public:
 
 bool IsKeyDown( const uint key );
 
+#include "color.h" 
+
 // EOF
