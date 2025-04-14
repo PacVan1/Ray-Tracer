@@ -652,8 +652,11 @@ public:
 			const float d = b * b - (_mm_dp_ps( oc, oc, 0x71 ).m128_f32[0] - 0.36f);
 			if (d > 0)
 			{
-				const float t = -b - sqrtf( d );
-				const bool hit = t < ray.t && t > 0;
+				float t = -b - sqrtf( d );
+				bool hit = t < ray.t && t > 0;
+				if (hit) { ray.t = t, ray.objIdx = 1; }
+				t = -b + sqrtf(d);
+				hit = t < ray.t && t > 0;
 				if (hit) { ray.t = t, ray.objIdx = 1; }
 			};
 		}

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "lights.h" 
+#include "lights.h"
+#include "materials.h" 
 #include "ui.h" 
 #include "scene.h"
 #include "camera.h" 
@@ -14,7 +15,8 @@ enum renderModes : uint8_t
 };
 
 int constexpr	INIT_RENDER_MODE	= RENDER_MODES_SHADED;
-float constexpr INIT_EPS			= 1e-3f; 
+float constexpr INIT_EPS			= 1e-3f;
+int constexpr	INIT_MAX_BOUNCES	= 10; 
 
 namespace Tmpl8
 {
@@ -31,8 +33,13 @@ private:
 	Camera					mCamera;
 	DirectionalLight		mDirLight;
 	std::vector<PointLight> mPointLights; 
-	std::vector<SpotLight>	mSpotLights; 
+	std::vector<SpotLight>	mSpotLights;
+
+	Metallic				mMetallic;
+	Dielectric				mDielectric; 
+
 	int						mRenderMode;
+	int						mMaxBounces; 
 
 	Timer mTimer; 
 	float mAvg = 10, mFps, mRps, mAlpha = 1;
@@ -48,7 +55,7 @@ public:
 	inline float			GetAvg() const			{ return mAvg; }
 
 private:
-	[[nodiscard]] float3	Trace( Ray& ray ) const;
+	[[nodiscard]] float3	Trace(Ray& ray, int const bounces = 0) const;
 	[[nodiscard]] float3	CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 	void					ResetAccumulator() const; 
 	void					PerformanceReport(); 

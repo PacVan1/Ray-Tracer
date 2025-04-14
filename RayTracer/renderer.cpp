@@ -28,13 +28,14 @@ void Renderer::SetRenderMode(int const renderMode)
 	ResetAccumulator();
 }
 
-float3 Renderer::Trace( Ray& ray ) const
+float3 Renderer::Trace(Ray& ray, int const bounces) const
 {
+	if (bounces >= mMaxBounces) return BLACK;
 	mScene.FindNearest( ray );
 	if (ray.objIdx == -1) return BLACK; // or a fancy sky color
-	float3 const intersection = calcIntersection(ray); 
-	float3 const normal = mScene.GetNormal( ray.objIdx, intersection, ray.D );
-	float3 const albedo = mScene.GetAlbedo( ray.objIdx, intersection);
+	float3 const intersection	= calcIntersection(ray); 
+	float3 const normal			= mScene.GetNormal( ray.objIdx, intersection, ray.D );
+	color const	 albedo			= mScene.GetAlbedo( ray.objIdx, intersection);
 
 	switch (mRenderMode)
 	{
@@ -52,11 +53,39 @@ float3 Renderer::Trace( Ray& ray ) const
 	}
 	case RENDER_MODES_SHADED: 
 	{
+		if (ray.objIdx == mScene.cube.objIdx)
+		{
+			Ray reflected = mMetallic.Scatter(ray, intersection, normal);
+			reflected.inside = ray.inside;  
+			return Trace(reflected, (bounces + 1));     
+		}
 		if (ray.objIdx == mScene.sphere.objIdx)
 		{
-			float3 const reflectedDir = reflect(ray.D, normal);
-			Ray reflected = Ray(intersection + reflectedDir * sEps, reflectedDir);
-			return Trace(reflected);  
+			float3 tempN = normal;
+			float ior = 1.0f / 1.33f;
+
+			if (ray.inside) // inside 
+			{
+				ior = 1.33f;
+			}
+
+			float cosTheta = std::fmin(dot(-ray.D, tempN), 1.0f);
+			float sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
+
+			//bool cannotRefract = ior * sinTheta > 1.0f; // total internal reflection       
+			float fresnel = schlickApprox(cosTheta, ior); 
+
+			float3 reflectedDir = reflect(ray.D, tempN);
+			Ray reflected = Ray(intersection + reflectedDir * Renderer::sEps, reflectedDir);
+			reflected.inside = ray.inside;
+
+			float3 rPerp = ior * (ray.D + cosTheta * tempN);
+			float3 rPara = -std::sqrt(std::fabs(1.0f - sqrLength(rPerp))) * tempN;
+			float3 refractedDir = rPerp + rPara;
+			Ray refracted = Ray(intersection + refractedDir * Renderer::sEps, refractedDir);
+			refracted.inside = !ray.inside;
+
+			return Trace(reflected, (bounces + 1)) * fresnel + Trace(refracted, (bounces + 1)) * (1.0f - fresnel);
 		}
 
 		return CalcDirectLight(mScene, intersection, normal) * albedo;
@@ -103,8 +132,9 @@ void Renderer::Init()
 	InitUi();
 	InitAccumulator(); 
 
-	mRenderMode = INIT_RENDER_MODE; 
 	sEps		= INIT_EPS;
+	mRenderMode = INIT_RENDER_MODE;
+	mMaxBounces = INIT_MAX_BOUNCES;
 
 	mDirLight.mDirection	= float3(1.0f, -0.3f, 0.8f);
 	mDirLight.mDirection	= normalize(mDirLight.mDirection); 
