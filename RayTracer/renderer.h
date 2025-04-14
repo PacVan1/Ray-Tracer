@@ -22,7 +22,7 @@ auto const CYAN		= float3(0.0f, 1.0f, 1.0f);
 auto const BLACK	= float3(0.0f, 0.0f, 0.0f); 
 auto const WHITE	= float3(1.0f, 1.0f, 1.0f); 
 
-int constexpr INIT_RENDER_MODE = RENDER_MODES_NORMALS;
+int constexpr INIT_RENDER_MODE = RENDER_MODES_SHADED;
 
 namespace Tmpl8
 {
@@ -30,14 +30,14 @@ namespace Tmpl8
 class Renderer final : public TheApp
 {
 private:
-	float4*				mAccumulator;
-	Ui					mUi;  
-	Scene				mScene;
-	Camera				mCamera;
-	PointLight			mPointLight;
-	DirectionalLight	mDirLight;
-	SpotLight			mSpotLight;
-	int					mRenderMode;
+	float4*					mAccumulator;
+	Ui						mUi;  
+	Scene					mScene;
+	Camera					mCamera;
+	DirectionalLight		mDirLight;
+	std::vector<PointLight> mPointLights; 
+	std::vector<SpotLight>	mSpotLights; 
+	int						mRenderMode;
 
 	Timer mTimer; 
 	float mAvg = 10, mFps, mRps, mAlpha = 1;
@@ -47,9 +47,10 @@ public:
 
 	void					SetRenderMode(int const renderMode);
 
-	inline float			GetFps() const { return mFps; }
-	inline float			GetRps() const { return mRps; }
-	inline float			GetAvg() const { return mAvg; }
+	inline int				GetRenderMode() const	{ return mRenderMode; }
+	inline float			GetFps() const			{ return mFps; }
+	inline float			GetRps() const			{ return mRps; }
+	inline float			GetAvg() const			{ return mAvg; }
 
 private:
 	[[nodiscard]] float3	Trace( Ray& ray ) const;
@@ -66,3 +67,5 @@ private:
 };
 
 } // namespace Tmpl8
+
+[[nodiscard]] static float3 calcIntersection(Ray const& ray);  

@@ -32,7 +32,7 @@ float3 Renderer::Trace( Ray& ray ) const
 {
 	mScene.FindNearest( ray );
 	if (ray.objIdx == -1) return BLACK; // or a fancy sky color
-	float3 const intersection = ray.O + ray.t * ray.D;
+	float3 const intersection = calcIntersection(ray); 
 	float3 const normal = mScene.GetNormal( ray.objIdx, intersection, ray.D );
 	float3 const albedo = mScene.GetAlbedo( ray.objIdx, intersection);
 
@@ -61,9 +61,15 @@ float3 Renderer::Trace( Ray& ray ) const
 float3 Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
 	float3 result = BLACK;  
-	result += mPointLight.Intensity(scene, intersection, normal); 
-	result += mDirLight.Intensity(scene, intersection, normal); 
-	result += mSpotLight.Intensity(scene, intersection, normal);
+	result += mDirLight.Intensity(scene, intersection, normal);
+	for (PointLight const& pointLight : mPointLights)
+	{
+		result += pointLight.Intensity(scene, intersection, normal); 
+	}
+	for (SpotLight const& spotLight : mSpotLights)
+	{
+		result += spotLight.Intensity(scene, intersection, normal);
+	}
 	return result; 
 }
 
@@ -90,15 +96,33 @@ void Renderer::Init()
 	InitUi();
 	InitAccumulator(); 
 
-	SetRenderMode(INIT_RENDER_MODE);  
+	SetRenderMode(INIT_RENDER_MODE);
 
-	mPointLight.mColor	= RED;
-	mSpotLight.mColor	= GREEN;
-	mDirLight.mColor	= BLUE; 
+	mDirLight.mDirection	= float3(1.0f, -0.1f, 0.5f);
+	mDirLight.mStrength		= 0.4f;
+	mDirLight.mColor		= WHITE; 
 
-	mSpotLight.mPosition	= float3( 0.0f, 2.0f, 1.0f );
-	mSpotLight.mLookAt		= float3( 0.0f, 0.0f, 1.0f );
-	mSpotLight.mStrength	= 2.0f;
+	for (int i = 0; i < 5; i++)
+	{
+		mSpotLights.emplace_back();
+		mSpotLights.back().mPosition = float3(i * 3.0f - 6.0f, 10.0f, 3.5f);
+		mSpotLights.back().mLookAt = float3(i * 3.0f - 6.0f, 0.0f, 3.5f);
+		mSpotLights.back().DirectionFromLookAt();
+		mSpotLights.back().mStrength = 20.0f;
+		mSpotLights.back().mColor = WHITE;
+	}
+
+	mSpotLights[0].mPosition.y = 8.0f;
+	mSpotLights[1].mPosition.y = 12.0f;
+	mSpotLights[2].mPosition.y = 15.0f;
+	mSpotLights[3].mPosition.y = 12.0f;
+	mSpotLights[4].mPosition.y = 8.0f;
+
+	mSpotLights[0].mColor = float3(1.0f, 0.7f, 0.0f);
+	mSpotLights[1].mColor = float3(1.0f, 0.4f, 0.0f);
+	mSpotLights[2].mColor = RED;
+	mSpotLights[3].mColor = float3(1.0f, 0.4f, 0.0f);
+	mSpotLights[4].mColor = float3(1.0f, 0.7f, 0.0f);
 }
 
 inline void Renderer::InitUi()
@@ -115,4 +139,9 @@ inline void Renderer::InitAccumulator()
 void Renderer::Shutdown()
 {
 	delete[] mAccumulator;  
+}
+
+float3 calcIntersection(Ray const& ray)
+{
+	return ray.O + ray.D * ray.t; 
 }

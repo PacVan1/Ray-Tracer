@@ -20,7 +20,7 @@ float3 PointLight::Intensity(Scene const& scene, float3 const& intersection, flo
 }
 
 DirectionalLight::DirectionalLight() :
-	mDirection(normalize(float3(1.0f, 0.0f, 0.5f))),
+	mDirection(normalize(float3(1.0f))),
 	mColor(1.0f),
 	mStrength(1.0f)
 {}
@@ -37,8 +37,8 @@ SpotLight::SpotLight() :
 	mDirection(0.0f),
 	mColor(1.0f),
 	mStrength(1.0f),
-	mInnerScalar(cos(40.0f / DEG_OVER_RAD)), 
-	mOuterScalar(cos(45.0f / DEG_OVER_RAD)),
+	mInnerScalar(cos(20.0f / DEG_OVER_RAD)), 
+	mOuterScalar(cos(22.5f / DEG_OVER_RAD)),
 	mEpsilon(mInnerScalar - mOuterScalar)
 {
 	DirectionFromLookAt();

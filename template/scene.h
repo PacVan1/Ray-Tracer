@@ -677,7 +677,7 @@ public:
 		plane[2].Intersect(ray);  
 		//plane[3].Intersect(ray);  
 		//plane[4].Intersect(ray);  
-		//plane[5].Intersect(ray);  
+		plane[5].Intersect(ray);  
 	}
 	bool IsOccluded( const Ray& ray ) const
 	{
