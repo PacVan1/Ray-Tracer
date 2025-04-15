@@ -4,6 +4,7 @@
 
 #include "precomp.h"
 #include "renderer.h" 
+#include "input.h" 
 
 #pragma comment( linker, "/subsystem:windows /ENTRY:mainCRTStartup" )
 
@@ -29,7 +30,6 @@ static bool hasFocus = true, running = true;
 static GLTexture* renderTarget = 0;
 static int scrwidth = 0, scrheight = 0;
 static TheApp* app = 0;
-uint keystate[512] = { 0 };
 
 // static member data for instruction set support class
 static const CPUCaps cpucaps;
@@ -39,9 +39,6 @@ GLTexture* GetRenderTarget() { return renderTarget; }
 
 // provide access to window focus state
 bool WindowHasFocus() { return hasFocus; }
-
-// provide access to key state array
-bool IsKeyDown( const uint key ) { return keystate[key & 511] == 1; }
 
 // GLFW callbacks
 void InitRenderTarget( int w, int h )
@@ -56,16 +53,17 @@ void ReshapeWindowCallback( GLFWwindow*, int w, int h )
 }
 void KeyEventCallback( GLFWwindow*, int key, int, int action, int )
 {
+	input.mShouldUpdate = true;
 	if (key == GLFW_KEY_ESCAPE) running = false;
-	if (action == GLFW_PRESS) { if (app) if (key >= 0) app->KeyDown( key ); keystate[key & 511] = 1; }
-	else if (action == GLFW_RELEASE) { if (app) if (key >= 0) app->KeyUp( key ); keystate[key & 511] = 0; }
+	if (action == GLFW_PRESS) { if (key >= 0) input.mKeyStates[key & INPUT_KEY_COUNT - 1] = true; }
+	else if (action == GLFW_RELEASE) { if (key >= 0) input.mKeyStates[key & INPUT_KEY_COUNT - 1] = false; }
 }
 void CharEventCallback( GLFWwindow*, uint ) { /* nothing here yet */ }
 void WindowFocusCallback( GLFWwindow*, int focused ) { hasFocus = (focused == GL_TRUE); }
 void MouseButtonCallback( GLFWwindow*, int button, int action, int )
 {
-	if (action == GLFW_PRESS) { if (app) app->MouseDown( button ); }
-	else if (action == GLFW_RELEASE) { if (app) app->MouseUp( button ); }
+	if (action == GLFW_PRESS) input.mMouseState = true; 
+	else if (action == GLFW_RELEASE) input.mMouseState = false;
 }
 void MouseScrollCallback( GLFWwindow*, double, double y )
 {
@@ -73,7 +71,7 @@ void MouseScrollCallback( GLFWwindow*, double, double y )
 }
 void MousePosCallback( GLFWwindow*, double x, double y )
 {
-	if (app) app->MouseMove( (int)x, (int)y );
+	input.mMousePos = { static_cast<int>(x), static_cast<int>(y) }; 
 }
 void ErrorCallback( int, const char* description )
 {
@@ -164,6 +162,7 @@ void main()
 		deltaTime = min( 500.0f, 1000.0f * timer.elapsed() );
 		timer.reset();
 		app->Tick( deltaTime );
+		input.Update(); 
 		// send the rendering result to the screen using OpenGL
 		if (frameNr++ > 1)
 		{

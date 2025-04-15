@@ -344,8 +344,9 @@ public:
 	virtual void KeyDown( int key ) {}
 };
 
-bool IsKeyDown( const uint key );
+#include "color.h"
+#include "input.h"
 
-#include "color.h" 
+inline Input input; 
 
 // EOF

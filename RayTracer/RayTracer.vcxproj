@@ -141,6 +141,7 @@
     </ClCompile>
     <ClCompile Include="..\template\tmpl8math.cpp" />
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="lights.cpp" />
     <ClCompile Include="materials.cpp" />
     <ClCompile Include="renderer.cpp" />
@@ -167,6 +168,7 @@
     <ClInclude Include="..\template\tmpl8math.h" />
     <ClInclude Include="color.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="input.h" />
     <ClInclude Include="lights.h" />
     <ClInclude Include="materials.h" />
     <ClInclude Include="renderer.h" />
