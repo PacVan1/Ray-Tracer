@@ -130,7 +130,15 @@ public:
 			// add deliberate aliasing to two tile
 			if (ix == 98 && iz == 98) ix = (int)(I.x * 32.01f), iz = (int)(I.z * 32.01f);
 			if (ix == 94 && iz == 98) ix = (int)(I.x * 64.01f), iz = (int)(I.z * 64.01f);
-			return float3( ((ix + iz) & 1) ? 1 : 0.3f );
+
+			if ((ix + iz) & 1)
+			{
+				return float3(1.0f, 0.0f, 0.0f); 
+			}
+			else
+			{
+				return float3(1.0f, 1.0f, 0.0f); 
+			}
 		}
 		else if (N.z == -1)
 		{

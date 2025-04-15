@@ -54,12 +54,12 @@ void DebugViewer2D::RenderRay(float3 const& origin, float3 const& intersection, 
 		}
 	}
 
-	int2 iO = ToPixel(origin); 
-	int2 iI = ToPixel(intersection);
-	int2 iN = ToPixel(intersection + normal);
-	mTarget.Line(iO.x, iO.y, iI.x, iI.y, rayColor);
-	mTarget.Line(iI.x, iI.y, iN.x, iN.y, normalColor);
-	mTarget.Bar(iI.x - 1, iI.y - 1, iI.x + 1, iI.y + 1, hitColor); 
+	int2 const originI			= ToPixel(origin); 
+	int2 const intersectionI	= ToPixel(intersection);
+	int2 const normalI			= ToPixel(intersection + normal);
+	mTarget.Line(originI.x, originI.y, intersectionI.x, intersectionI.y, rayColor);
+	mTarget.Line(intersectionI.x, intersectionI.y, normalI.x, normalI.y, normalColor);
+	mTarget.Bar(intersectionI.x - 1, intersectionI.y - 1, intersectionI.x + 1, intersectionI.y + 1, hitColor);
 }
 
 void DebugViewer2D::Clear()

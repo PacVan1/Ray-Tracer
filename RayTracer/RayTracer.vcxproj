@@ -170,7 +170,6 @@
     <ClInclude Include="lights.h" />
     <ClInclude Include="materials.h" />
     <ClInclude Include="renderer.h" />
-    <ClInclude Include="settings.h" />
     <ClInclude Include="skydome.h" />
     <ClInclude Include="textures.h" />
     <ClInclude Include="ui.h" />

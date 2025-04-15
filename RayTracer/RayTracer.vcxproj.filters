@@ -108,9 +108,6 @@
     </ClInclude>
     <ClInclude Include="materials.h" />
     <ClInclude Include="debug.h" />
-    <ClInclude Include="settings.h">
-      <Filter>additional</Filter>
-    </ClInclude>
     <ClInclude Include="textures.h" />
     <ClInclude Include="skydome.h" />
   </ItemGroup>

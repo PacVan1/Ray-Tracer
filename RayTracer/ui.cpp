@@ -26,6 +26,11 @@ void Ui::General() const
 	{
 		mRenderer->SetRenderMode(renderMode); 
 	}
+	int maxBounces = mRenderer->GetMaxBounces();
+	if (ImGui::SliderInt("Max Bounces", &maxBounces, 1, 10))
+	{
+		mRenderer->SetMaxBounces(maxBounces);
+	}
 
 	if (ImGui::BeginTabBar("Main"))
 	{

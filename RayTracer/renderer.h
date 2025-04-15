@@ -39,6 +39,7 @@ private:
 	Scene					mScene;
 	Camera					mCamera;
 	DirectionalLight		mDirLight;
+	DirectionalLight		mDirLight2;
 	std::vector<PointLight> mPointLights; 
 	std::vector<SpotLight>	mSpotLights;
 
@@ -57,19 +58,21 @@ public:
 	void					Tick( float deltaTime ) override;
 
 	void					SetRenderMode(int const renderMode);
+	void					SetMaxBounces(int const maxBounces); 
 
 	inline int				GetRenderMode() const	{ return mRenderMode; }
+	inline int				GetMaxBounces() const	{ return mMaxBounces; }
 	inline float			GetFps() const			{ return mFps; }
 	inline float			GetRps() const			{ return mRps; }
 	inline float			GetAvg() const			{ return mAvg; }
 
 private:
-	[[nodiscard]] float3	Trace(Ray& ray, int const bounces = 0) const;
-	[[nodiscard]] float3	TraceDebug(Ray& ray, debug debug = {}, int const bounces = 0);
-	[[nodiscard]] float3	TraceNormals(Ray& ray) const; 
-	[[nodiscard]] float3	TraceDepth(Ray& ray) const; 
-	[[nodiscard]] float3	TraceAlbedo(Ray& ray) const; 
-	[[nodiscard]] float3	CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const;
+	[[nodiscard]] color		Trace(Ray& ray, int const bounces = 0) const;
+	[[nodiscard]] color		TraceDebug(Ray& ray, debug debug = {}, int const bounces = 0);
+	[[nodiscard]] color		TraceNormals(Ray& ray) const; 
+	[[nodiscard]] color		TraceDepth(Ray& ray) const; 
+	[[nodiscard]] color		TraceAlbedo(Ray& ray) const; 
+	[[nodiscard]] color		CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 	void					ResetAccumulator() const; 
 	void					PerformanceReport(); 
 

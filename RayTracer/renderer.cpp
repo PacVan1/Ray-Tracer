@@ -1,9 +1,7 @@
 #include "precomp.h"
 #include "renderer.h"
 
-#include "settings.h" 
-
-void Renderer::Tick( float deltaTime )
+void Renderer::Tick(float deltaTime)
 {
 #if DEBUG_MODE
 	mTimer.reset();
@@ -43,12 +41,12 @@ void Renderer::Tick( float deltaTime )
 					if (debugRay == mDebugViewer.mSelected) debug.mIsSelected = true; // set ray to selected
 				}
 
-				float3 const pixel = TraceDebug(primRay, debug);   
+				color const pixel = TraceDebug(primRay, debug);
 				mScreen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8(pixel);
 			}
 			else
 			{
-				float3 const pixel = Trace(primRay);
+				color const pixel = Trace(primRay);
 				mScreen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8(pixel); 
 			}
 			break;
@@ -70,7 +68,13 @@ void Renderer::SetRenderMode(int const renderMode)
 	//ResetAccumulator();
 }
 
-float3 Renderer::Trace(Ray& ray, int const bounces) const
+void Renderer::SetMaxBounces(int const maxBounces)
+{
+	mMaxBounces = maxBounces;
+	//ResetAccumulator(); 
+}
+
+color Renderer::Trace(Ray& ray, int const bounces) const
 {
 	if (bounces >= mMaxBounces) return BLACK;
 	mScene.FindNearest( ray );
@@ -81,37 +85,8 @@ float3 Renderer::Trace(Ray& ray, int const bounces) const
 
 	if (ray.objIdx == mScene.cube.objIdx)
 	{
-		float3 tempN = normal;
-		float ior = 1.0f / 1.33f;
-
-		if (ray.inside) // inside 
-		{ 
-			ior = 1.33f;
-		}
-
-		float const cosTheta = std::fmin(dot(-ray.D, tempN), 1.0f);
-		float const sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
-		float const fresnel = schlickApprox(cosTheta, ior);
-
-		if (ior * sinTheta > 1.0f) 
-		{
-			float3 reflectedDir = reflect(ray.D, tempN);
-			Ray reflected = Ray(intersection + normal * sEps, reflectedDir);
-			reflected.inside = ray.inside;
-			return Trace(reflected, (bounces + 1));
-		}
-
-		float3 reflectedDir = reflect(ray.D, tempN);
-		Ray reflected = Ray(intersection + normal * sEps, reflectedDir);
-		reflected.inside = ray.inside;
-
-		float3 rPerp = ior * (ray.D + cosTheta * tempN);
-		float3 rPara = -std::sqrt(std::fabs(1.0f - sqrLength(rPerp))) * tempN;
-		float3 refractedDir = rPerp + rPara;
-		Ray refracted = Ray(intersection + (-normal) * sEps, refractedDir);
-		refracted.inside = !ray.inside;
-
-		return Trace(reflected, (bounces + 1)) * fresnel + Trace(refracted, (bounces + 1)) * (1.0f - fresnel);
+		Ray reflected = mMetallic.Scatter(ray, intersection, normal);  
+		return Trace(reflected, (bounces + 1)); 
 	}
 	if (ray.objIdx == mScene.sphere.objIdx)
 	{
@@ -151,11 +126,11 @@ float3 Renderer::Trace(Ray& ray, int const bounces) const
 	return CalcDirectLight(mScene, intersection, normal) * albedo;
 }
 
-float3 Renderer::TraceDebug(Ray& ray, debug debug, int const bounces) 
+color Renderer::TraceDebug(Ray& ray, debug debug, int const bounces)
 {
 	if (bounces >= mMaxBounces) return BLACK;
 	mScene.FindNearest(ray);
-	if (ray.objIdx == -1) return BLACK; // or a fancy sky color
+	if (ray.objIdx == -1) return mHdrTexture.Sample(ray.D);
 	float3 const intersection = calcIntersection(ray);
 	float3 const normal = mScene.GetNormal(ray.objIdx, intersection, ray.D);
 	color const	 albedo = mScene.GetAlbedo(ray.objIdx, intersection);
@@ -236,7 +211,7 @@ float3 Renderer::TraceDebug(Ray& ray, debug debug, int const bounces)
 	return CalcDirectLight(mScene, intersection, normal) * albedo;
 }
 
-float3 Renderer::TraceNormals(Ray& ray) const
+color Renderer::TraceNormals(Ray& ray) const
 {
 	mScene.FindNearest(ray);
 	if (ray.objIdx == -1) return BLACK;
@@ -247,7 +222,7 @@ float3 Renderer::TraceNormals(Ray& ray) const
 	return (normal + 1) * 0.5f;
 }
 
-float3 Renderer::TraceDepth(Ray& ray) const
+color Renderer::TraceDepth(Ray& ray) const
 {
 	mScene.FindNearest(ray);
 	if (ray.objIdx == -1) return BLACK;
@@ -255,7 +230,7 @@ float3 Renderer::TraceDepth(Ray& ray) const
 	return 0.1f * float3(ray.t, ray.t, ray.t);
 }
 
-float3 Renderer::TraceAlbedo(Ray& ray) const
+color Renderer::TraceAlbedo(Ray& ray) const
 {
 	mScene.FindNearest(ray);
 	if (ray.objIdx == -1) return BLACK; // or a fancy sky color
@@ -264,10 +239,11 @@ float3 Renderer::TraceAlbedo(Ray& ray) const
 	return albedo; 
 }
 
-float3 Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const
+color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
-	float3 result = BLACK;  
+	color result = BLACK;
 	result += mDirLight.Intensity(scene, intersection, normal);
+	result += mDirLight2.Intensity(scene, intersection, normal);
 	for (PointLight const& pointLight : mPointLights)
 	{
 		result += pointLight.Intensity(scene, intersection, normal); 
@@ -320,10 +296,15 @@ void Renderer::Init()
 	mRenderMode = INIT_RENDER_MODE;
 	mMaxBounces = INIT_MAX_BOUNCES;
 
-	mDirLight.mDirection	= float3(0.0f, -1.0f, 0.0f);
+	mDirLight.mDirection	= float3(0.8f, -0.3f, 0.5f);
 	mDirLight.mDirection	= normalize(mDirLight.mDirection); 
 	mDirLight.mStrength		= 1.0f;
 	mDirLight.mColor		= WHITE;
+
+	mDirLight2.mDirection	= float3(-0.4f, -0.4f, 0.7f);
+	mDirLight2.mDirection	= normalize(mDirLight2.mDirection);
+	mDirLight2.mStrength	= 1.0f;
+	mDirLight2.mColor		= WHITE;
 
 	mHdrTexture = HdrTexture("../assets/hdr/kloppenheim_06_puresky_4k.hdr");  
 }

@@ -5,8 +5,8 @@
 namespace Tmpl8 { class Ray; }
 
 // default screen resolution
-#define SCRWIDTH	1280
-#define SCRHEIGHT	720
+#define SCRWIDTH		1280
+#define SCRHEIGHT		720
 // #define FULLSCREEN
 // #define DOUBLESIZE
 
@@ -18,6 +18,8 @@ namespace Tmpl8 { class Ray; }
 #define DEG_OVER_RAD	57.2957795131572957795131f 
 #define SQRT_PI_INV		0.56418958355f
 #define LARGE_FLOAT		1e34f
+
+#define DEBUG_MODE		1
 
 [[nodiscard]] float2	calcSphereUv(float3 const& direction);  
 [[nodiscard]] float3	calcIntersection(Ray const& ray);
