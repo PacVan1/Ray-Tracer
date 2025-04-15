@@ -31,6 +31,7 @@ public:
 public:
 	DebugViewer2D			mDebugViewer; 
 	bool					mDebugViewerActive = false;
+	bool					mBreakPixelActive = false;
 
 private:
 	Ui						mUi;
@@ -39,7 +40,6 @@ private:
 	Scene					mScene;
 	Camera					mCamera;
 	DirectionalLight		mDirLight;
-	DirectionalLight		mDirLight2;
 	std::vector<PointLight> mPointLights; 
 	std::vector<SpotLight>	mSpotLights;
 
@@ -50,6 +50,7 @@ private:
 
 	int						mRenderMode;
 	int						mMaxBounces;
+	bool					mBreakPixel = false; 
 
 	Timer mTimer; 
 	float mAvg = 10, mFps, mRps, mAlpha = 1;

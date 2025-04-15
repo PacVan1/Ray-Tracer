@@ -73,4 +73,11 @@ void Ui::DebugViewer() const
 		ImGui::SameLine(); ImGui::Text("Hit Point");
 		ImGui::Separator(); 
 	}
+	if (ImGui::CollapsingHeader("Pixel Break"))
+	{
+		ImGui::Separator();
+		ImGui::Checkbox("Active", &mRenderer->mBreakPixelActive);
+		ImGui::Text("Pixel Coordinate: (%d, %d)", input.mMousePos.x, input.mMousePos.y);
+		ImGui::Separator();
+	}
 }

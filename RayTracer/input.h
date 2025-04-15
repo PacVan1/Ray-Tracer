@@ -17,8 +17,13 @@ public:
 public:
 						Input(); 
 	void				Update();
+
 	[[nodiscard]] bool	IsKeyDown(uint const key) const;
 	[[nodiscard]] bool	IsKeyUp(uint const key) const;
 	[[nodiscard]] bool	IsKeyReleased(uint const key) const;
+
+	[[nodiscard]] bool	IsMouseDown() const; 
+	[[nodiscard]] bool	IsMouseUp() const; 
+	[[nodiscard]] bool	IsMouseReleased() const; 
 };
 

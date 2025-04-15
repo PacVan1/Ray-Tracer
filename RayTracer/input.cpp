@@ -15,7 +15,6 @@ void Input::Update()
 	{
 		memcpy(mPrevKeyStates, mKeyStates, INPUT_KEY_COUNT * sizeof(bool));
 		mShouldUpdate = false;
-		printf("input updated\n");  
 	}
 	mPrevMouseState = mMouseState;
 }
@@ -33,4 +32,19 @@ bool Input::IsKeyUp(uint const key) const
 bool Input::IsKeyReleased(uint const key) const
 {
 	return mPrevKeyStates[key & INPUT_KEY_COUNT - 1] && !mKeyStates[key & INPUT_KEY_COUNT - 1]; 
+}
+
+bool Input::IsMouseDown() const
+{
+	return mMouseState; 
+}
+
+bool Input::IsMouseUp() const
+{
+	return !mMouseState;
+}
+
+bool Input::IsMouseReleased() const
+{
+	return mPrevMouseState && !mMouseState;
 }

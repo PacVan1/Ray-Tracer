@@ -21,6 +21,23 @@ namespace Tmpl8 { class Ray; }
 
 #define DEBUG_MODE		1
 
+enum controls : uint8_t
+{
+	CONTROLS_MOVE_EAST		= GLFW_KEY_D,
+	CONTROLS_MOVE_NORTH		= GLFW_KEY_W,
+	CONTROLS_MOVE_WEST		= GLFW_KEY_A,
+	CONTROLS_MOVE_SOUTH		= GLFW_KEY_S,
+	CONTROLS_MOVE_UP		= GLFW_KEY_R,
+	CONTROLS_MOVE_DOWN		= GLFW_KEY_F,
+
+	CONTROLS_LOOK_EAST		= GLFW_KEY_RIGHT, 
+	CONTROLS_LOOK_NORTH		= GLFW_KEY_UP, 
+	CONTROLS_LOOK_WEST		= GLFW_KEY_LEFT, 
+	CONTROLS_LOOK_SOUTH		= GLFW_KEY_DOWN, 
+
+	CONTROLS_BREAK_PIXEL	= GLFW_KEY_B,
+};
+
 [[nodiscard]] float2	calcSphereUv(float3 const& direction);  
 [[nodiscard]] float3	calcIntersection(Ray const& ray);
 [[nodiscard]] float		schlickApprox(float const cosTheta, float const ior);

@@ -5,10 +5,16 @@ void Renderer::Tick(float deltaTime)
 {
 #if DEBUG_MODE
 	mTimer.reset();
+	mBreakPixel = input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive; 
 	int debugRay = 0; 
 #pragma omp parallel for schedule(dynamic)
 	for (int y = 0; y < SCRHEIGHT; y++) for (int x = 0; x < SCRWIDTH; x++)
 	{
+		if (mBreakPixel && input.mMousePos.x == x && input.mMousePos.y == y)
+		{
+			__debugbreak(); 
+		}
+
 		switch (mRenderMode)
 		{
 		case RENDER_MODES_NORMALS:
@@ -56,7 +62,12 @@ void Renderer::Tick(float deltaTime)
 	}
 
 	PerformanceReport();
-	if (mDebugViewerActive) RenderDebugViewer(); 
+	if (mDebugViewerActive) RenderDebugViewer();
+	if (mBreakPixelActive)
+	{
+		mScreen->Line(static_cast<float>(input.mMousePos.x), 0, static_cast<float>(input.mMousePos.x), SCRHEIGHT - 1, RED_U);
+		mScreen->Line(0, static_cast<float>(input.mMousePos.y), SCRWIDTH - 1, static_cast<float>(input.mMousePos.y), RED_U); 
+	}
 
 	mCamera.HandleInput( deltaTime );
 #endif
@@ -243,7 +254,6 @@ color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, 
 {
 	color result = BLACK;
 	result += mDirLight.Intensity(scene, intersection, normal);
-	result += mDirLight2.Intensity(scene, intersection, normal);
 	for (PointLight const& pointLight : mPointLights)
 	{
 		result += pointLight.Intensity(scene, intersection, normal); 
@@ -300,11 +310,6 @@ void Renderer::Init()
 	mDirLight.mDirection	= normalize(mDirLight.mDirection); 
 	mDirLight.mStrength		= 1.0f;
 	mDirLight.mColor		= WHITE;
-
-	mDirLight2.mDirection	= float3(-0.4f, -0.4f, 0.7f);
-	mDirLight2.mDirection	= normalize(mDirLight2.mDirection);
-	mDirLight2.mStrength	= 1.0f;
-	mDirLight2.mColor		= WHITE;
 
 	mHdrTexture = HdrTexture("../assets/hdr/kloppenheim_06_puresky_4k.hdr");  
 }
