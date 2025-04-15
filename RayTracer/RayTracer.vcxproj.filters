@@ -43,6 +43,9 @@
     <ClCompile Include="ui.cpp" />
     <ClCompile Include="materials.cpp" />
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="textures.cpp" />
+    <ClCompile Include="skydome.cpp" />
+    <ClCompile Include="..\template\common.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -108,6 +111,8 @@
     <ClInclude Include="settings.h">
       <Filter>additional</Filter>
     </ClInclude>
+    <ClInclude Include="textures.h" />
+    <ClInclude Include="skydome.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">

@@ -132,6 +132,7 @@
     <ClCompile Include="..\lib\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\lib\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\lib\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\template\common.cpp" />
     <ClCompile Include="..\template\opengl.cpp" />
     <ClCompile Include="..\template\surface.cpp" />
     <ClCompile Include="..\template\template.cpp">
@@ -143,6 +144,8 @@
     <ClCompile Include="lights.cpp" />
     <ClCompile Include="materials.cpp" />
     <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="skydome.cpp" />
+    <ClCompile Include="textures.cpp" />
     <ClCompile Include="ui.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +171,8 @@
     <ClInclude Include="materials.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="settings.h" />
+    <ClInclude Include="skydome.h" />
+    <ClInclude Include="textures.h" />
     <ClInclude Include="ui.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

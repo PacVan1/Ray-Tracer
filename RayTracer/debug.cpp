@@ -19,24 +19,25 @@ DebugViewer2D::DebugViewer2D() :
 	mNormalColor.y	= ScaleColor(BLUE_U, 100);
 	mHitColor.y		= ScaleColor(WHITE_U, 100);
 	mInsideColor.y	= ScaleColor(YELLOW_U, 100);
-	mOutsideColor.y = ScaleColor(GREEN_U, 100); 
+	mOutsideColor.y = ScaleColor(GREEN_U, 100);
+
+	SetSelection();
 }
 
-void DebugViewer2D::RenderRay(Ray const& ray, float3 const& intersection, float3 const& normal, int const debug, int const bounces)
+void DebugViewer2D::RenderRay(float3 const& origin, float3 const& intersection, float3 const& normal, debug const debug) 
 {
-	if (debug == 0) return;
+	if (!debug.mIsDebug) return; 
 
 	uint rayColor		= mPrimRayColor.x;
 	uint normalColor	= mNormalColor.x;
 	uint hitColor		= mHitColor.x; 
 
-	if (bounces > 0)
+	if (!debug.mIsPrimary)
 	{
-		if (!isSelected(debug)) return;
-		if (isInside(debug))
-		{
-			if (debug >> 3 & 1) rayColor = 0xff00ff;
-			else rayColor = mInsideColor.x;
+		if (!debug.mIsSelected) return;
+		if (debug.mIsInside)
+ 		{
+			rayColor = mInsideColor.x;
 		}
 		else
 		{
@@ -45,7 +46,7 @@ void DebugViewer2D::RenderRay(Ray const& ray, float3 const& intersection, float3
 	}
 	else
 	{
-		if (!isSelected(debug))
+		if (!debug.mIsSelected) 
 		{
 			rayColor	= mPrimRayColor.y; 
 			normalColor = mNormalColor.y; 
@@ -53,7 +54,7 @@ void DebugViewer2D::RenderRay(Ray const& ray, float3 const& intersection, float3
 		}
 	}
 
-	int2 iO = ToPixel(ray.O);
+	int2 iO = ToPixel(origin); 
 	int2 iI = ToPixel(intersection);
 	int2 iN = ToPixel(intersection + normal);
 	mTarget.Line(iO.x, iO.y, iI.x, iI.y, rayColor);
@@ -64,6 +65,12 @@ void DebugViewer2D::RenderRay(Ray const& ray, float3 const& intersection, float3
 void DebugViewer2D::Clear()
 {
 	mTarget.Clear(0);  
+}
+
+void DebugViewer2D::SetSelection()
+{
+	mSelectionCount = floor(SCRWIDTH / mEvery);
+	mSelected		= min(mSelectionCount, mSelected);
 }
 
 int2 DebugViewer2D::ToPixel(float3 const& position) const

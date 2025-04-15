@@ -4,6 +4,7 @@ C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\lib\imgui\imgui_impl_glfw.cpp;C:
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\lib\imgui\imgui_impl_opengl3.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\imgui_impl_opengl3.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\lib\imgui\imgui_tables.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\imgui_tables.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\lib\imgui\imgui_widgets.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\imgui_widgets.obj
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\common.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\opengl.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\opengl.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\surface.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\surface.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\template.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\template.obj
@@ -12,4 +13,6 @@ C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\debug.cpp;C:\Perforce\
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\lights.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\lights.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\materials.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\materials.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\renderer.obj
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\skydome.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\skydome.obj
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\textures.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\textures.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\ui.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\ui.obj

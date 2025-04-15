@@ -39,11 +39,3 @@ Ray Dielectric::Scatter(Ray const& ray, float3 const& intersection, float3 const
 
 	return Ray();
 }
-
-float schlickApprox(float const cosTheta, float const ior)
-{
-	float r0 = (1 - ior) / (1 + ior);
-	r0 = r0 * r0;
-	float const test = (1 - cosTheta);
-	return r0 + (1 - r0) * test * test * test * test * test; 
-}

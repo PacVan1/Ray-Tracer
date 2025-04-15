@@ -14,5 +14,3 @@ public:
 	[[nodiscard]] Ray Scatter(Ray const& ray, float3 const& intersection, float3 const& normal) const;
 };
 
-[[nodiscard]] float schlickApprox(float const cosTheta, float const ior);
-

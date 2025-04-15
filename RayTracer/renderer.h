@@ -6,6 +6,7 @@
 #include "scene.h"
 #include "camera.h"
 #include "debug.h" 
+#include "textures.h" 
 
 enum renderModes : uint8_t
 {
@@ -29,8 +30,7 @@ public:
 
 public:
 	DebugViewer2D			mDebugViewer; 
-	bool					mDebugViewerActive = true;
-	bool					mTIR = false;
+	bool					mDebugViewerActive = false;
 
 private:
 	Ui						mUi;
@@ -44,6 +44,8 @@ private:
 
 	Metallic				mMetallic;
 	Dielectric				mDielectric; 
+
+	HdrTexture				mHdrTexture;
 
 	int						mRenderMode;
 	int						mMaxBounces;
@@ -63,7 +65,7 @@ public:
 
 private:
 	[[nodiscard]] float3	Trace(Ray& ray, int const bounces = 0) const;
-	[[nodiscard]] float3	TraceDebug(Ray& ray, int debug = 0, int const bounces = 0); 
+	[[nodiscard]] float3	TraceDebug(Ray& ray, debug debug = {}, int const bounces = 0);
 	[[nodiscard]] float3	TraceNormals(Ray& ray) const; 
 	[[nodiscard]] float3	TraceDepth(Ray& ray) const; 
 	[[nodiscard]] float3	TraceAlbedo(Ray& ray) const; 
@@ -81,5 +83,3 @@ private:
 };
 
 } // namespace Tmpl8
-
-[[nodiscard]] static float3 calcIntersection(Ray const& ray);  
