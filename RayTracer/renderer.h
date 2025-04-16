@@ -51,6 +51,7 @@ private:
 	int						mRenderMode;
 	int						mMaxBounces;
 	int						mMaxFrames			= 2;
+	int						mMaxFramesActive	= false;
 	bool					mBreakPixel			= false; 
 	bool					mAaActive			= true;
 	bool					mAccumActive		= true;

@@ -5,7 +5,7 @@ void Renderer::Tick(float deltaTime)
 {
 #if DEBUG_MODE
 	mTimer.reset();
-	if (mSpp < mMaxFrames)
+	if (mSpp < mMaxFrames || !mMaxFramesActive) 
 	{
 		mBreakPixel = input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive;
 		float const scale		= 1.0f / static_cast<float>(mSpp++);   
@@ -152,17 +152,19 @@ color Renderer::Trace(Ray& ray, int const bounces) const
 	if (ray.objIdx == mScene.cube.objIdx)
 	{
 		Ray scattered;
-		if (mMetallic.Scatter(ray, scattered, intersection, normal))
+		color color = WHITE;
+		if (mDielectric.Scatter2(ray, scattered, color, intersection, normal))
 		{
-			return Trace(scattered, (bounces + 1));
+			return Trace(scattered, bounces + 1) * color;
 		}
 	}
 	if (ray.objIdx == mScene.sphere.objIdx)
 	{
 		Ray scattered;
-		if (mDielectric.Scatter(ray, scattered, intersection, normal))
+		color color = WHITE;  
+		if (mDielectric.Scatter2(ray, scattered, color, intersection, normal))
 		{
-			return Trace(scattered, (bounces + 1));
+			return Trace(scattered, bounces + 1) * color;
 		}
 	}
 
