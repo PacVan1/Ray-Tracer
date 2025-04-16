@@ -18,6 +18,25 @@ float3 calcIntersection(Ray const& ray)
 	return ray.O + ray.D * ray.t;
 }
 
+float3 randomUnitOnDisk()
+{
+	while (true)
+	{
+		float3 const point = { randomFloatUnit(), randomFloatUnit(), 0.0f };
+		if (sqrLength(point) < 1.0f) return point;
+	}
+}
+
+float3 randomFloat3Unit()
+{
+	return { randomFloatUnit(), randomFloatUnit() , randomFloatUnit() };
+}
+
+float randomFloatUnit()
+{
+	return RandomFloat() * 2.0f - 1.0f; 
+}
+
 float schlickApprox(float const cosTheta, float const ior)
 {
 	float r0 = (1 - ior) / (1 + ior);

@@ -1,57 +1,52 @@
 #pragma once
 
-namespace Tmpl8 {
+#include "scene.h" 
+
+float3 const	INIT_CAMERA_POSITION		= float3(0.0f, 0.0f, -2.0f);  
+float3 const	INIT_CAMERA_TARGET			= float3(0.0f, 0.0f, -1.0f);
+float constexpr INIT_CAMERA_SPEED			= 0.0025f;
+float constexpr INIT_CAMERA_FOV				= 50.0f;
+float constexpr INIT_CAMERA_DEFOCUS_ANGLE	= 0.02f;
+float constexpr INIT_CAMERA_FOCUS_DIST		= 10.0f;
+float constexpr INIT_CAMERA_MAX_FOCUS_DIST	= 300.0f;
+
 class Camera
 {
+private: 
+	float3	mPosition;
+	float3	mTarget;
+
+	float3	mTopLeft;
+	float3	mTopRight;
+	float3	mBottomLeft;
+	float3	mViewportU;
+	float3	mViewportV;
+	float	mViewportWidth;
+	float	mViewportHeight;
+
+	float3	mAhead;
+	float3	mRight;
+	float3	mUp;
+
+	float3	mDefocusDiskU;
+	float3	mDefocusDiskV;
+	float	mDefocusAngle;
+	float	mFocusDist; 
+
+	float	mSpeed;
+	float	mFov; 
+
 public:
-	Camera()
-	{
-		// setup a basic view frustum
-		camPos		= float3( 0, 0.0f, -2 );
-		camTarget	= float3( 0, 0, -1 );
-		topLeft		= float3( -aspect, 1, 0 );
-		topRight	= float3( aspect, 1, 0 );
-		bottomLeft	= float3( -aspect, -1, 0 );
-	}
-	Ray GetPrimaryRay( const float x, const float y )
-	{
-		// calculate pixel position on virtual screen plane
-		const float u = (float)x * (1.0f / SCRWIDTH);
-		const float v = (float)y * (1.0f / SCRHEIGHT);
-		const float3 P = topLeft + u * (topRight - topLeft) + v * (bottomLeft - topLeft);
-		return Ray( camPos, normalize( P - camPos ) );
-	}
-	bool HandleInput( const float t )
-	{
-		if (!WindowHasFocus()) return false;
-		float speed = 0.0025f * t;
-		float3 ahead = normalize( camTarget - camPos );
-		float3 tmpUp( 0, 1, 0 );
-		float3 right = normalize( cross( tmpUp, ahead ) );
-		float3 up = normalize( cross( ahead, right ) );
-		bool changed = false;
-		if (input.IsKeyDown( GLFW_KEY_A )) camPos -= speed * 2 * right, changed = true;
-		if (input.IsKeyDown( GLFW_KEY_D )) camPos += speed * 2 * right, changed = true;
-		if (input.IsKeyDown( GLFW_KEY_W )) camPos += speed * 2 * ahead, changed = true;
-		if (input.IsKeyDown( GLFW_KEY_S )) camPos -= speed * 2 * ahead, changed = true;
-		if (input.IsKeyDown( GLFW_KEY_R )) camPos += speed * 2 * up, changed = true;
-		if (input.IsKeyDown( GLFW_KEY_F )) camPos -= speed * 2 * up, changed = true;
-		camTarget = camPos + ahead;
-		if (input.IsKeyDown( GLFW_KEY_UP )) camTarget -= speed * up, changed = true;
-		if (input.IsKeyDown( GLFW_KEY_DOWN )) camTarget += speed * up, changed = true;
-		if (input.IsKeyDown( GLFW_KEY_LEFT )) camTarget -= speed * right, changed = true;
-		if (input.IsKeyDown( GLFW_KEY_RIGHT )) camTarget += speed * right, changed = true;
-		if (!changed) return false;
-		ahead = normalize( camTarget - camPos );
-		up = normalize( cross( ahead, right ) );
-		right = normalize( cross( up, ahead ) );
-		topLeft = camPos + ahead * 2.0f - aspect * right + up;
-		topRight = camPos + ahead * 2.0f + aspect * right + up;
-		bottomLeft = camPos + ahead * 2.0f - aspect * right - up;
-		return true;
-	}
-	float aspect = (float)SCRWIDTH / (float)SCRHEIGHT;
-	float3 camPos, camTarget;
-	float3 topLeft, topRight, bottomLeft;
+						Camera();
+	bool				Update(float const dt);
+	void				Focus(Scene const& scene); 
+	[[nodiscard]] Ray	GetPrimaryRay(float2 const pixel) const;
+	[[nodiscard]] Ray	GetPrimaryRay2(float2 const pixel) const;
+	[[nodiscard]] Ray	GetPrimaryRayFocused(float2 const pixel) const;
+
+private:
+	void				UpdateBasisVectors();
+	void				UpdateViewport();
+	void				UpdateViewport2();
+	void				UpdateDefocusDisk();
 };
-}

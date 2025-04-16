@@ -47,6 +47,9 @@
     <ClCompile Include="skydome.cpp" />
     <ClCompile Include="..\template\common.cpp" />
     <ClCompile Include="input.cpp" />
+    <ClCompile Include="camera.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">

@@ -4,9 +4,9 @@
 
 namespace Tmpl8 { class Ray; }
 
-// default screen resolution
-#define SCRWIDTH		1280
-#define SCRHEIGHT		720
+int constexpr	SCRWIDTH		= 1280;
+int constexpr	SCRHEIGHT		= 720;
+float constexpr ASPECT_RATIO	= static_cast<float>(SCRWIDTH) / static_cast<float>(SCRHEIGHT); 
 // #define FULLSCREEN
 // #define DOUBLESIZE
 
@@ -23,21 +23,24 @@ namespace Tmpl8 { class Ray; }
 
 enum controls : uint8_t
 {
-	CONTROLS_MOVE_EAST		= GLFW_KEY_D,
-	CONTROLS_MOVE_NORTH		= GLFW_KEY_W,
-	CONTROLS_MOVE_WEST		= GLFW_KEY_A,
-	CONTROLS_MOVE_SOUTH		= GLFW_KEY_S,
+	CONTROLS_MOVE_RIGHT		= GLFW_KEY_D,
+	CONTROLS_MOVE_FORWARD	= GLFW_KEY_W,
+	CONTROLS_MOVE_LEFT		= GLFW_KEY_A,
+	CONTROLS_MOVE_BACKWARD	= GLFW_KEY_S,
 	CONTROLS_MOVE_UP		= GLFW_KEY_R,
 	CONTROLS_MOVE_DOWN		= GLFW_KEY_F,
 
-	CONTROLS_LOOK_EAST		= GLFW_KEY_RIGHT, 
-	CONTROLS_LOOK_NORTH		= GLFW_KEY_UP, 
-	CONTROLS_LOOK_WEST		= GLFW_KEY_LEFT, 
-	CONTROLS_LOOK_SOUTH		= GLFW_KEY_DOWN, 
+	CONTROLS_LOOK_RIGHT		= GLFW_KEY_RIGHT, 
+	CONTROLS_LOOK_UP		= GLFW_KEY_UP, 
+	CONTROLS_LOOK_LEFT		= GLFW_KEY_LEFT, 
+	CONTROLS_LOOK_DOWN		= GLFW_KEY_DOWN, 
 
 	CONTROLS_BREAK_PIXEL	= GLFW_KEY_B,
 };
 
 [[nodiscard]] float2	calcSphereUv(float3 const& direction);  
 [[nodiscard]] float3	calcIntersection(Ray const& ray);
+[[nodiscard]] float3	randomUnitOnDisk();
+[[nodiscard]] float3	randomFloat3Unit();
+[[nodiscard]] float		randomFloatUnit();
 [[nodiscard]] float		schlickApprox(float const cosTheta, float const ior);

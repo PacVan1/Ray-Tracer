@@ -23,21 +23,24 @@ void Renderer::Tick(float deltaTime)
 		{
 		case RENDER_MODES_NORMALS:
 		{
-			Ray primRay = mCamera.GetPrimaryRay(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+			float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
+			Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
 			color const pixel = TraceNormals(primRay);  
 			mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
 			break;
 		}
 		case RENDER_MODES_DEPTH:
 		{
-			Ray primRay = mCamera.GetPrimaryRay(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+			float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
+			Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
 			color const pixel = TraceDepth(primRay);
 			mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
 			break;
 		}
 		case RENDER_MODES_ALBEDO:
 		{
-			Ray primRay = mCamera.GetPrimaryRay(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+			float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
+			Ray primRay = mCamera.GetPrimaryRay(pixelCoord); 
 			color const pixel = TraceAlbedo(primRay);
 			mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
 			break;
@@ -45,8 +48,10 @@ void Renderer::Tick(float deltaTime)
 		case RENDER_MODES_SHADED:
 		{
 			float2 pixelCoord = float2(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
-			if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f); 
-			Ray primRay = mCamera.GetPrimaryRay(pixelCoord.x, pixelCoord.y);
+			if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f);
+			Ray primRay;
+			if (mDofActive) primRay = mCamera.GetPrimaryRayFocused(pixelCoord);
+			else			primRay = mCamera.GetPrimaryRay2(pixelCoord); 
 			color pixel = BLACK;
 
 			if (mDebugViewerActive)
@@ -88,8 +93,9 @@ void Renderer::Tick(float deltaTime)
 		mScreen->Line(static_cast<float>(input.mMousePos.x), 0, static_cast<float>(input.mMousePos.x), SCRHEIGHT - 1, RED_U);
 		mScreen->Line(0, static_cast<float>(input.mMousePos.y), SCRWIDTH - 1, static_cast<float>(input.mMousePos.y), RED_U); 
 	}
-	if (mCamera.HandleInput(deltaTime))
+	if (mCamera.Update(deltaTime))
 	{
+		if (mAutoFocusActive) mCamera.Focus(mScene);  
 		ResetAccumulator(); 
 	}
 #endif
@@ -117,6 +123,19 @@ void Renderer::SetAccum(bool const accumActive)
 {
 	mAccumActive = accumActive;
 	ResetAccumulator(); 
+}
+
+void Renderer::SetAutoFocus(bool const autoFocusActive)
+{
+	mAutoFocusActive = autoFocusActive;
+	mCamera.Focus(mScene);
+	ResetAccumulator();
+}
+
+void Renderer::SetDof(bool const dofActive)
+{
+	mDofActive = dofActive;
+	ResetAccumulator();
 }
 
 color Renderer::Trace(Ray& ray, int const bounces) const

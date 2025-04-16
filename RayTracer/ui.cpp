@@ -91,4 +91,14 @@ void Ui::Enhancements() const
 	{
 		mRenderer->SetAccum(accum);
 	}
+	bool dof = mRenderer->GetDof();
+	if (ImGui::Checkbox("Depth of field", &dof))
+	{
+		mRenderer->SetDof(dof);
+	}
+	bool autoFocus = mRenderer->GetAutoFocus();
+	if (ImGui::Checkbox("Auto-focus", &autoFocus))
+	{
+		mRenderer->SetAutoFocus(autoFocus);
+	}
 }

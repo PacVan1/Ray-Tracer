@@ -50,9 +50,11 @@ private:
 
 	int						mRenderMode;
 	int						mMaxBounces;
-	bool					mBreakPixel		= false; 
-	bool					mAaActive		= true;
-	bool					mAccumActive	= true; 
+	bool					mBreakPixel			= false; 
+	bool					mAaActive			= true;
+	bool					mAccumActive		= true;
+	bool					mAutoFocusActive	= true;
+	bool					mDofActive			= true;
 	int						mSpp;
 
 	Timer mTimer; 
@@ -63,13 +65,17 @@ public:
 
 	void					SetRenderMode(int const renderMode);
 	void					SetMaxBounces(int const maxBounces);
-	void					SetAa(bool const aa);
+	void					SetAa(bool const aaActive); 
 	void					SetAccum(bool const accumActive); 
+	void					SetAutoFocus(bool const autoFocusActive); 
+	void					SetDof(bool const dofActive); 
 
 	inline int				GetRenderMode() const	{ return mRenderMode; }
 	inline int				GetMaxBounces() const	{ return mMaxBounces; }
 	inline int				GetAa() const			{ return mAaActive; }
 	inline int				GetAccum() const		{ return mAccumActive; } 
+	inline int				GetAutoFocus() const	{ return mAutoFocusActive; } 
+	inline int				GetDof() const			{ return mDofActive; } 
 	inline float			GetFps() const			{ return mFps; }
 	inline float			GetRps() const			{ return mRps; }
 	inline float			GetAvg() const			{ return mAvg; }
