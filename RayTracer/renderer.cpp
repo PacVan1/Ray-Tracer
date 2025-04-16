@@ -5,11 +5,15 @@ void Renderer::Tick(float deltaTime)
 {
 #if DEBUG_MODE
 	mTimer.reset();
-	mBreakPixel = input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive; 
-	int debugRay = 0; 
+	mBreakPixel = input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive;
+
+	float const scale		= 1.0f / static_cast<float>(mSpp++);   
+	int			debugRayIdx	= 0;
 #pragma omp parallel for schedule(dynamic)
-	for (int y = 0; y < SCRHEIGHT; y++) for (int x = 0; x < SCRWIDTH; x++)
+	for (int y = 0; y < SCRHEIGHT; y++) for (int x = 0; x < SCRWIDTH; x++) 
 	{
+		int const pixelIdx = x + y * SCRWIDTH; 
+
 		if (mBreakPixel && input.mMousePos.x == x && input.mMousePos.y == y)
 		{
 			__debugbreak(); 
@@ -19,70 +23,100 @@ void Renderer::Tick(float deltaTime)
 		{
 		case RENDER_MODES_NORMALS:
 		{
-			float3 const pixel = TraceNormals(mCamera.GetPrimaryRay((float)x, (float)y)); 
-			mScreen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8(pixel); 
+			Ray primRay = mCamera.GetPrimaryRay(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+			color const pixel = TraceNormals(primRay);  
+			mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
 			break;
 		}
 		case RENDER_MODES_DEPTH:
 		{
-			float3 const pixel = TraceDepth(mCamera.GetPrimaryRay((float)x, (float)y));
-			mScreen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8(pixel);
+			Ray primRay = mCamera.GetPrimaryRay(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+			color const pixel = TraceDepth(primRay);
+			mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
 			break;
 		}
 		case RENDER_MODES_ALBEDO:
 		{
-			float3 const pixel = TraceAlbedo(mCamera.GetPrimaryRay((float)x, (float)y));
-			mScreen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8(pixel);
+			Ray primRay = mCamera.GetPrimaryRay(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+			color const pixel = TraceAlbedo(primRay);
+			mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
 			break;
 		}
 		case RENDER_MODES_SHADED:
 		{
-			Ray primRay = mCamera.GetPrimaryRay(static_cast<float>(x), static_cast<float>(y));
+			float2 pixelCoord = float2(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+			if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f); 
+			Ray primRay = mCamera.GetPrimaryRay(pixelCoord.x, pixelCoord.y);
+			color pixel = BLACK;
+
 			if (mDebugViewerActive)
 			{
 				debug debug = {};
 				if (y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
 				{
-					debug.mIsDebug = true; debugRay++; 
-					if (debugRay == mDebugViewer.mSelected) debug.mIsSelected = true; // set ray to selected
+					debug.mIsDebug		= true; debugRayIdx++;
+					debug.mIsSelected	= debugRayIdx == mDebugViewer.mSelected;
 				}
-
-				color const pixel = TraceDebug(primRay, debug);
-				mScreen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8(pixel);
+				pixel = TraceDebug(primRay, debug);
 			}
 			else
 			{
-				color const pixel = Trace(primRay);
-				mScreen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8(pixel); 
+				pixel = Trace(primRay);
 			}
+
+			if (mAccumActive)
+			{
+				mAccumulator[pixelIdx] += pixel; 
+				color const average = mAccumulator[pixelIdx] * scale;
+				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(average);
+			}
+			else
+			{
+				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);  
+			}
+
 			break;
 		}
 		default: break; 
 		}
 	}
-
 	PerformanceReport();
+
 	if (mDebugViewerActive) RenderDebugViewer();
 	if (mBreakPixelActive)
 	{
 		mScreen->Line(static_cast<float>(input.mMousePos.x), 0, static_cast<float>(input.mMousePos.x), SCRHEIGHT - 1, RED_U);
 		mScreen->Line(0, static_cast<float>(input.mMousePos.y), SCRWIDTH - 1, static_cast<float>(input.mMousePos.y), RED_U); 
 	}
-
-	mCamera.HandleInput( deltaTime );
+	if (mCamera.HandleInput(deltaTime))
+	{
+		ResetAccumulator(); 
+	}
 #endif
 }
 
 void Renderer::SetRenderMode(int const renderMode)
 {
 	mRenderMode = renderMode;
-	//ResetAccumulator();
+	ResetAccumulator();
 }
 
 void Renderer::SetMaxBounces(int const maxBounces)
 {
 	mMaxBounces = maxBounces;
-	//ResetAccumulator(); 
+	ResetAccumulator(); 
+}
+
+void Renderer::SetAa(bool const aa)
+{
+	mAaActive = aa;
+	ResetAccumulator();
+}
+
+void Renderer::SetAccum(bool const accumActive)
+{
+	mAccumActive = accumActive;
+	ResetAccumulator(); 
 }
 
 color Renderer::Trace(Ray& ray, int const bounces) const
@@ -265,8 +299,11 @@ color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, 
 	return result; 
 }
 
-void Renderer::ResetAccumulator() const
+void Renderer::ResetAccumulator()
 {
+	if (!mAccumActive) return; 
+
+	mSpp = 1; 
 	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));
 }
 

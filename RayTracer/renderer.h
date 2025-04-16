@@ -30,8 +30,8 @@ public:
 
 public:
 	DebugViewer2D			mDebugViewer; 
-	bool					mDebugViewerActive = false;
-	bool					mBreakPixelActive = false;
+	bool					mDebugViewerActive	= false;
+	bool					mBreakPixelActive	= false;
 
 private:
 	Ui						mUi;
@@ -50,7 +50,10 @@ private:
 
 	int						mRenderMode;
 	int						mMaxBounces;
-	bool					mBreakPixel = false; 
+	bool					mBreakPixel		= false; 
+	bool					mAaActive		= true;
+	bool					mAccumActive	= true; 
+	int						mSpp;
 
 	Timer mTimer; 
 	float mAvg = 10, mFps, mRps, mAlpha = 1;
@@ -59,10 +62,14 @@ public:
 	void					Tick( float deltaTime ) override;
 
 	void					SetRenderMode(int const renderMode);
-	void					SetMaxBounces(int const maxBounces); 
+	void					SetMaxBounces(int const maxBounces);
+	void					SetAa(bool const aa);
+	void					SetAccum(bool const accumActive); 
 
 	inline int				GetRenderMode() const	{ return mRenderMode; }
 	inline int				GetMaxBounces() const	{ return mMaxBounces; }
+	inline int				GetAa() const			{ return mAaActive; }
+	inline int				GetAccum() const		{ return mAccumActive; } 
 	inline float			GetFps() const			{ return mFps; }
 	inline float			GetRps() const			{ return mRps; }
 	inline float			GetAvg() const			{ return mAvg; }
@@ -74,7 +81,7 @@ private:
 	[[nodiscard]] color		TraceDepth(Ray& ray) const; 
 	[[nodiscard]] color		TraceAlbedo(Ray& ray) const; 
 	[[nodiscard]] color		CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const;
-	void					ResetAccumulator() const; 
+	void					ResetAccumulator(); 
 	void					PerformanceReport(); 
 
 	void					UI() override;

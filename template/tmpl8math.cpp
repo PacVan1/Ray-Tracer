@@ -7,12 +7,14 @@
 
 #include "precomp.h"
 
+#include <thread>
+
 // random number generator - Marsaglia's xor32
 // This is a high-quality RNG that uses a single 32-bit seed. More info:
 // https://www.researchgate.net/publication/5142825_Xorshift_RNGs
 
 // RNG seed. NOTE: in a multithreaded application, don't use a single seed!
-static uint seed = 0x12345678;
+static thread_local uint seed = 0x12345678;
 
 // WangHash: calculates a high-quality seed based on an arbitrary non-zero
 // integer. Use this to create your own seed based on e.g. thread index.

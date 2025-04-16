@@ -34,17 +34,14 @@ void Ui::General() const
 
 	if (ImGui::BeginTabBar("Main"))
 	{
-		if (ImGui::BeginTabItem("Debug"))
-		{
-			DebugViewer(); 
-			ImGui::EndTabItem();
-		}
+		if (ImGui::BeginTabItem("Debug"))			{ Debug();			ImGui::EndTabItem(); }
+		if (ImGui::BeginTabItem("Enhancements"))	{ Enhancements();	ImGui::EndTabItem(); }
 	}
 
 	ImGui::End(); 
 }
 
-void Ui::DebugViewer() const
+void Ui::Debug() const
 {
 	if (ImGui::CollapsingHeader("2D Slice Viewer"))
 	{
@@ -79,5 +76,19 @@ void Ui::DebugViewer() const
 		ImGui::Checkbox("Active", &mRenderer->mBreakPixelActive);
 		ImGui::Text("Pixel Coordinate: (%d, %d)", input.mMousePos.x, input.mMousePos.y);
 		ImGui::Separator();
+	}
+}
+
+void Ui::Enhancements() const
+{
+	bool aa = mRenderer->GetAa();
+	if (ImGui::Checkbox("Anti-aliasing", &aa))
+	{
+		mRenderer->SetAa(aa);
+	}
+	bool accum = mRenderer->GetAccum();
+	if (ImGui::Checkbox("Accumulator", &accum)) 
+	{
+		mRenderer->SetAccum(accum);
 	}
 }

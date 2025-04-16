@@ -23,6 +23,7 @@ public:
 	void	General() const;
 
 private:
-	void	DebugViewer() const; 
+	void	Debug() const;
+	void	Enhancements() const; 
 };
 
