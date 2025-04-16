@@ -22,6 +22,8 @@ Camera::Camera() :
 	mFov(INIT_CAMERA_FOV)
 {
 	UpdateBasisVectors();
+	UpdateViewport();
+	UpdateDefocusDisk();
 }
 
 bool Camera::Update(float const dt)

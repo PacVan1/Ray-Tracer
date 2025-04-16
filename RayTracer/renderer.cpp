@@ -5,84 +5,86 @@ void Renderer::Tick(float deltaTime)
 {
 #if DEBUG_MODE
 	mTimer.reset();
-	mBreakPixel = input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive;
-
-	float const scale		= 1.0f / static_cast<float>(mSpp++);   
-	int			debugRayIdx	= 0;
-#pragma omp parallel for schedule(dynamic)
-	for (int y = 0; y < SCRHEIGHT; y++) for (int x = 0; x < SCRWIDTH; x++) 
+	if (mSpp < mMaxFrames)
 	{
-		int const pixelIdx = x + y * SCRWIDTH; 
+		mBreakPixel = input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive;
+		float const scale		= 1.0f / static_cast<float>(mSpp++);   
+		int			debugRayIdx	= 0;
+#pragma omp parallel for schedule(dynamic)
+		for (int y = 0; y < SCRHEIGHT; y++) for (int x = 0; x < SCRWIDTH; x++) 
+		{
+			int const pixelIdx = x + y * SCRWIDTH; 
 
-		if (mBreakPixel && input.mMousePos.x == x && input.mMousePos.y == y)
-		{
-			__debugbreak(); 
-		}
-
-		switch (mRenderMode)
-		{
-		case RENDER_MODES_NORMALS:
-		{
-			float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
-			Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
-			color const pixel = TraceNormals(primRay);  
-			mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
-			break;
-		}
-		case RENDER_MODES_DEPTH:
-		{
-			float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
-			Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
-			color const pixel = TraceDepth(primRay);
-			mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
-			break;
-		}
-		case RENDER_MODES_ALBEDO:
-		{
-			float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
-			Ray primRay = mCamera.GetPrimaryRay(pixelCoord); 
-			color const pixel = TraceAlbedo(primRay);
-			mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
-			break;
-		}
-		case RENDER_MODES_SHADED:
-		{
-			float2 pixelCoord = float2(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
-			if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f);
-			Ray primRay;
-			if (mDofActive) primRay = mCamera.GetPrimaryRayFocused(pixelCoord);
-			else			primRay = mCamera.GetPrimaryRay(pixelCoord); 
-			color pixel = BLACK;
-
-			if (mDebugViewerActive)
+			if (mBreakPixel && input.mMousePos.x == x && input.mMousePos.y == y)
 			{
-				debug debug = {};
-				if (y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
+				__debugbreak(); 
+			}
+
+			switch (mRenderMode)
+			{
+			case RENDER_MODES_NORMALS:
+			{
+				float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
+				Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
+				color const pixel = TraceNormals(primRay);  
+				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
+				break;
+			}
+			case RENDER_MODES_DEPTH:
+			{
+				float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
+				Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
+				color const pixel = TraceDepth(primRay);
+				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
+				break;
+			}
+			case RENDER_MODES_ALBEDO:
+			{
+				float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
+				Ray primRay = mCamera.GetPrimaryRay(pixelCoord); 
+				color const pixel = TraceAlbedo(primRay);
+				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
+				break;
+			}
+			case RENDER_MODES_SHADED:
+			{
+				float2 pixelCoord = float2(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+				if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f);
+				Ray primRay;
+				if (mDofActive) primRay = mCamera.GetPrimaryRayFocused(pixelCoord);
+				else			primRay = mCamera.GetPrimaryRay(pixelCoord); 
+				color pixel = BLACK;
+
+				if (mDebugViewerActive)
 				{
-					debug.mIsDebug		= true; debugRayIdx++;
-					debug.mIsSelected	= debugRayIdx == mDebugViewer.mSelected;
+					debug debug = {};
+					if (y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
+					{
+						debug.mIsDebug		= true; debugRayIdx++;
+						debug.mIsSelected	= debugRayIdx == mDebugViewer.mSelected;
+					}
+					pixel = TraceDebug(primRay, debug);
 				}
-				pixel = TraceDebug(primRay, debug);
-			}
-			else
-			{
-				pixel = Trace(primRay);
-			}
+				else
+				{
+					pixel = Trace(primRay);
+				}
 
-			if (mAccumActive)
-			{
-				mAccumulator[pixelIdx] += pixel; 
-				color const average = mAccumulator[pixelIdx] * scale;
-				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(average);
-			}
-			else
-			{
-				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);  
-			}
+				if (mAccumActive)
+				{
+					mAccumulator[pixelIdx] += pixel; 
+					color const average = mAccumulator[pixelIdx] * scale;
+					mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(average);
+				}
+				else
+				{
+					mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);  
+				}
 
-			break;
-		}
-		default: break; 
+				break;
+			}
+			default: break; 
+			}
 		}
 	}
 	PerformanceReport();
@@ -113,9 +115,9 @@ void Renderer::SetMaxBounces(int const maxBounces)
 	ResetAccumulator(); 
 }
 
-void Renderer::SetAa(bool const aa)
+void Renderer::SetAa(bool const aaActive)
 {
-	mAaActive = aa;
+	mAaActive = aaActive;
 	ResetAccumulator();
 }
 
@@ -149,42 +151,19 @@ color Renderer::Trace(Ray& ray, int const bounces) const
 
 	if (ray.objIdx == mScene.cube.objIdx)
 	{
-		Ray reflected = mMetallic.Scatter(ray, intersection, normal);  
-		return Trace(reflected, (bounces + 1)); 
+		Ray scattered;
+		if (mMetallic.Scatter(ray, scattered, intersection, normal))
+		{
+			return Trace(scattered, (bounces + 1));
+		}
 	}
 	if (ray.objIdx == mScene.sphere.objIdx)
 	{
-		float3 tempN = normal;
-		float ior = 1.0f / 1.33f;
-
-		if (ray.inside) // inside 
+		Ray scattered;
+		if (mDielectric.Scatter(ray, scattered, intersection, normal))
 		{
-			ior = 1.33f;
+			return Trace(scattered, (bounces + 1));
 		}
-
-		float const cosTheta = std::fmin(dot(-ray.D, tempN), 1.0f);
-		float const sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
-		float const fresnel = schlickApprox(cosTheta, ior);
-
-		if (ior * sinTheta > 1.0f)
-		{
-			float3 reflectedDir = reflect(ray.D, tempN);
-			Ray reflected = Ray(intersection + normal * sEps, reflectedDir);
-			reflected.inside = ray.inside;
-			return Trace(reflected, (bounces + 1));
-		}
-
-		float3 reflectedDir = reflect(ray.D, tempN);
-		Ray reflected = Ray(intersection + normal * sEps, reflectedDir);
-		reflected.inside = ray.inside;
-
-		float3 rPerp = ior * (ray.D + cosTheta * tempN);
-		float3 rPara = -std::sqrt(std::fabs(1.0f - sqrLength(rPerp))) * tempN;
-		float3 refractedDir = rPerp + rPara;
-		Ray refracted = Ray(intersection + (-normal) * sEps, refractedDir);
-		refracted.inside = !ray.inside;
-
-		return Trace(reflected, (bounces + 1)) * fresnel + Trace(refracted, (bounces + 1)) * (1.0f - fresnel);
 	}
 
 	return CalcDirectLight(mScene, intersection, normal) * albedo;
@@ -205,71 +184,19 @@ color Renderer::TraceDebug(Ray& ray, debug debug, int const bounces)
 
 	if (ray.objIdx == mScene.cube.objIdx)
 	{
-		float3 tempN = normal;
-		float ior = 1.0f / 1.33f;
-
-		if (ray.inside) // inside 
+		Ray scattered;
+		if (mMetallic.Scatter(ray, scattered, intersection, normal))
 		{
-			ior = 1.33f;
+			return TraceDebug(scattered, debug, (bounces + 1));
 		}
-
-		float const cosTheta	= std::fmin(dot(-ray.D, tempN), 1.0f);
-		float const sinTheta	= std::sqrt(1.0f - cosTheta * cosTheta);
-		float const fresnel		= schlickApprox(cosTheta, ior);
-
-		if (ior * sinTheta > 1.0f)
-		{
-			float3 reflectedDir = reflect(ray.D, tempN);
-			Ray reflected = Ray(intersection + normal * sEps, reflectedDir);
-			reflected.inside = ray.inside;
-			return TraceDebug(reflected, debug, (bounces + 1));
-		}
-
-		float3 reflectedDir = reflect(ray.D, tempN);
-		Ray reflected = Ray(intersection + normal * sEps, reflectedDir);
-		reflected.inside = ray.inside;
-
-		float3 rPerp = ior * (ray.D + cosTheta * tempN);
-		float3 rPara = -std::sqrt(std::fabs(1.0f - sqrLength(rPerp))) * tempN;
-		float3 refractedDir = rPerp + rPara;
-		Ray refracted = Ray(intersection + (-normal) * sEps, refractedDir);
-		refracted.inside = !ray.inside;
-
-		return TraceDebug(reflected, debug, (bounces + 1)) * fresnel + TraceDebug(refracted, debug, (bounces + 1)) * (1.0f - fresnel);
 	}
 	if (ray.objIdx == mScene.sphere.objIdx)
 	{
-		float3 tempN = normal;
-		float ior = 1.0f / 1.33f;
-
-		if (ray.inside) // inside 
+		Ray scattered;
+		if (mDielectric.Scatter(ray, scattered, intersection, normal))
 		{
-			ior = 1.33f;
+			return TraceDebug(scattered, debug, (bounces + 1));
 		}
-
-		float const cosTheta = std::fmin(dot(-ray.D, tempN), 1.0f);
-		float const sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
-		float const fresnel = schlickApprox(cosTheta, ior);
-
-		if (ior * sinTheta > 1.0f)
-		{
-			float3 reflectedDir = reflect(ray.D, tempN);
-			Ray reflected = Ray(intersection + normal * sEps, reflectedDir);
-			reflected.inside = ray.inside;
-			return TraceDebug(reflected, debug, (bounces + 1));
-		}
-
-		float3 reflectedDir = reflect(ray.D, tempN);
-		Ray reflected = Ray(intersection + normal * sEps, reflectedDir);
-		reflected.inside = ray.inside;
-
-		float3 rPerp = ior * (ray.D + cosTheta * tempN);
-		float3 rPara = -std::sqrt(std::fabs(1.0f - sqrLength(rPerp))) * tempN;
-		float3 refractedDir = rPerp + rPara;
-		Ray refracted = Ray(intersection + (-normal) * sEps, refractedDir);
-		refracted.inside = !ray.inside;
-
-		return TraceDebug(reflected, debug, (bounces + 1)) * fresnel + TraceDebug(refracted, debug, (bounces + 1)) * (1.0f - fresnel);
 	}
 
 	return CalcDirectLight(mScene, intersection, normal) * albedo;
