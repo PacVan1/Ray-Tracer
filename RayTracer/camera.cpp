@@ -35,14 +35,15 @@ bool Camera::Update(float const dt)
 	if (input.IsKeyDown(CONTROLS_MOVE_BACKWARD))	mPosition -= speed * 2 * mAhead,	changed = true;
 	if (input.IsKeyDown(CONTROLS_MOVE_UP))			mPosition += speed * 2 * mUp,		changed = true;
 	if (input.IsKeyDown(CONTROLS_MOVE_DOWN))		mPosition -= speed * 2 * mUp,		changed = true;
-	mTarget = mPosition + mAhead;
-	if (input.IsKeyDown(CONTROLS_LOOK_UP))			mTarget += speed * mUp,				changed = true;
-	if (input.IsKeyDown(CONTROLS_LOOK_DOWN))		mTarget -= speed * mUp,				changed = true;
-	if (input.IsKeyDown(CONTROLS_LOOK_LEFT))		mTarget -= speed * mRight,			changed = true;
-	if (input.IsKeyDown(CONTROLS_LOOK_RIGHT))		mTarget += speed * mRight,			changed = true;
+	float3 target = mPosition + mAhead; 
+	if (input.IsKeyDown(CONTROLS_LOOK_UP))			target += speed * mUp,				changed = true;
+	if (input.IsKeyDown(CONTROLS_LOOK_DOWN))		target -= speed * mUp,				changed = true;
+	if (input.IsKeyDown(CONTROLS_LOOK_LEFT))		target -= speed * mRight,			changed = true;
+	if (input.IsKeyDown(CONTROLS_LOOK_RIGHT))		target += speed * mRight,			changed = true;
 	if (!changed) return false;
+	mTarget = target; 
 	UpdateBasisVectors();
-	UpdateViewport2();
+	UpdateViewport();
 	UpdateDefocusDisk();
 	return true;
 }
@@ -52,18 +53,10 @@ void Camera::Focus(Scene const& scene)
 	Ray ray = { mPosition, mAhead };
 	scene.FindNearest(ray);
 	mFocusDist = min(ray.t, INIT_CAMERA_MAX_FOCUS_DIST);
-	UpdateViewport2(); 
+	UpdateViewport(); 
 }
 
 Ray Camera::GetPrimaryRay(float2 const pixel) const
-{
-	float const u = (pixel.x + 0.5f) * (1.0f / SCRWIDTH);
-	float const v = (pixel.y + 0.5f) * (1.0f / SCRHEIGHT);
-	float3 const point = mTopLeft + u * (mTopRight - mTopLeft) + v * (mBottomLeft - mTopLeft);
-	return { mPosition, normalize(point - mPosition) }; 
-}
-
-Ray Camera::GetPrimaryRay2(float2 const pixel) const
 {
 	float const u = (pixel.x + 0.5f) * (1.0f / SCRWIDTH);
 	float const v = (pixel.y + 0.5f) * (1.0f / SCRHEIGHT);
@@ -81,6 +74,40 @@ Ray Camera::GetPrimaryRayFocused(float2 const pixel) const
 	return { point, normalize(target - point) };
 }
 
+void Camera::SetPosition(float3 const position)
+{
+	mPosition = position; 
+	UpdateBasisVectors();
+	UpdateViewport();
+	UpdateDefocusDisk();
+}
+
+void Camera::SetTarget(float3 const target)
+{
+	mTarget = target;
+	UpdateBasisVectors();
+	UpdateViewport();
+	UpdateDefocusDisk();
+}
+
+void Camera::SetFocusDist(float const focusDist)
+{
+	mFocusDist = focusDist;
+	UpdateViewport(); 
+}
+
+void Camera::SetDefocusAngle(float const defocusAngle)
+{
+	mDefocusAngle = defocusAngle;
+	UpdateDefocusDisk();
+}
+
+void Camera::SetFov(float const fov)
+{
+	mFov = fov;
+	UpdateViewport(); 
+}
+
 void Camera::UpdateBasisVectors()
 {
 	mAhead	= normalize(mTarget - mPosition);
@@ -89,13 +116,6 @@ void Camera::UpdateBasisVectors()
 }
 
 void Camera::UpdateViewport()
-{
-	mTopLeft	= mPosition + mAhead * 2.0f - ASPECT_RATIO * mRight + mUp;
-	mTopRight	= mPosition + mAhead * 2.0f + ASPECT_RATIO * mRight + mUp;
-	mBottomLeft = mPosition + mAhead * 2.0f - ASPECT_RATIO * mRight - mUp;
-}
-
-void Camera::UpdateViewport2()
 {
 	float const theta = mFov / DEG_OVER_RAD;
 	float const height = tan(theta * 0.5f);

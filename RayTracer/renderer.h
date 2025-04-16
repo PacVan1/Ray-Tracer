@@ -32,13 +32,13 @@ public:
 	DebugViewer2D			mDebugViewer; 
 	bool					mDebugViewerActive	= false;
 	bool					mBreakPixelActive	= false;
+	Camera					mCamera;
+	Scene					mScene;
 
 private:
 	Ui						mUi;
 
 	float4*					mAccumulator;
-	Scene					mScene;
-	Camera					mCamera;
 	DirectionalLight		mDirLight;
 	std::vector<PointLight> mPointLights; 
 	std::vector<SpotLight>	mSpotLights;
@@ -62,6 +62,7 @@ private:
 
 public:
 	void					Tick( float deltaTime ) override;
+	void					ResetAccumulator(); 
 
 	void					SetRenderMode(int const renderMode);
 	void					SetMaxBounces(int const maxBounces);
@@ -87,7 +88,6 @@ private:
 	[[nodiscard]] color		TraceDepth(Ray& ray) const; 
 	[[nodiscard]] color		TraceAlbedo(Ray& ray) const; 
 	[[nodiscard]] color		CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const;
-	void					ResetAccumulator(); 
 	void					PerformanceReport(); 
 
 	void					UI() override;

@@ -9,6 +9,7 @@ float constexpr INIT_CAMERA_FOV				= 50.0f;
 float constexpr INIT_CAMERA_DEFOCUS_ANGLE	= 0.02f;
 float constexpr INIT_CAMERA_FOCUS_DIST		= 10.0f;
 float constexpr INIT_CAMERA_MAX_FOCUS_DIST	= 300.0f;
+float constexpr INIT_CAMERA_MAX_FOV			= 180.0f;
 
 class Camera
 {
@@ -41,12 +42,22 @@ public:
 	bool				Update(float const dt);
 	void				Focus(Scene const& scene); 
 	[[nodiscard]] Ray	GetPrimaryRay(float2 const pixel) const;
-	[[nodiscard]] Ray	GetPrimaryRay2(float2 const pixel) const;
 	[[nodiscard]] Ray	GetPrimaryRayFocused(float2 const pixel) const;
+
+	void				SetPosition(float3 const position);
+	void				SetTarget(float3 const target);
+	void				SetFocusDist(float const focusDist);
+	void				SetDefocusAngle(float const defocusAngle);
+	void				SetFov(float const fov); 
+
+	inline float3		GetPosition() const		{ return mPosition; }
+	inline float3		GetTarget() const		{ return mTarget; }
+	inline float		GetFocusDist() const	{ return mFocusDist; }
+	inline float		GetDefocusAngle() const { return mDefocusAngle; }
+	inline float		GetFov() const			{ return mFov; }
 
 private:
 	void				UpdateBasisVectors();
 	void				UpdateViewport();
-	void				UpdateViewport2();
 	void				UpdateDefocusDisk();
 };

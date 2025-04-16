@@ -23,7 +23,8 @@ public:
 	void	General() const;
 
 private:
-	void	Debug() const;
-	void	Enhancements() const; 
+	void	DebugUi() const;
+	void	EnhancementsUi() const;
+	void	CameraUi() const; 
 };
 

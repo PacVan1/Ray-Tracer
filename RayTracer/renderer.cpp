@@ -51,7 +51,7 @@ void Renderer::Tick(float deltaTime)
 			if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f);
 			Ray primRay;
 			if (mDofActive) primRay = mCamera.GetPrimaryRayFocused(pixelCoord);
-			else			primRay = mCamera.GetPrimaryRay2(pixelCoord); 
+			else			primRay = mCamera.GetPrimaryRay(pixelCoord); 
 			color pixel = BLACK;
 
 			if (mDebugViewerActive)

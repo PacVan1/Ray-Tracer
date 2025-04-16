@@ -34,14 +34,15 @@ void Ui::General() const
 
 	if (ImGui::BeginTabBar("Main"))
 	{
-		if (ImGui::BeginTabItem("Debug"))			{ Debug();			ImGui::EndTabItem(); }
-		if (ImGui::BeginTabItem("Enhancements"))	{ Enhancements();	ImGui::EndTabItem(); }
+		if (ImGui::BeginTabItem("Camera"))			{ CameraUi();		ImGui::EndTabItem(); }
+		if (ImGui::BeginTabItem("Debug"))			{ DebugUi();		ImGui::EndTabItem(); }
+		if (ImGui::BeginTabItem("Enhancements"))	{ EnhancementsUi();	ImGui::EndTabItem(); }
 	}
 
 	ImGui::End(); 
 }
 
-void Ui::Debug() const
+void Ui::DebugUi() const
 {
 	if (ImGui::CollapsingHeader("2D Slice Viewer"))
 	{
@@ -79,7 +80,7 @@ void Ui::Debug() const
 	}
 }
 
-void Ui::Enhancements() const
+void Ui::EnhancementsUi() const
 {
 	bool aa = mRenderer->GetAa();
 	if (ImGui::Checkbox("Anti-aliasing", &aa))
@@ -100,5 +101,42 @@ void Ui::Enhancements() const
 	if (ImGui::Checkbox("Auto-focus", &autoFocus))
 	{
 		mRenderer->SetAutoFocus(autoFocus);
+	}
+}
+
+void Ui::CameraUi() const
+{
+	Camera& camera = mRenderer->mCamera;  
+	float3 position = camera.GetPosition();
+	if (ImGui::DragFloat3("Position", position.cell, 0.1f))
+	{
+		camera.SetPosition(position);
+		mRenderer->ResetAccumulator();
+		camera.Focus(mRenderer->mScene);
+	}
+	float3 target = camera.GetTarget();
+	if (ImGui::DragFloat3("Target", target.cell, 0.1f))
+	{
+		camera.SetTarget(target);
+		mRenderer->ResetAccumulator();
+		camera.Focus(mRenderer->mScene); 
+	}
+	float focusDist = camera.GetFocusDist();
+	if (ImGui::DragFloat("Focus distance", &focusDist, 0.01f, 0.0f, INIT_CAMERA_FOCUS_DIST))
+	{
+		camera.SetFocusDist(focusDist);
+		mRenderer->ResetAccumulator();
+	}
+	float defocusAngle = camera.GetDefocusAngle();
+	if (ImGui::DragFloat("Defocus angle", &defocusAngle, 0.005f, 0.0f, INIT_CAMERA_MAX_FOCUS_DIST))
+	{
+		camera.SetDefocusAngle(defocusAngle);
+		mRenderer->ResetAccumulator();
+	}
+	float fov = camera.GetFov();
+	if (ImGui::DragFloat("Field of view", &fov, 0.2f, 0.0f, INIT_CAMERA_MAX_FOV)) 
+	{
+		camera.SetFov(fov);
+		mRenderer->ResetAccumulator();
 	}
 }
