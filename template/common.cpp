@@ -27,9 +27,39 @@ float3 randomUnitOnDisk()
 	}
 }
 
-float3 randomFloat3Unit()
+float3 randomFloat3()
 {
 	return { randomFloatUnit(), randomFloatUnit() , randomFloatUnit() };
+}
+
+float3 randomFloat3Unit()
+{
+	while (true) {
+		float3 const point = randomFloat3();
+		float const lensq = sqrLength(point);
+		if (1e-160 < lensq && lensq <= 1)
+			return point / sqrt(lensq);
+	}
+}
+
+float3 diffuseReflection(float3 const& normal)
+{
+	float3 reflected; 
+	do
+	{
+		reflected = randomFloat3();
+	} while (sqrLength(reflected) > 1.0f);
+	return dot(normal, reflected) < 0.0f ? -reflected : reflected; 
+}
+
+float3 cosineWeightedDiffuseReflection(float3 const& normal)
+{
+	float3 random;
+	do
+	{
+		random = randomFloat3();
+	} while (dot(random, random) > 1.0f);
+	return normalize(normal + normalize(random));
 }
 
 float randomFloatUnit()

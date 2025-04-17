@@ -143,30 +143,26 @@ void Renderer::SetDof(bool const dofActive)
 color Renderer::Trace(Ray& ray, int const bounces) const
 {
 	if (bounces >= mMaxBounces) return BLACK;
-	mScene.FindNearest( ray );
+	mScene.FindNearest(ray);
 	if (ray.objIdx == -1) return mHdrTexture.Sample(ray.D); // or a fancy sky color 
 	float3 const	intersection	= calcIntersection(ray); 
-	float3 const	normal			= mScene.GetNormal( ray.objIdx, intersection, ray.D );
-	color			albedo			= mScene.GetAlbedo( ray.objIdx, intersection);
+	float3 const	normal			= mScene.GetNormal(ray.objIdx, intersection, ray.D);
+	color			albedo			= mScene.GetAlbedo(ray.objIdx, intersection);
 
-	if (ray.objIdx == mScene.cube.objIdx)
+	if (ray.objIdx == mScene.sphere.objIdx || ray.objIdx == mScene.cube.objIdx || ray.objIdx == mScene.torus.objIdx)
 	{
 		Ray scattered;
-		if (mDielectric.Scatter2(ray, scattered, albedo, intersection, normal))
+		albedo = WHITE;
+ 		color scatteredColor = albedo;  
+		if (mMetallic.Scatter2(ray, scattered, scatteredColor, intersection, normal))
 		{
-			return Trace(scattered, bounces + 1) * albedo;
-		}
-	}
-	if (ray.objIdx == mScene.sphere.objIdx)
-	{
-		Ray scattered;
-		if (mDielectric.Scatter2(ray, scattered, albedo, intersection, normal))
-		{
-			return Trace(scattered, bounces + 1) * albedo;
+			color const directLight		= CalcDirectLight(mScene, intersection, normal) * albedo; 
+			color const indirectLight	= Trace(scattered, bounces + 1) * scatteredColor; 
+			return indirectLight + directLight;  
 		}
 	}
 
-	return CalcDirectLight(mScene, intersection, normal) * albedo;
+	return CalcDirectLight(mScene, intersection, normal) * albedo; 
 }
 
 color Renderer::TraceDebug(Ray& ray, debug debug, int const bounces)

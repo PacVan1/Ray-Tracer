@@ -37,6 +37,11 @@ public:
 	Camera					mCamera;
 	Scene					mScene;
 
+	Metallic				mMetallic;
+	Dielectric				mDielectric; 
+	Glossy					mGlossy;  
+	Glossy2					mGlossy2;  
+
 private:
 	Ui						mUi;
 
@@ -44,9 +49,6 @@ private:
 	DirectionalLight		mDirLight;
 	std::vector<PointLight> mPointLights; 
 	std::vector<SpotLight>	mSpotLights;
-
-	Metallic				mMetallic;
-	Dielectric				mDielectric; 
 
 	HdrTexture				mHdrTexture;
 

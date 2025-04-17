@@ -188,7 +188,8 @@ public:
 	{
 		objIdx = idx;
 		b[0] = float4( pos - 0.5f * size, 1 );
-		b[1] = float4( pos + 0.5f * size, 1 );
+		//b[1] = float4( pos + 0.5f * size, 1 );
+		b[1] = float4(pos.x, pos.y + 0.5f * size.y, pos.z + 0.5f * size.z, 1.0f); 
 	}
 	void Intersect( Ray& ray ) const
 	{
@@ -655,18 +656,18 @@ public:
 	#endif
 		{
 			// SIMD sphere intersection code by Jesse Vrooman
-			const __m128 oc = _mm_sub_ps( ray.O4, sphere.pos4 );
-			const float b = _mm_dp_ps( oc, ray.D4, 0x71 ).m128_f32[0];
-			const float d = b * b - (_mm_dp_ps( oc, oc, 0x71 ).m128_f32[0] - 0.36f);
-			if (d > 0)
-			{
-				float t = -b - sqrtf( d );
-				bool hit = t < ray.t && t > 0;
-				if (hit) { ray.t = t, ray.objIdx = 1; }
-				t = -b + sqrtf(d);
-				hit = t < ray.t && t > 0;
-				if (hit) { ray.t = t, ray.objIdx = 1; }
-			};
+			//const __m128 oc = _mm_sub_ps( ray.O4, sphere.pos4 );
+			//const float b = _mm_dp_ps( oc, ray.D4, 0x71 ).m128_f32[0];
+			//const float d = b * b - (_mm_dp_ps( oc, oc, 0x71 ).m128_f32[0] - 0.36f);
+			//if (d > 0)
+			//{
+			//	float t = -b - sqrtf( d );
+			//	bool hit = t < ray.t && t > 0;
+			//	if (hit) { ray.t = t, ray.objIdx = 1; }
+			//	t = -b + sqrtf(d);
+			//	hit = t < ray.t && t > 0;
+			//	if (hit) { ray.t = t, ray.objIdx = 1; }
+			//}
 		}
 		{
 			// SIMD sphere intersection code by Jesse Vrooman
@@ -679,10 +680,10 @@ public:
 			//	const float t = sqrtf( d ) - b;
 			//	const bool hit = t < ray.t && t > 0;
 			//	if (hit) { ray.t = t, ray.objIdx = 2; }
-			//};
+			//}
 		}
 		cube.Intersect( ray );
-		torus.Intersect( ray );
+		//torus.Intersect( ray );
 		//plane[0].Intersect(ray);  
 		//plane[1].Intersect(ray);  
 		plane[2].Intersect(ray);  
@@ -693,21 +694,21 @@ public:
 	bool IsOccluded( const Ray& ray ) const
 	{
 		if (cube.IsOccluded( ray )) return true;
-		const float3 oc = ray.O - sphere.pos;
-		const float b = dot( oc, ray.D ), c = dot( oc, oc ) - (0.6f * 0.6f);
-		const float d = b * b - c;
-		if (d > 0)
-		{
-			const float t = -b - sqrtf( d );
-			const bool hit = t < ray.t && t > 0;
-			if (hit) return true;
-		}
+		//const float3 oc = ray.O - sphere.pos;
+		//const float b = dot( oc, ray.D ), c = dot( oc, oc ) - (0.6f * 0.6f);
+		//const float d = b * b - c;
+		//if (d > 0)
+		//{
+		//	const float t = -b - sqrtf( d );
+		//	const bool hit = t < ray.t && t > 0;
+		//	if (hit) return true;
+		//}
 	#ifdef FOURLIGHTS
 		//for (int i = 0; i < 4; i++) if (quad[i].IsOccluded( ray )) return true;
 	#else
 		if (quad.IsOccluded( ray )) return true;
 	#endif
-		if (torus.IsOccluded( ray )) return true;
+		//if (torus.IsOccluded( ray )) return true;
 		return false; // skip planes and rounded corners
 	}
 	float3 GetNormal( const int objIdx, const float3 I, const float3 wo ) const

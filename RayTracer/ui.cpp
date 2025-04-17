@@ -35,6 +35,7 @@ void Ui::General() const
 	if (ImGui::BeginTabBar("Main"))
 	{
 		if (ImGui::BeginTabItem("Camera"))			{ CameraUi();		ImGui::EndTabItem(); }
+		if (ImGui::BeginTabItem("Materials"))		{ MaterialsUi();	ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Debug"))			{ DebugUi();		ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Enhancements"))	{ EnhancementsUi();	ImGui::EndTabItem(); }
 	}
@@ -147,4 +148,12 @@ void Ui::CameraUi() const
 		camera.SetFov(fov);
 		mRenderer->ResetAccumulator();
 	}
+}
+
+void Ui::MaterialsUi() const
+{
+	Dielectric& dielectric = mRenderer->mDielectric;
+
+	ImGui::DragFloat("Refractive Index", &dielectric.mRefractiveIdx, 0.02f, 1.0f, 3.0f);
+	ImGui::DragFloat3("Absorption", dielectric.mAbsorption.cell, 0.02f, 0.0f, 10.0f);
 }

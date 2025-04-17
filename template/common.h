@@ -41,6 +41,9 @@ enum controls : uint8_t
 [[nodiscard]] float2	calcSphereUv(float3 const& direction);  
 [[nodiscard]] float3	calcIntersection(Ray const& ray);
 [[nodiscard]] float3	randomUnitOnDisk();
+[[nodiscard]] float3	randomFloat3();
 [[nodiscard]] float3	randomFloat3Unit();
+[[nodiscard]] float3	diffuseReflection(float3 const& normal);
+[[nodiscard]] float3	cosineWeightedDiffuseReflection(float3 const& normal);  
 [[nodiscard]] float		randomFloatUnit();
 [[nodiscard]] float		schlickApprox(float const cosTheta, float const ior);
