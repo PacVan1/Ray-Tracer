@@ -32,6 +32,8 @@ public:
 	DebugViewer2D			mDebugViewer; 
 	bool					mDebugViewerActive	= false;
 	bool					mBreakPixelActive	= false;
+	bool					mMaxFramesActive	= false;
+	int						mMaxFrames			= 2;
 	Camera					mCamera;
 	Scene					mScene;
 
@@ -50,14 +52,13 @@ private:
 
 	int						mRenderMode;
 	int						mMaxBounces;
-	int						mMaxFrames			= 2;
-	int						mMaxFramesActive	= false;
 	bool					mBreakPixel			= false; 
 	bool					mAaActive			= true;
 	bool					mAccumActive		= true;
 	bool					mAutoFocusActive	= true;
 	bool					mDofActive			= true;
 	int						mSpp;
+	int						mFrame; 
 
 	Timer mTimer; 
 	float mAvg = 10, mFps, mRps, mAlpha = 1;
@@ -78,7 +79,9 @@ public:
 	inline int				GetAa() const			{ return mAaActive; }
 	inline int				GetAccum() const		{ return mAccumActive; } 
 	inline int				GetAutoFocus() const	{ return mAutoFocusActive; } 
-	inline int				GetDof() const			{ return mDofActive; } 
+	inline int				GetDof() const			{ return mDofActive; }
+	inline int				GetSpp() const			{ return mSpp; }
+	inline int				GetFrame() const		{ return mFrame; }
 	inline float			GetFps() const			{ return mFps; }
 	inline float			GetRps() const			{ return mRps; }
 	inline float			GetAvg() const			{ return mAvg; }

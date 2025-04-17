@@ -90,7 +90,7 @@ public:
 	}
 	float3 GetAlbedo( const float3 I ) const
 	{
-		return float3( 0.93f );
+		return float3( 1.0f );
 	}
 	union
 	{

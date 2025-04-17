@@ -78,6 +78,14 @@ void Ui::DebugUi() const
 		ImGui::Text("Pixel Coordinate: (%d, %d)", input.mMousePos.x, input.mMousePos.y);
 		ImGui::Separator();
 	}
+	if (ImGui::CollapsingHeader("Frame Controller"))
+	{
+		ImGui::Separator();
+		ImGui::Checkbox("Active", &mRenderer->mMaxFramesActive); 
+		ImGui::DragInt("Number of frames", &mRenderer->mMaxFrames, 1, 1, 1000); 
+		ImGui::ProgressBar(static_cast<float>(mRenderer->GetFrame()) / static_cast<float>(mRenderer->mMaxFrames), ImVec2(0.0f, 0.0f), "Progress"); 
+		ImGui::Separator();
+	}
 }
 
 void Ui::EnhancementsUi() const

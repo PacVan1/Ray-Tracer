@@ -5,10 +5,10 @@ void Renderer::Tick(float deltaTime)
 {
 #if DEBUG_MODE
 	mTimer.reset();
-	if (mSpp < mMaxFrames || !mMaxFramesActive) 
+	if (mFrame < mMaxFrames || !mMaxFramesActive) 
 	{
 		mBreakPixel = input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive;
-		float const scale		= 1.0f / static_cast<float>(mSpp++);   
+		float const scale = 1.0f / static_cast<float>(mSpp++); mFrame++; 
 		int			debugRayIdx	= 0;
 #pragma omp parallel for schedule(dynamic)
 		for (int y = 0; y < SCRHEIGHT; y++) for (int x = 0; x < SCRWIDTH; x++) 
@@ -145,26 +145,24 @@ color Renderer::Trace(Ray& ray, int const bounces) const
 	if (bounces >= mMaxBounces) return BLACK;
 	mScene.FindNearest( ray );
 	if (ray.objIdx == -1) return mHdrTexture.Sample(ray.D); // or a fancy sky color 
-	float3 const intersection	= calcIntersection(ray); 
-	float3 const normal			= mScene.GetNormal( ray.objIdx, intersection, ray.D );
-	color const	 albedo			= mScene.GetAlbedo( ray.objIdx, intersection);
+	float3 const	intersection	= calcIntersection(ray); 
+	float3 const	normal			= mScene.GetNormal( ray.objIdx, intersection, ray.D );
+	color			albedo			= mScene.GetAlbedo( ray.objIdx, intersection);
 
 	if (ray.objIdx == mScene.cube.objIdx)
 	{
 		Ray scattered;
-		color color = WHITE;
-		if (mDielectric.Scatter2(ray, scattered, color, intersection, normal))
+		if (mDielectric.Scatter2(ray, scattered, albedo, intersection, normal))
 		{
-			return Trace(scattered, bounces + 1) * color;
+			return Trace(scattered, bounces + 1) * albedo;
 		}
 	}
 	if (ray.objIdx == mScene.sphere.objIdx)
 	{
 		Ray scattered;
-		color color = WHITE;  
-		if (mDielectric.Scatter2(ray, scattered, color, intersection, normal))
+		if (mDielectric.Scatter2(ray, scattered, albedo, intersection, normal))
 		{
-			return Trace(scattered, bounces + 1) * color;
+			return Trace(scattered, bounces + 1) * albedo;
 		}
 	}
 
@@ -251,7 +249,8 @@ void Renderer::ResetAccumulator()
 {
 	if (!mAccumActive) return; 
 
-	mSpp = 1; 
+	mSpp = 1;
+	mFrame = 0; 
 	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));
 }
 
