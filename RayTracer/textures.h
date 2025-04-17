@@ -10,9 +10,7 @@ private:
 public:
 						HdrTexture(); 
 						HdrTexture(char const* path);
+						~HdrTexture();
 	[[nodiscard]] color	Sample(float2 const uv) const;
-
-	// TODO TEMP
-	[[nodiscard]] color Sample(float3 const& direction) const;
 };
 

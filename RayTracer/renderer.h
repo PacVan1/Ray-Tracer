@@ -5,7 +5,8 @@
 #include "ui.h" 
 #include "scene.h"
 #include "camera.h"
-#include "debug.h" 
+#include "debug.h"
+#include "skydome.h" 
 #include "textures.h" 
 
 enum renderModes : uint8_t
@@ -50,7 +51,7 @@ private:
 	std::vector<PointLight> mPointLights; 
 	std::vector<SpotLight>	mSpotLights;
 
-	HdrTexture				mHdrTexture;
+	Skydome					mSkydome; 
 
 	int						mRenderMode;
 	int						mMaxBounces;

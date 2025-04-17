@@ -144,7 +144,7 @@ color Renderer::Trace(Ray& ray, int const bounces) const
 {
 	if (bounces >= mMaxBounces) return BLACK;
 	mScene.FindNearest(ray);
-	if (ray.objIdx == -1) return mHdrTexture.Sample(ray.D); // or a fancy sky color 
+	if (ray.objIdx == -1) return mSkydome.Sample(ray.D); // or a fancy sky color 
 	float3 const	intersection	= calcIntersection(ray); 
 	float3 const	normal			= mScene.GetNormal(ray.objIdx, intersection, ray.D);
 	color			albedo			= mScene.GetAlbedo(ray.objIdx, intersection);
@@ -154,11 +154,11 @@ color Renderer::Trace(Ray& ray, int const bounces) const
 		Ray scattered;
 		albedo = WHITE;
  		color scatteredColor = albedo;  
-		if (mMetallic.Scatter2(ray, scattered, scatteredColor, intersection, normal))
+		if (mGlossy2.Scatter2(ray, scattered, scatteredColor, intersection, normal))
 		{
-			color const directLight		= CalcDirectLight(mScene, intersection, normal) * albedo; 
+			//color const directLight		= CalcDirectLight(mScene, intersection, normal) * albedo; 
 			color const indirectLight	= Trace(scattered, bounces + 1) * scatteredColor; 
-			return indirectLight + directLight;  
+			return indirectLight/* + directLight*/;  
 		}
 	}
 
@@ -169,7 +169,7 @@ color Renderer::TraceDebug(Ray& ray, debug debug, int const bounces)
 {
 	if (bounces >= mMaxBounces) return BLACK;
 	mScene.FindNearest(ray);
-	if (ray.objIdx == -1) return mHdrTexture.Sample(ray.D);
+	if (ray.objIdx == -1) return mSkydome.Sample(ray.D);
 	float3 const intersection = calcIntersection(ray);
 	float3 const normal = mScene.GetNormal(ray.objIdx, intersection, ray.D);
 	color const	 albedo = mScene.GetAlbedo(ray.objIdx, intersection);
@@ -229,7 +229,8 @@ color Renderer::TraceAlbedo(Ray& ray) const
 color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
 	color result = BLACK;
-	result += mDirLight.Intensity(scene, intersection, normal);
+	result += mSkydome.Intensity(scene, intersection, normal);  
+	//result += mDirLight.Intensity(scene, intersection, normal);
 	for (PointLight const& pointLight : mPointLights)
 	{
 		result += pointLight.Intensity(scene, intersection, normal); 
@@ -291,7 +292,7 @@ void Renderer::Init()
 	mDirLight.mStrength		= 1.0f;
 	mDirLight.mColor		= WHITE;
 
-	mHdrTexture = HdrTexture("../assets/hdr/kloppenheim_06_puresky_4k.hdr");  
+	mSkydome = Skydome("../assets/hdr/kloppenheim_06_puresky_4k.hdr");  
 }
 
 inline void Renderer::InitUi()

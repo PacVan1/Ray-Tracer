@@ -42,6 +42,16 @@ float3 randomFloat3Unit()
 	}
 }
 
+float3 randomUnitOnHemisphere(float3 const& normal)
+{
+	float3 const random = normalize(randomFloat3());
+	if (dot(random, normal) > 0.0f)
+	{
+		return random;
+	}
+	return -random;
+}
+
 float3 diffuseReflection(float3 const& normal)
 {
 	float3 reflected; 

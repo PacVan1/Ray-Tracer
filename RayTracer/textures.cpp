@@ -32,6 +32,11 @@ HdrTexture::HdrTexture(char const* path)
 	stbi_image_free(data);
 }
 
+HdrTexture::~HdrTexture()
+{
+	delete[] mPixels; 
+}
+
 color HdrTexture::Sample(float2 const uv) const
 {
 	unsigned int const ix = static_cast<unsigned int>(uv.x * static_cast<float>(mWidth));
@@ -39,9 +44,4 @@ color HdrTexture::Sample(float2 const uv) const
 	unsigned int const px = (ix % (mWidth - 1));	// loops when coordinates are outside of texture
 	unsigned int const py = (iy % (mHeight - 1));
 	return mPixels[px + py * mWidth];
-}
-
-color HdrTexture::Sample(float3 const& direction) const
-{
-	return Sample(calcSphereUv(direction));
 }

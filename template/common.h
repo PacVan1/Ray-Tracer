@@ -43,6 +43,7 @@ enum controls : uint8_t
 [[nodiscard]] float3	randomUnitOnDisk();
 [[nodiscard]] float3	randomFloat3();
 [[nodiscard]] float3	randomFloat3Unit();
+[[nodiscard]] float3	randomUnitOnHemisphere(float3 const& normal);
 [[nodiscard]] float3	diffuseReflection(float3 const& normal);
 [[nodiscard]] float3	cosineWeightedDiffuseReflection(float3 const& normal);  
 [[nodiscard]] float		randomFloatUnit();
