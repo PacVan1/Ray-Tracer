@@ -29,5 +29,6 @@ private:
 	void	EnhancementsUi() const;
 	void	CameraUi() const;
 	void	MaterialsUi() const;
+	void	LightsUi() const; 
 };
 

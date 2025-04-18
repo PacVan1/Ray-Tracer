@@ -13,7 +13,7 @@ Skydome::Skydome(char const* path) :
 
 color Skydome::Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
-	float3 random = randomUnitOnHemisphere(normal); 
+	float3 const random = randomUnitOnHemisphere(normal); 
 	if (scene.IsOccluded({ intersection + random * Renderer::sEps, random })) return BLACK;
 	float const cosa = max(0.0f, dot(normal, random));
 	return cosa * Sample(random);

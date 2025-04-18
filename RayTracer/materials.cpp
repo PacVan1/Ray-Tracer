@@ -80,26 +80,86 @@ bool Dielectric::Scatter2(Ray const& in, Ray& out, color& color, float3 const& i
 	return true;
 }
 
+Glossy::Glossy() :
+	mAlbedo(WHITE),
+	mSpecularProb(0.5f),
+	mSmoothness(0.5f)
+{}
+
 bool Glossy::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const
 {
-	float3 const diffuseDir = cosineWeightedDiffuseReflection(normal);
-	float3 const specularDir = reflect(in.D, normal);
-	bool const isSpecular = 0.2f /*specular probability*/ > RandomFloat(); 
-	float3 rayDir = lerp(diffuseDir, specularDir, 1.0f /*smoothness*/ * static_cast<float>(isSpecular));
-	out = { intersection + rayDir * Renderer::sEps, rayDir };
-	float3 const specularColor = 1.0f;
-	color = lerp(RED, specularColor, isSpecular);
+	// src:			https://www.youtube.com/watch?v=Qz0KTGYJtUk
+	// timestamp:	27:14
+
+	float3 const diffuseDir		= cosineWeightedDiffuseReflection(normal);
+	float3 const specularDir	= reflect(in.D, normal);
+	bool const isSpecular		= mSpecularProb > RandomFloat(); 
+	float3 const reflectedDir	= lerp(diffuseDir, specularDir, mSmoothness * static_cast<float>(isSpecular));
+
+	out = Ray(intersection + reflectedDir * Renderer::sEps, reflectedDir);
+	color = isSpecular ? WHITE : mAlbedo;
+
 	return true;
 }
 
+Glossy2::Glossy2() :
+	mAlbedo(WHITE),
+	mSmoothness(1.0f)
+{}
+
 bool Glossy2::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const
 {
-	float3 const diffuseDir = cosineWeightedDiffuseReflection(normal);
-	float3 const specularDir = reflect(in.D, normal);
-	bool const isSpecular = schlickApprox(std::fmin(dot(-in.D, normal), 1.0f), 2.0f) > RandomFloat();
-	float3 rayDir = lerp(diffuseDir, specularDir, 1.0f /*smoothness*/ * static_cast<float>(isSpecular));
-	out = { intersection + rayDir * Renderer::sEps, rayDir };
-	float3 const specularColor = 1.0f;
-	color = lerp(RED, specularColor, isSpecular);
+	// inspiration:	https://www.youtube.com/watch?v=Qz0KTGYJtUk
+	// timestamp:	27:14
+
+	float3 const diffuseDir		= cosineWeightedDiffuseReflection(normal);
+	float3 const specularDir	= reflect(in.D, normal);
+	bool const isSpecular		= schlickApprox(std::fmin(dot(-in.D, normal), 1.0f), 2.0f) > RandomFloat();
+	float3 const reflectedDir	= lerp(diffuseDir, specularDir, mSmoothness * static_cast<float>(isSpecular));
+
+	out		= Ray(intersection + reflectedDir * Renderer::sEps, reflectedDir);
+	color	= isSpecular ? WHITE : mAlbedo;
+
+	return true;
+}
+
+Lambertian::Lambertian() :
+	mAlbedo(WHITE)
+{}
+
+bool Lambertian::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const
+{
+	float3 const reflected = cosineWeightedDiffuseReflection(normal);
+	out		= Ray(intersection + reflected * Renderer::sEps, reflected);
+	color	= mAlbedo;
+	return true;
+}
+
+Lambertian2::Lambertian2() :
+	mAlbedo(WHITE)
+{}
+
+bool Lambertian2::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const
+{
+	static float constexpr PDF = 1.0f / TWOPI;
+
+	float3 const reflected	= diffuseReflection(normal);
+	float3 const brdf		= mAlbedo / PI;
+	out		= Ray(intersection + reflected * Renderer::sEps, reflected); 
+	color	= brdf * (dot(normal, reflected) / PDF);
+	return true; 
+}
+
+Lambertian3::Lambertian3() :
+	mAlbedo(WHITE)
+{}
+
+bool Lambertian3::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const
+{
+	float3 const reflected	= cosineWeightedDiffuseReflection(normal);
+	float3 const brdf		= mAlbedo / PI;
+	float const  pdf		= dot(normal, reflected) / PI;  
+	out = Ray(intersection + reflected * Renderer::sEps, reflected);
+	color = brdf * (dot(normal, reflected) / pdf);
 	return true;
 }

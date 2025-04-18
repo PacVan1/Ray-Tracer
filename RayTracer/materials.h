@@ -27,13 +27,62 @@ public:
 class Glossy
 {
 public:
-	bool Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const; 
+	color mAlbedo;
+	float mSpecularProb;
+	float mSmoothness; 
+
+public:
+					Glossy(); 
+	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	inline color	GetAlbedo() const { return mAlbedo; }
 };
 
-// diffuse reflection + fresnel reflection 
+// cosine weighted diffuse reflection + fresnel reflection 
 class Glossy2
 {
 public:
-	bool Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	color mAlbedo;
+	float mSmoothness;
+
+public:
+					Glossy2(); 
+	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	inline color	GetAlbedo() const { return mAlbedo; }
+};
+
+// diffuse reflection
+class Lambertian
+{
+public:
+	color mAlbedo; 
+
+public:
+					Lambertian();
+	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	inline color	GetAlbedo() const { return mAlbedo; }
+};
+
+// diffuse reflection + pdf + brdf
+class Lambertian2
+{
+public:
+	color mAlbedo;
+
+public:
+					Lambertian2();
+	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	inline color	GetAlbedo() const { return mAlbedo; }
+};
+
+// diffuse reflection + pdf + brdf
+class Lambertian3
+{
+public:
+	color mAlbedo;
+
+public:
+					Lambertian3();
+	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	inline color	GetAlbedo() const { return mAlbedo; }
 };
 

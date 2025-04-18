@@ -36,6 +36,7 @@ void Ui::General() const
 	{
 		if (ImGui::BeginTabItem("Camera"))			{ CameraUi();		ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Materials"))		{ MaterialsUi();	ImGui::EndTabItem(); }
+		if (ImGui::BeginTabItem("Lights"))			{ LightsUi();		ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Debug"))			{ DebugUi();		ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Enhancements"))	{ EnhancementsUi();	ImGui::EndTabItem(); }
 	}
@@ -130,6 +131,7 @@ void Ui::CameraUi() const
 		mRenderer->ResetAccumulator();
 		camera.Focus(mRenderer->mScene); 
 	}
+	if (ImGui::DragFloat("Speed", &camera.mSpeed, 0.05f, 0.0f, 10.0f));
 	float focusDist = camera.GetFocusDist();
 	if (ImGui::DragFloat("Focus distance", &focusDist, 0.01f, 0.0f, INIT_CAMERA_FOCUS_DIST))
 	{
@@ -156,4 +158,12 @@ void Ui::MaterialsUi() const
 
 	ImGui::DragFloat("Refractive Index", &dielectric.mRefractiveIdx, 0.02f, 1.0f, 3.0f);
 	ImGui::DragFloat3("Absorption", dielectric.mAbsorption.cell, 0.02f, 0.0f, 10.0f);
+}
+
+void Ui::LightsUi() const
+{
+	if (ImGui::Checkbox("Directional Light", &mRenderer->mDirLightActive))		mRenderer->ResetAccumulator();
+	if (ImGui::Checkbox("Point Lights", &mRenderer->mPointLightsActive))		mRenderer->ResetAccumulator();
+	if (ImGui::Checkbox("Spot Lights", &mRenderer->mSpotLightsActive))			mRenderer->ResetAccumulator();
+	if (ImGui::Checkbox("Skydome Illumination", &mRenderer->mSkydomeActive))	mRenderer->ResetAccumulator();
 }

@@ -142,34 +142,34 @@ void Renderer::SetDof(bool const dofActive)
 
 color Renderer::Trace(Ray& ray, int const bounces) const
 {
-	if (bounces >= mMaxBounces) return BLACK;
+	if (bounces >= mMaxBounces) return BLACK; 
 	mScene.FindNearest(ray);
-	if (ray.objIdx == -1) return mSkydome.Sample(ray.D); // or a fancy sky color 
+	if (ray.objIdx == -1) return Miss(ray.D); 
 	float3 const	intersection	= calcIntersection(ray); 
 	float3 const	normal			= mScene.GetNormal(ray.objIdx, intersection, ray.D);
-	color			albedo			= mScene.GetAlbedo(ray.objIdx, intersection);
+	color			albedo			= mScene.GetAlbedo(ray.objIdx, intersection); 
 
 	if (ray.objIdx == mScene.sphere.objIdx || ray.objIdx == mScene.cube.objIdx || ray.objIdx == mScene.torus.objIdx)
 	{
-		Ray scattered;
-		albedo = WHITE;
- 		color scatteredColor = albedo;  
-		if (mGlossy2.Scatter2(ray, scattered, scatteredColor, intersection, normal))
+		albedo = mLambertian3.GetAlbedo();
+		Ray		scattered;
+ 		color	scatteredColor;   
+		if (mLambertian3.Scatter2(ray, scattered, scatteredColor, intersection, normal))
 		{
-			//color const directLight		= CalcDirectLight(mScene, intersection, normal) * albedo; 
+			color const directLight		= CalcDirectLight(mScene, intersection, normal) * albedo; 
 			color const indirectLight	= Trace(scattered, bounces + 1) * scatteredColor; 
-			return indirectLight/* + directLight*/;  
+			return indirectLight + directLight;  
 		}
 	}
 
-	return CalcDirectLight(mScene, intersection, normal) * albedo; 
+	return CalcDirectLightWithArea(mScene, intersection, normal) * albedo; 
 }
 
 color Renderer::TraceDebug(Ray& ray, debug debug, int const bounces)
 {
 	if (bounces >= mMaxBounces) return BLACK;
 	mScene.FindNearest(ray);
-	if (ray.objIdx == -1) return mSkydome.Sample(ray.D);
+	if (ray.objIdx == -1) return Miss(ray.D); 
 	float3 const intersection = calcIntersection(ray);
 	float3 const normal = mScene.GetNormal(ray.objIdx, intersection, ray.D);
 	color const	 albedo = mScene.GetAlbedo(ray.objIdx, intersection);
@@ -228,18 +228,32 @@ color Renderer::TraceAlbedo(Ray& ray) const
 
 color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
-	color result = BLACK;
-	result += mSkydome.Intensity(scene, intersection, normal);  
-	//result += mDirLight.Intensity(scene, intersection, normal);
-	for (PointLight const& pointLight : mPointLights)
-	{
-		result += pointLight.Intensity(scene, intersection, normal); 
-	}
-	for (SpotLight const& spotLight : mSpotLights)
-	{
-		result += spotLight.Intensity(scene, intersection, normal);
-	}
+	color result = BLACK; 
+	if (mDirLightActive)	result += mDirLight.Intensity(scene, intersection, normal);
+	if (mPointLightsActive) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity(scene, intersection, normal);
+	if (mSpotLightsActive)	for (SpotLight const& spotLight : mSpotLights) result += spotLight.Intensity(scene, intersection, normal);
 	return result; 
+}
+
+color Renderer::CalcDirectLightWithArea(Scene const& scene, float3 const& intersection, float3 const& normal) const
+{
+	color result = BLACK; 
+	result += CalcDirectLight(scene, intersection, normal);
+	result += mSkydomeActive ? mSkydome.Intensity(scene, intersection, normal) : MissIntensity(scene, intersection, normal);  
+	return result; 
+}
+
+color Renderer::Miss(float3 const direction) const
+{
+	return mSkydomeActive ? mSkydome.Sample(direction) : mMiss;   
+}
+
+color Renderer::MissIntensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
+{
+	float3 const random = randomUnitOnHemisphere(normal);
+	if (scene.IsOccluded({ intersection + random * sEps, random })) return BLACK;
+	float const cosa = max(0.0f, dot(normal, random));
+	return cosa * mMiss; 
 }
 
 void Renderer::ResetAccumulator()
@@ -283,14 +297,32 @@ void Renderer::Init()
 	InitUi();
 	InitAccumulator(); 
 
-	sEps		= INIT_EPS;
-	mRenderMode = INIT_RENDER_MODE;
-	mMaxBounces = INIT_MAX_BOUNCES;
+	mMiss				= INIT_MISS;
+	sEps				= INIT_EPS;
+	mRenderMode			= INIT_RENDER_MODE;
+	mMaxBounces			= INIT_MAX_BOUNCES;
+
+	mDirLightActive		= INIT_LIGHTS_DIR_LIGHT_ACTIVE;
+	mPointLightsActive	= INIT_LIGHTS_POINT_LIGHTS_ACTIVE;
+	mSpotLightsActive	= INIT_LIGHTS_SPOT_LIGHTS_ACTIVE;
+	mSkydomeActive		= INIT_LIGHTS_SKYDOME_ACTIVE;
+
+	mDofActive			= INIT_DOF_ACTIVE; 
+	mBreakPixel			= INIT_BREAK_PIXEL;
+	mAaActive			= INIT_AA_ACTIVE;
+	mAccumActive		= INIT_ACCUM_ACTIVE;
+	mAutoFocusActive	= INIT_AUTO_FOCUS_ACTIVE;
 
 	mDirLight.mDirection	= float3(0.8f, -0.3f, 0.5f);
 	mDirLight.mDirection	= normalize(mDirLight.mDirection); 
 	mDirLight.mStrength		= 1.0f;
 	mDirLight.mColor		= WHITE;
+
+	//mGlossy.mAlbedo			= RED; 
+	//mGlossy2.mAlbedo		= RED; 
+	//mLambertian.mAlbedo		= RED; 
+	//mLambertian2.mAlbedo	= RED; 
+	//mLambertian3.mAlbedo	= RED; 
 
 	mSkydome = Skydome("../assets/hdr/kloppenheim_06_puresky_4k.hdr");  
 }

@@ -17,9 +17,21 @@ enum renderModes : uint8_t
 	RENDER_MODES_SHADED
 };
 
-int constexpr	INIT_RENDER_MODE	= RENDER_MODES_SHADED;
-float constexpr INIT_EPS			= 1e-3f;
-int constexpr	INIT_MAX_BOUNCES	= 10; 
+color const		INIT_MISS						= WHITE;
+int constexpr	INIT_RENDER_MODE				= RENDER_MODES_SHADED;
+float constexpr INIT_EPS						= 1e-3f;
+int constexpr	INIT_MAX_BOUNCES				= 10; 
+
+bool constexpr	INIT_LIGHTS_DIR_LIGHT_ACTIVE	= false; 
+bool constexpr	INIT_LIGHTS_POINT_LIGHTS_ACTIVE	= false;
+bool constexpr	INIT_LIGHTS_SPOT_LIGHTS_ACTIVE	= false;
+bool constexpr	INIT_LIGHTS_SKYDOME_ACTIVE		= true; 
+
+bool constexpr	INIT_DOF_ACTIVE					= false;
+bool constexpr	INIT_BREAK_PIXEL				= true;
+bool constexpr	INIT_AA_ACTIVE					= false;
+bool constexpr	INIT_ACCUM_ACTIVE				= true;
+bool constexpr	INIT_AUTO_FOCUS_ACTIVE			= false; 
 
 namespace Tmpl8
 {
@@ -34,7 +46,7 @@ public:
 	bool					mDebugViewerActive	= false;
 	bool					mBreakPixelActive	= false;
 	bool					mMaxFramesActive	= false;
-	int						mMaxFrames			= 2;
+	int						mMaxFrames			= 1;
 	Camera					mCamera;
 	Scene					mScene;
 
@@ -42,29 +54,38 @@ public:
 	Dielectric				mDielectric; 
 	Glossy					mGlossy;  
 	Glossy2					mGlossy2;  
+	Lambertian				mLambertian;
+	Lambertian2				mLambertian2;
+	Lambertian3				mLambertian3;
+
+	bool					mDirLightActive;
+	bool					mPointLightsActive;
+	bool					mSpotLightsActive; 
+	bool					mSkydomeActive;
 
 private:
 	Ui						mUi;
 
 	float4*					mAccumulator;
+
 	DirectionalLight		mDirLight;
 	std::vector<PointLight> mPointLights; 
 	std::vector<SpotLight>	mSpotLights;
-
 	Skydome					mSkydome; 
+	color					mMiss;
 
 	int						mRenderMode;
 	int						mMaxBounces;
-	bool					mBreakPixel			= false; 
-	bool					mAaActive			= true;
-	bool					mAccumActive		= true;
-	bool					mAutoFocusActive	= true;
-	bool					mDofActive			= true;
+	bool					mDofActive;
+	bool					mBreakPixel; 
+	bool					mAaActive;
+	bool					mAccumActive;
+	bool					mAutoFocusActive;
 	int						mSpp;
 	int						mFrame; 
 
-	Timer mTimer; 
-	float mAvg = 10, mFps, mRps, mAlpha = 1;
+	Timer					mTimer; 
+	float					mAvg = 10, mFps, mRps, mAlpha = 1;
 
 public:
 	void					Tick( float deltaTime ) override;
@@ -96,6 +117,9 @@ private:
 	[[nodiscard]] color		TraceDepth(Ray& ray) const; 
 	[[nodiscard]] color		TraceAlbedo(Ray& ray) const; 
 	[[nodiscard]] color		CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const;
+	[[nodiscard]] color		CalcDirectLightWithArea(Scene const& scene, float3 const& intersection, float3 const& normal) const;
+	[[nodiscard]] color		Miss(float3 const direction) const;
+	[[nodiscard]] color		MissIntensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 	void					PerformanceReport(); 
 
 	void					UI() override;
