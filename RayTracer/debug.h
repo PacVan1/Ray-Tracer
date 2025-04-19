@@ -6,10 +6,10 @@ float constexpr INIT_DEBUG_VIEWER_ZOOM	= 250.0f;
 
 typedef struct
 {
-	unsigned int mIsDebug		: 1; 
 	unsigned int mIsInside		: 1; 
 	unsigned int mIsSelected	: 1;
 	unsigned int mIsPrimary		: 1;
+	unsigned int mPadding		: 1; 
 } debug;
 
 class DebugViewer2D

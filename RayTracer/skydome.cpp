@@ -19,6 +19,14 @@ color Skydome::Intensity(Scene const& scene, float3 const& intersection, float3 
 	return cosa * Sample(random);
 }
 
+color Skydome::Intensity2(Scene const& scene, HitInfo const& info) const
+{
+	float3 const random = randomUnitOnHemisphere(info.mN); 
+	if (scene.IsOccluded({ info.mI + random * Renderer::sEps, random })) return BLACK; 
+	float const cosa = max(0.0f, dot(info.mN, random)); 
+	return cosa * Sample(random);
+}
+
 color Skydome::Sample(float3 const& direction) const
 {
     return mTexture->Sample(calcSphereUv(direction));

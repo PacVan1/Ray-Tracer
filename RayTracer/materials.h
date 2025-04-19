@@ -1,13 +1,15 @@
 #pragma once
 
 #include "scene.h" 
+#include "hitinfo.h" 
 
 // perfect reflection
 class Metallic
 {
 public:
 	bool Scatter(Ray const& in, Ray& out, float3 const& intersection, float3 const& normal) const;
-	bool Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const; 
+	bool Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	bool Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const;
 };
 
 // fresnel reflection + refraction
@@ -21,6 +23,7 @@ public:
 			Dielectric();
 	bool	Scatter(Ray const& in, Ray& out, float3 const& intersection, float3 const& normal) const;
 	bool	Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	bool	Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const;
 };
 
 // diffuse reflection + perfect reflection
@@ -34,6 +37,7 @@ public:
 public:
 					Glossy(); 
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	bool			Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const;
 	inline color	GetAlbedo() const { return mAlbedo; }
 };
 
@@ -47,6 +51,7 @@ public:
 public:
 					Glossy2(); 
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	bool			Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const;
 	inline color	GetAlbedo() const { return mAlbedo; }
 };
 
@@ -59,6 +64,7 @@ public:
 public:
 					Lambertian();
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	bool			Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const;
 	inline color	GetAlbedo() const { return mAlbedo; }
 };
 
@@ -71,6 +77,7 @@ public:
 public:
 					Lambertian2();
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
+	bool			Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const;
 	inline color	GetAlbedo() const { return mAlbedo; }
 };
 
@@ -83,6 +90,8 @@ public:
 public:
 					Lambertian3();
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
-	inline color	GetAlbedo() const { return mAlbedo; }
+	bool			Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const;
+	inline color	GetAlbedo() const	{ return mAlbedo; }
+	inline color	GetEmission() const { return WHITE * 20.0f; }
 };
 

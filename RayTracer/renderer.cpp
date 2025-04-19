@@ -55,15 +55,12 @@ void Renderer::Tick(float deltaTime)
 				else			primRay = mCamera.GetPrimaryRay(pixelCoord); 
 				color pixel = BLACK;
 
-				if (mDebugViewerActive)
+				if (mDebugViewerActive && y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
 				{
 					debug debug = {};
-					if (y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
-					{
-						debug.mIsDebug		= true; debugRayIdx++;
-						debug.mIsSelected	= debugRayIdx == mDebugViewer.mSelected;
-					}
-					pixel = TraceDebug(primRay, debug);
+					debugRayIdx++;
+					debug.mIsSelected = debugRayIdx == mDebugViewer.mSelected;
+					pixel = TraceDebug(primRay, debug);  
 				}
 				else
 				{
@@ -140,32 +137,117 @@ void Renderer::SetDof(bool const dofActive)
 	ResetAccumulator();
 }
 
-color Renderer::Trace(Ray& ray, int const bounces) const
+color Renderer::Trace(Ray& ray) const
+{
+	color light			= BLACK; 
+	color throughput	= WHITE;
+	for (int bounce = 0; bounce < mMaxBounces; bounce++)
+	{
+		mScene.FindNearest(ray);
+		if (ray.objIdx == -1) return throughput * Miss(ray.D) + light; 
+		HitInfo const info = CalcHitInfo(ray); 
+		color albedo = mScene.GetAlbedo(ray.objIdx, info.mI);  
+
+		color emission = BLACK;  
+
+		if (ray.objIdx == mScene.sphere.objIdx)
+		{
+			albedo = WHITE; 
+			emission = WHITE * 10.0f;
+		}
+		else if (ray.objIdx == mScene.torus.objIdx)
+		{
+			albedo = BLUE;;
+		}
+		else if (ray.objIdx == mScene.cube.objIdx) 
+		{
+			albedo = GREEN;
+		}
+
+		Ray		scattered;
+		color	attenuation = albedo;
+		if (mLambertian3.Scatter3(ray, info, scattered, attenuation)) 
+		{
+			color const directLight		= CalcDirectLight2(mScene, info) * albedo;
+			color const indirectLight	= attenuation;
+			light		+= (directLight + emission) * throughput; 
+			throughput	*= indirectLight;
+			ray = scattered;
+			continue; 
+		}
+
+		light += (CalcDirectLightWithArea2(mScene, info) * albedo + emission) * throughput; 
+		return light; 
+	}
+	return BLACK; 
+}
+
+color Renderer::TraceDebug(Ray& ray, debug debug)
+{
+	color light = BLACK;
+	color throughput = WHITE;
+	for (int bounce = 0; bounce < mMaxBounces; bounce++)
+	{
+		mScene.FindNearest(ray);
+		if (ray.objIdx == -1) return throughput * Miss(ray.D) + light;
+		HitInfo const info = CalcHitInfo(ray);
+		color albedo = mScene.GetAlbedo(ray.objIdx, info.mI);
+
+		debug.mIsPrimary	= bounce == 0;
+		debug.mIsInside		= ray.inside;
+		mDebugViewer.RenderRay(ray.O, info.mI, info.mN, debug);
+
+		color emission = BLACK;
+
+		if (ray.objIdx != mScene.sphere.objIdx)
+		{
+			Ray		scattered;
+			color	attenuation = albedo;
+			if (mGlossy2.Scatter3(ray, info, scattered, attenuation))
+			{
+				color const directLight = CalcDirectLight2(mScene, info) * albedo;
+				color const indirectLight = attenuation;
+				light += (directLight + emission) * throughput;
+				throughput *= indirectLight;
+				ray = scattered;
+				continue;
+			}
+		}
+
+		albedo = RED;
+		emission = RED * 3.0f;
+
+		light += (CalcDirectLightWithArea2(mScene, info) * albedo + emission) * throughput;
+		return light;
+	}
+	return BLACK;
+}
+
+color Renderer::TraceRecursive(Ray& ray, int const bounces) const
 {
 	if (bounces >= mMaxBounces) return BLACK; 
 	mScene.FindNearest(ray);
-	if (ray.objIdx == -1) return Miss(ray.D); 
-	float3 const	intersection	= calcIntersection(ray); 
-	float3 const	normal			= mScene.GetNormal(ray.objIdx, intersection, ray.D);
-	color			albedo			= mScene.GetAlbedo(ray.objIdx, intersection); 
+	if (ray.objIdx == -1) return Miss(ray.D);
+	HitInfo const info	= CalcHitInfo(ray);
+	color albedo		= mScene.GetAlbedo(ray.objIdx, info.mI); 
 
 	if (ray.objIdx == mScene.sphere.objIdx || ray.objIdx == mScene.cube.objIdx || ray.objIdx == mScene.torus.objIdx)
 	{
 		albedo = mLambertian3.GetAlbedo();
 		Ray		scattered;
  		color	scatteredColor;   
-		if (mLambertian3.Scatter2(ray, scattered, scatteredColor, intersection, normal))
+		if (mLambertian3.Scatter3(ray, info, scattered, scatteredColor))
 		{
-			color const directLight		= CalcDirectLight(mScene, intersection, normal) * albedo; 
-			color const indirectLight	= Trace(scattered, bounces + 1) * scatteredColor; 
+			color const directLight		= CalcDirectLight2(mScene, info) * albedo; 
+			color const indirectLight	= TraceRecursive(scattered, bounces + 1) * scatteredColor;
 			return indirectLight + directLight;  
 		}
 	}
 
-	return CalcDirectLightWithArea(mScene, intersection, normal) * albedo; 
+	return CalcDirectLightWithArea2(mScene, info) * albedo; 
 }
 
-color Renderer::TraceDebug(Ray& ray, debug debug, int const bounces)
+color Renderer::TraceDebugRecursive(Ray& ray, debug debug, int const bounces)
 {
 	if (bounces >= mMaxBounces) return BLACK;
 	mScene.FindNearest(ray);
@@ -183,7 +265,7 @@ color Renderer::TraceDebug(Ray& ray, debug debug, int const bounces)
 		Ray scattered;
 		if (mMetallic.Scatter(ray, scattered, intersection, normal))
 		{
-			return TraceDebug(scattered, debug, (bounces + 1));
+			return TraceDebugRecursive(scattered, debug, (bounces + 1));
 		}
 	}
 	if (ray.objIdx == mScene.sphere.objIdx)
@@ -191,7 +273,7 @@ color Renderer::TraceDebug(Ray& ray, debug debug, int const bounces)
 		Ray scattered;
 		if (mDielectric.Scatter(ray, scattered, intersection, normal))
 		{
-			return TraceDebug(scattered, debug, (bounces + 1));
+			return TraceDebugRecursive(scattered, debug, (bounces + 1));
 		}
 	}
 
@@ -235,12 +317,30 @@ color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, 
 	return result; 
 }
 
+color Renderer::CalcDirectLight2(Scene const& scene, HitInfo const& info) const
+{
+	color result = BLACK;
+	if (mDirLightActive)	result += mDirLight.Intensity2(scene, info);
+	if (mPointLightsActive) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity2(scene, info);
+	if (mSpotLightsActive)	for (SpotLight const& spotLight : mSpotLights) result += spotLight.Intensity2(scene, info);
+	return result;
+}
+
 color Renderer::CalcDirectLightWithArea(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
 	color result = BLACK; 
 	result += CalcDirectLight(scene, intersection, normal);
 	result += mSkydomeActive ? mSkydome.Intensity(scene, intersection, normal) : MissIntensity(scene, intersection, normal);  
 	return result; 
+}
+
+color Renderer::CalcDirectLightWithArea2(Scene const& scene, HitInfo const& info) const
+{
+	color result = BLACK;
+	result += CalcDirectLight2(scene, info);
+	result += CalcAreaLight(scene, info);
+	result += mSkydomeActive ? mSkydome.Intensity2(scene, info) : MissIntensity2(scene, info);
+	return result;
 }
 
 color Renderer::Miss(float3 const direction) const
@@ -254,6 +354,22 @@ color Renderer::MissIntensity(Scene const& scene, float3 const& intersection, fl
 	if (scene.IsOccluded({ intersection + random * sEps, random })) return BLACK;
 	float const cosa = max(0.0f, dot(normal, random));
 	return cosa * mMiss; 
+}
+
+color Renderer::MissIntensity2(Scene const& scene, HitInfo const& info) const
+{
+	float3 const random = randomUnitOnHemisphere(info.mN); 
+	if (scene.IsOccluded({ info.mI + random * sEps, random })) return BLACK;
+	float const cosa = max(0.0f, dot(info.mN, random));
+	return cosa * mMiss;
+}
+
+HitInfo Renderer::CalcHitInfo(Ray const& ray) const
+{
+	HitInfo info;
+	info.mI	= calcIntersection(ray);
+	info.mN	= mScene.GetNormal(ray.objIdx, info.mI, ray.D);
+	return info;
 }
 
 void Renderer::ResetAccumulator()
@@ -336,6 +452,20 @@ inline void Renderer::InitAccumulator()
 {
 	mAccumulator = static_cast<float4*>(MALLOC64(SCRWIDTH * SCRHEIGHT * sizeof(float4)));
 	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4)); 
+}
+
+color Renderer::CalcAreaLight(Scene const& scene, HitInfo const& info) const
+{
+	float3 dir			= scene.RandomPointOnLight(RandomFloat(), RandomFloat()) - sEps - info.mI; 
+	float const dist	= length(dir);
+	dir					= normalize(dir);
+
+	if (scene.IsOccluded(Ray(info.mI + dir * sEps, dir, dist - sEps))) return BLACK;
+
+	float const cosa		= max(0.0f, dot(info.mN, dir));
+	float const attenuation = (1.0f / (dist * dist));
+
+	return attenuation * cosa;  
 }
 
 void Renderer::Shutdown()

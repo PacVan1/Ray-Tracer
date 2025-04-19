@@ -50,6 +50,7 @@
     <ClCompile Include="camera.cpp">
       <Filter>additional</Filter>
     </ClCompile>
+    <ClCompile Include="hitinfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -115,6 +116,7 @@
     <ClInclude Include="textures.h" />
     <ClInclude Include="skydome.h" />
     <ClInclude Include="input.h" />
+    <ClInclude Include="hitinfo.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">

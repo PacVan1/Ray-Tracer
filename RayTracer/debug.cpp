@@ -26,8 +26,6 @@ DebugViewer2D::DebugViewer2D() :
 
 void DebugViewer2D::RenderRay(float3 const& origin, float3 const& intersection, float3 const& normal, debug const debug) 
 {
-	if (!debug.mIsDebug) return; 
-
 	uint rayColor		= mPrimRayColor.x;
 	uint normalColor	= mNormalColor.x;
 	uint hitColor		= mHitColor.x; 

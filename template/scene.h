@@ -294,7 +294,7 @@ public:
 	}
 	float3 GetAlbedo( const float3 I ) const
 	{
-		return float3( 10 );
+		return float3( 1 );
 	}
 	float size;
 	mat4 T, invT;
@@ -636,21 +636,21 @@ public:
 		//if (t4.m128_f32[2] < ray.t) ray.t = t4.m128_f32[2], ray.objIdx = idx4.m128i_i32[2];
 	#ifdef FOURLIGHTS
 		// efficient four-quad intersection by Jesse Vrooman
-		//const __m128 t = _mm_div_ps( _mm_add_ps( _mm_set1_ps( ray.O.y ),
-		//	_mm_set1_ps( -1.5 ) ), _mm_xor_ps( _mm_set1_ps( ray.D.y ), _mm_set1_ps( -0.0 ) ) );
-		//const __m128 Ix = _mm_add_ps( _mm_add_ps( _mm_set1_ps( ray.O.x ),
-		//	_mm_set_ps( 1, -1, -1, 1 ) ), _mm_mul_ps( t, _mm_set1_ps( ray.D.x ) ) );
-		//const __m128 Iz = _mm_add_ps( _mm_add_ps( _mm_set1_ps( ray.O.z ),
-		//	_mm_set_ps( 1, 1, -1, -1 ) ), _mm_mul_ps( t, _mm_set1_ps( ray.D.z ) ) );
-		//const static __m128 size = _mm_set1_ps( 0.25f );
-		//const static __m128 nsize = _mm_xor_ps( _mm_set1_ps( 0.25f ), _mm_set1_ps( -0.0 ) );
-		//const __m128 maskedT = _mm_and_ps( t, _mm_and_ps(
-		//	_mm_and_ps( _mm_cmpgt_ps( Ix, nsize ), _mm_cmplt_ps( Ix, size ) ),
-		//	_mm_and_ps( _mm_cmpgt_ps( Iz, nsize ), _mm_cmplt_ps( Iz, size ) ) ) );
-		//if (maskedT.m128_f32[3] > 0) ray.t = maskedT.m128_f32[3], ray.objIdx = 0;
-		//if (maskedT.m128_f32[2] > 0) ray.t = maskedT.m128_f32[2], ray.objIdx = 0;
-		//if (maskedT.m128_f32[1] > 0) ray.t = maskedT.m128_f32[1], ray.objIdx = 0;
-		//if (maskedT.m128_f32[0] > 0) ray.t = maskedT.m128_f32[0], ray.objIdx = 0;
+		const __m128 t = _mm_div_ps( _mm_add_ps( _mm_set1_ps( ray.O.y ),
+			_mm_set1_ps( -1.5 ) ), _mm_xor_ps( _mm_set1_ps( ray.D.y ), _mm_set1_ps( -0.0 ) ) );
+		const __m128 Ix = _mm_add_ps( _mm_add_ps( _mm_set1_ps( ray.O.x ),
+			_mm_set_ps( 1, -1, -1, 1 ) ), _mm_mul_ps( t, _mm_set1_ps( ray.D.x ) ) );
+		const __m128 Iz = _mm_add_ps( _mm_add_ps( _mm_set1_ps( ray.O.z ),
+			_mm_set_ps( 1, 1, -1, -1 ) ), _mm_mul_ps( t, _mm_set1_ps( ray.D.z ) ) );
+		const static __m128 size = _mm_set1_ps( 0.25f );
+		const static __m128 nsize = _mm_xor_ps( _mm_set1_ps( 0.25f ), _mm_set1_ps( -0.0 ) );
+		const __m128 maskedT = _mm_and_ps( t, _mm_and_ps(
+			_mm_and_ps( _mm_cmpgt_ps( Ix, nsize ), _mm_cmplt_ps( Ix, size ) ),
+			_mm_and_ps( _mm_cmpgt_ps( Iz, nsize ), _mm_cmplt_ps( Iz, size ) ) ) );
+		if (maskedT.m128_f32[3] > 0) ray.t = maskedT.m128_f32[3], ray.objIdx = 0;
+		if (maskedT.m128_f32[2] > 0) ray.t = maskedT.m128_f32[2], ray.objIdx = 0;
+		if (maskedT.m128_f32[1] > 0) ray.t = maskedT.m128_f32[1], ray.objIdx = 0;
+		if (maskedT.m128_f32[0] > 0) ray.t = maskedT.m128_f32[0], ray.objIdx = 0;
 	#else
 		quad.Intersect( ray );
 	#endif
@@ -704,9 +704,9 @@ public:
 			if (hit) return true;
 		}
 	#ifdef FOURLIGHTS
-		//for (int i = 0; i < 4; i++) if (quad[i].IsOccluded( ray )) return true;
+		//for (int i = 0; i < 4; i++) if (quad[i].IsOccluded( ray )) return true; 
 	#else
-		if (quad.IsOccluded( ray )) return true;
+		//if (quad.IsOccluded( ray )) return true;
 	#endif
 		if (torus.IsOccluded( ray )) return true;
 		return false; // skip planes and rounded corners
