@@ -179,7 +179,7 @@ color Renderer::Trace(Ray& ray) const
 		light += (CalcDirectLightWithArea2(mScene, info) * albedo + emission) * throughput; 
 		return light; 
 	}
-	return BLACK; 
+	return light;    
 }
 
 color Renderer::TraceDebug(Ray& ray, debug debug)
