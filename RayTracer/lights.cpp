@@ -15,7 +15,7 @@ float3 PointLight::Intensity(Scene const& scene, float3 const& intersection, flo
 	float const dist	= length(dir);
 	dir					= normalize(dir); 
 
-	if (scene.IsOccluded({ intersection + -dir * Renderer::sEps, -dir })) return BLACK;
+	if (scene.IsOccluded({ intersection + -dir * Renderer::sEps, -dir, dist })) return BLACK;  
 
 	float const cosa		= max(0.0f, dot(normal, dir));
 	float const attenuation = 1.0f / (dist * dist); 
@@ -25,13 +25,14 @@ float3 PointLight::Intensity(Scene const& scene, float3 const& intersection, flo
 
 float3 PointLight::Intensity2(Scene const& scene, HitInfo const& info) const
 {
-	float3 dir = mPosition - info.mI;
-	float const dist = length(dir);
-	dir = normalize(dir);
+	float3 dir			= info.mI - mPosition; 
+	float const dist	= length(dir);
+	dir					= normalize(dir);
 
-	if (scene.IsOccluded({ info.mI + -dir * Renderer::sEps, -dir })) return BLACK;
+	Ray shadow = Ray(info.mI - dir * Renderer::sEps, -dir, dist - Renderer::sEps);    
+	if (scene.IsOccluded(shadow)) return BLACK;  
 
-	float const cosa = max(0.0f, dot(info.mN, dir)); 
+	float const cosa		= max(0.0f, dot(info.mN, -dir)); 
 	float const attenuation = 1.0f / (dist * dist);
 
 	return cosa * attenuation * mColor * mStrength;
@@ -78,12 +79,12 @@ float3 SpotLight::Intensity(Scene const& scene, float3 const& intersection, floa
 	float const dist	= length(dir);
 	dir					= normalize(dir);
 
-	if (scene.IsOccluded({ intersection + -dir * Renderer::sEps, -dir })) return BLACK;
+	if (scene.IsOccluded({ intersection + -dir * Renderer::sEps, -dir, dist })) return BLACK;
 
 	float const theta		= dot(dir, -mDirection);
 	float const intensity	= clamp((theta - mOuterScalar) / mEpsilon, 0.0f, 1.0f);
   
-	float const cosa			= max(0.0f, dot(normal , dir));
+	float const cosa			= max(0.0f, dot(normal , dir)); 
 	float const attenuation		= 1.0f / (dist * dist); 
 
 	return attenuation * cosa * intensity * mColor * mStrength;
@@ -95,7 +96,7 @@ float3 SpotLight::Intensity2(Scene const& scene, HitInfo const& info) const
 	float const dist = length(dir);
 	dir = normalize(dir);
 
-	if (scene.IsOccluded({ info.mI + -dir * Renderer::sEps, -dir })) return BLACK;
+	if (scene.IsOccluded({ info.mI + -dir * Renderer::sEps, -dir, dist })) return BLACK; 
 
 	float const theta = dot(dir, -mDirection);
 	float const intensity = clamp((theta - mOuterScalar) / mEpsilon, 0.0f, 1.0f);

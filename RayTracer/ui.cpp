@@ -162,8 +162,44 @@ void Ui::MaterialsUi() const
 
 void Ui::LightsUi() const
 {
+	ImGui::Separator(); 
+
 	if (ImGui::Checkbox("Directional Light", &mRenderer->mDirLightActive))		mRenderer->ResetAccumulator();
 	if (ImGui::Checkbox("Point Lights", &mRenderer->mPointLightsActive))		mRenderer->ResetAccumulator();
 	if (ImGui::Checkbox("Spot Lights", &mRenderer->mSpotLightsActive))			mRenderer->ResetAccumulator();
 	if (ImGui::Checkbox("Skydome Illumination", &mRenderer->mSkydomeActive))	mRenderer->ResetAccumulator();
+
+	ImGui::Separator(); 
+
+	static int lightTypeIdx = 0;
+	if (ImGui::Combo("Light Type", &lightTypeIdx, STR_LIGHT_TYPES));  
+	if (ImGui::Button("Add Light"))
+	{
+		switch (lightTypeIdx)
+		{
+		case 0: mRenderer->mPointLights.emplace_back(); break; 
+		case 2: mRenderer->mSpotLights.emplace_back(); break; 
+		default: break;  
+		}
+	}
+
+	ImGui::Separator(); 
+
+	if (ImGui::TreeNode("Point Lights"))
+	{
+		for (int i = 0; i < mRenderer->mPointLights.size(); i++)  
+		{
+			std::string strLightIdx = "##" + std::to_string(i);
+			if (ImGui::TreeNode(("Point Light" + strLightIdx).c_str()))
+			{
+				PointLight& l = mRenderer->mPointLights[i];  
+				std::string strLightIdx = "##" + std::to_string(i); 
+				if (ImGui::DragFloat3(("Position" + strLightIdx).c_str(), l.mPosition.cell, 0.005f))	mRenderer->ResetAccumulator(); 
+				if (ImGui::ColorEdit3(("Color" + strLightIdx).c_str(), l.mColor.cell))					mRenderer->ResetAccumulator();
+				if (ImGui::DragFloat(("Strength" + strLightIdx).c_str(), &l.mStrength, 0.005f, 0.0f))	mRenderer->ResetAccumulator();
+				ImGui::TreePop();
+			}
+		}
+		ImGui::TreePop(); // Points Lights 
+	}
 }

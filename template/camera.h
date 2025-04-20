@@ -2,8 +2,13 @@
 
 #include "scene.h" 
 
-float3 const	INIT_CAMERA_POSITION		= float3(-3.018f, 1.146f, -3.449f);  
-float3 const	INIT_CAMERA_TARGET			= float3(-2.530f, 0.931f, -2.603f);
+// position 1: 
+//float3 const	INIT_CAMERA_POSITION		= float3(-3.018f, 1.146f, -3.449f);  
+//float3 const	INIT_CAMERA_TARGET			= float3(-2.530f, 0.931f, -2.603f);
+// position 2: 
+float3 const	INIT_CAMERA_POSITION		= float3(-1.793f, 1.109f, 6.860f);  
+float3 const	INIT_CAMERA_TARGET			= float3( 0.000f, 0.109f, 2.000f);
+
 float constexpr INIT_CAMERA_SPEED			= 0.0025f;
 float constexpr INIT_CAMERA_FOV				= 50.0f;
 float constexpr INIT_CAMERA_DEFOCUS_ANGLE	= 0.02f;

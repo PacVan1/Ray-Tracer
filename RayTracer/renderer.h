@@ -18,7 +18,7 @@ enum renderModes : uint8_t
 	RENDER_MODES_SHADED
 };
 
-color const		INIT_MISS						= BLACK;
+color const		INIT_MISS						= BLACK;  
 int constexpr	INIT_RENDER_MODE				= RENDER_MODES_SHADED;
 float constexpr INIT_EPS						= 1e-3f;
 int constexpr	INIT_MAX_BOUNCES				= 10; 
@@ -28,7 +28,7 @@ bool constexpr	INIT_LIGHTS_POINT_LIGHTS_ACTIVE	= false;
 bool constexpr	INIT_LIGHTS_SPOT_LIGHTS_ACTIVE	= false;
 bool constexpr	INIT_LIGHTS_SKYDOME_ACTIVE		= false; 
 
-bool constexpr	INIT_DOF_ACTIVE					= true;
+bool constexpr	INIT_DOF_ACTIVE					= false; 
 bool constexpr	INIT_BREAK_PIXEL				= true;
 bool constexpr	INIT_AA_ACTIVE					= true;
 bool constexpr	INIT_ACCUM_ACTIVE				= true;
@@ -59,9 +59,19 @@ public:
 	Lambertian2				mLambertian2;
 	Lambertian3				mLambertian3;
 
+	Material*				mSphereMaterial; 
+	Material*				mTorusMaterial; 
+	Material*				mCubeMaterial; 
+	Material*				mFloorMaterial;
+	Material*				mQuadMaterial; 
+
+	std::vector<PointLight> mPointLights; 
+	std::vector<SpotLight>	mSpotLights;
+
 	bool					mDirLightActive;
 	bool					mPointLightsActive;
 	bool					mSpotLightsActive; 
+	bool					mQuadLightActive = true;  
 	bool					mSkydomeActive;
 
 private:
@@ -70,8 +80,6 @@ private:
 	float4*					mAccumulator;
 
 	DirectionalLight		mDirLight;
-	std::vector<PointLight> mPointLights; 
-	std::vector<SpotLight>	mSpotLights;
 	Skydome					mSkydome; 
 	color					mMiss;
 
@@ -123,10 +131,10 @@ private:
 	[[nodiscard]] color		CalcDirectLight2(Scene const& scene, HitInfo const& info) const;
 	[[nodiscard]] color		CalcDirectLightWithArea(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 	[[nodiscard]] color		CalcDirectLightWithArea2(Scene const& scene, HitInfo const& info) const;
+	[[nodiscard]] color		CalcQuadLight(Scene const& scene, HitInfo const& info) const;
 	[[nodiscard]] color		Miss(float3 const direction) const;
 	[[nodiscard]] color		MissIntensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 	[[nodiscard]] color		MissIntensity2(Scene const& scene, HitInfo const& info) const;
-	[[nodiscard]] color		CalcAreaLight(Scene const& scene, HitInfo const& info) const;
 	[[nodiscard]] HitInfo	CalcHitInfo(Ray const& ray) const;
 	void					PerformanceReport(); 
 

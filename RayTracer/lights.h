@@ -3,6 +3,13 @@
 #include "scene.h" 
 #include "hitinfo.h" 
 
+enum lightTypes : uint8_t
+{
+	LIGHT_TYPES_POINT, 
+	LIGHT_TYPES_DIRECTIONAL, 
+	LIGHT_TYPES_SPOT 
+};
+
 class PointLight
 {
 public:

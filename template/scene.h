@@ -15,7 +15,7 @@
 // - Has some high-frequency details - for filtering
 // -----------------------------------------------------------
 
-#define FOURLIGHTS
+//#define FOURLIGHTS
 
 #define PLANE_X(o,i) {t=-(ray.O.x+o)*ray.rD.x;if(t<ray.t&&t>0)ray.t=t,ray.objIdx=i;}
 #define PLANE_Y(o,i) {t=-(ray.O.y+o)*ray.rD.y;if(t<ray.t&&t>0)ray.t=t,ray.objIdx=i;}
@@ -682,7 +682,7 @@ public:
 			//	if (hit) { ray.t = t, ray.objIdx = 2; }
 			//}
 		}
-		cube.Intersect( ray );
+		cube.Intersect( ray ); 
 		torus.Intersect( ray );
 		//plane[0].Intersect(ray);  
 		//plane[1].Intersect(ray);  
@@ -704,9 +704,9 @@ public:
 			if (hit) return true;
 		}
 	#ifdef FOURLIGHTS
-		//for (int i = 0; i < 4; i++) if (quad[i].IsOccluded( ray )) return true; 
+		for (int i = 0; i < 4; i++) if (quad[i].IsOccluded( ray )) return true; 
 	#else
-		//if (quad.IsOccluded( ray )) return true;
+		if (quad.IsOccluded( ray )) return true; 
 	#endif
 		if (torus.IsOccluded( ray )) return true;
 		return false; // skip planes and rounded corners

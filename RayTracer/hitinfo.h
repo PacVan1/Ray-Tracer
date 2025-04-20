@@ -1,8 +1,11 @@
 #pragma once
 
+class Material;   
+
 struct HitInfo
 {
-	float3 mI;
-	float3 mN; 
+	float3		mI;
+	float3		mN;
+	Material*	mMat;       
 };
 

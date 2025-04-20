@@ -3,6 +3,11 @@
 
 #include "renderer.h"  
 
+Material::Material() : 
+	mAlbedo(WHITE), 
+	mEmission(BLACK)
+{}
+
 bool Metallic::Scatter(Ray const& in, Ray& out, float3 const& intersection, float3 const& normal) const
 {
 	float3 const reflected = reflect(in.D, normal);
@@ -19,7 +24,7 @@ bool Metallic::Scatter2(Ray const& in, Ray& out, color& color, float3 const& int
 	return true;
 }
 
-bool Metallic::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const
+bool Metallic::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const
 {
 	float3 const reflected = reflect(in.D, info.mN);
 	out			= Ray(info.mI + reflected * Renderer::sEps, reflected); 
@@ -88,14 +93,14 @@ bool Dielectric::Scatter2(Ray const& in, Ray& out, color& color, float3 const& i
 	return true;
 }
 
-bool Dielectric::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const
+bool Dielectric::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const
 {
 	float ri = 1.0f / mRefractiveIdx;
 
 	if (in.inside)
 	{
 		ri = mRefractiveIdx;
-		color = expf(-mAbsorption * in.t);
+		attenuation = expf(-mAbsorption * in.t);
 	}
 
 	float const cosTheta = std::fmin(dot(-in.D, info.mN), 1.0f);
@@ -115,9 +120,8 @@ bool Dielectric::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& c
 	return true;
 }
 
-Glossy::Glossy() :
-	mAlbedo(WHITE),
-	mSpecularProb(0.5f),
+Glossy::Glossy() : 
+	mSpecularProb(0.5f), 
 	mSmoothness(0.5f)
 {}
 
@@ -137,7 +141,7 @@ bool Glossy::Scatter2(Ray const& in, Ray& out, color& color, float3 const& inter
 	return true;
 }
 
-bool Glossy::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const
+bool Glossy::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const 
 {
 	// src:			https://www.youtube.com/watch?v=Qz0KTGYJtUk
 	// timestamp:	27:14
@@ -145,14 +149,13 @@ bool Glossy::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color
 	float3 const diffuse	= cosineWeightedDiffuseReflection(info.mN);
 	float3 const specular	= reflect(in.D, info.mN); 
 	bool const isSpecular	= mSpecularProb > RandomFloat();
-	float3 const reflected	= lerp(diffuse, specular, mSmoothness * static_cast<float>(isSpecular));
-	out		= Ray(info.mI + reflected * Renderer::sEps, reflected); 
-	color	= isSpecular ? WHITE : mAlbedo;
+	float3 const reflected	= lerp(diffuse, specular, mSmoothness * static_cast<float>(isSpecular)); 
+	out			= Ray(info.mI + reflected * Renderer::sEps, reflected);  
+	attenuation = isSpecular ? WHITE : mAlbedo; 
 	return true;
 }
 
 Glossy2::Glossy2() :
-	mAlbedo(WHITE),
 	mSmoothness(1.0f)
 {}
 
@@ -172,7 +175,7 @@ bool Glossy2::Scatter2(Ray const& in, Ray& out, color& color, float3 const& inte
 	return true;
 }
 
-bool Glossy2::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const
+bool Glossy2::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const 
 {
 	// inspiration:	https://www.youtube.com/watch?v=Qz0KTGYJtUk
 	// timestamp:	27:14
@@ -180,15 +183,11 @@ bool Glossy2::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& colo
 	float3 const diffuse	= cosineWeightedDiffuseReflection(info.mN); 
 	float3 const specular	= reflect(in.D, info.mN);
 	bool const isSpecular	= schlickApprox(std::fmin(dot(-in.D, info.mN), 1.0f), 2.0f) > RandomFloat();
-	float3 const reflected	= lerp(diffuse, specular, mSmoothness * static_cast<float>(isSpecular));
-	out		= Ray(info.mI + reflected * Renderer::sEps, reflected);
-	color	= isSpecular ? WHITE : color; 
+	float3 const reflected	= lerp(diffuse, specular, mSmoothness * static_cast<float>(isSpecular)); 
+	out			= Ray(info.mI + reflected * Renderer::sEps, reflected); 
+	attenuation = isSpecular ? WHITE : mAlbedo;    
 	return true;
 }
-
-Lambertian::Lambertian() :
-	mAlbedo(WHITE)
-{}
 
 bool Lambertian::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const
 {
@@ -198,17 +197,13 @@ bool Lambertian::Scatter2(Ray const& in, Ray& out, color& color, float3 const& i
 	return true;
 }
 
-bool Lambertian::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const
+bool Lambertian::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const
 {
 	float3 const reflected = cosineWeightedDiffuseReflection(info.mN); 
-	out		= Ray(info.mI + reflected * Renderer::sEps, reflected);
-	color	= mAlbedo;
+	out			= Ray(info.mI + reflected * Renderer::sEps, reflected);
+	attenuation = mAlbedo;   
 	return true;
 }
-
-Lambertian2::Lambertian2() :
-	mAlbedo(WHITE)
-{}
 
 bool Lambertian2::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const
 {
@@ -221,20 +216,16 @@ bool Lambertian2::Scatter2(Ray const& in, Ray& out, color& color, float3 const& 
 	return true; 
 }
 
-bool Lambertian2::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const
+bool Lambertian2::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const
 {
 	static float constexpr PDF = 1.0f / TWOPI;
 
 	float3 const reflected	= diffuseReflection(info.mN); 
 	float3 const brdf		= mAlbedo / PI;
-	out		= Ray(info.mI + reflected * Renderer::sEps, reflected);
-	color	= brdf * (dot(info.mN, reflected) / PDF);
+	out			= Ray(info.mI + reflected * Renderer::sEps, reflected);
+	attenuation = brdf * (dot(info.mN, reflected) / PDF); 
 	return true;
 }
-
-Lambertian3::Lambertian3() :
-	mAlbedo(WHITE)
-{}
 
 bool Lambertian3::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const
 {
@@ -246,12 +237,12 @@ bool Lambertian3::Scatter2(Ray const& in, Ray& out, color& color, float3 const& 
 	return true;
 }
 
-bool Lambertian3::Scatter3(Ray const& in, HitInfo const& info, Ray& out, color& color) const
+bool Lambertian3::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const 
 {
 	float3 const reflected	= cosineWeightedDiffuseReflection(info.mN); 
 	float3 const brdf		= mAlbedo / PI;
 	float const  pdf		= dot(info.mN, reflected) / PI;
-	out		= Ray(info.mI + reflected * Renderer::sEps, reflected);
-	color	= brdf * (dot(info.mN, reflected) / pdf);
+	out			= Ray(info.mI + reflected * Renderer::sEps, reflected); 
+	attenuation = brdf * (dot(info.mN, reflected) / pdf); 
 	return true;
 }

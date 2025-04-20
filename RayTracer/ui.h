@@ -13,7 +13,8 @@ static constexpr ImGuiWindowFlags UI_WINDOW_FLAGS =
 	ImGuiWindowFlags_NoFocusOnAppearing		|
 	ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-inline auto constexpr STR_RENDER_MODES = "Normals\0Depth\0Albedo\0Shaded\0";  
+inline auto constexpr STR_RENDER_MODES	= "Normals\0Depth\0Albedo\0Shaded\0";   
+inline auto constexpr STR_LIGHT_TYPES	= "Point\0Directional\0Spot\0";   
 
 class Ui
 {
