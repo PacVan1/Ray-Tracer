@@ -144,7 +144,7 @@ color Renderer::Trace(Ray& ray) const
 	for (int bounce = 0; bounce < mMaxBounces; bounce++)
 	{
 		mScene.FindNearest(ray);
-		if (ray.objIdx != -1)
+		if (DidHit(ray)) 
 		{
 			HitInfo const info = CalcHitInfo(ray);  
 
@@ -472,9 +472,9 @@ void Renderer::Init()
 	mDirLight.mStrength		= 1.0f;
 	mDirLight.mColor		= WHITE;   
 
-	mSphereMaterial = new Glossy2;      
-	mTorusMaterial	= new Glossy2;       
-	mCubeMaterial	= new Glossy2;      
+	mSphereMaterial = &mDielectric;        
+	mTorusMaterial	= &mDielectric;         
+	mCubeMaterial	= &mDielectric;        
 	mFloorMaterial	= new Lambertian3();   
 	mQuadMaterial	= new Glossy2();
 	mQuadMaterial->mAlbedo		= WHITE;
@@ -494,6 +494,11 @@ inline void Renderer::InitAccumulator()
 {
 	mAccumulator = static_cast<float4*>(MALLOC64(SCRWIDTH * SCRHEIGHT * sizeof(float4)));
 	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4)); 
+}
+
+bool Renderer::DidHit(Ray const& ray) const  
+{
+	return ray.objIdx != -1; 
 }
 
 void Renderer::Shutdown()

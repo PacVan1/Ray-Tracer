@@ -31,7 +31,7 @@ class Dielectric : public Material
 {
 public:
 	color mAbsorption; 
-	float mRefractiveIdx;
+	float mIor;  
 
 public:
 			Dielectric();

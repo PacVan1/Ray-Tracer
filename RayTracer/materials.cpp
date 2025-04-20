@@ -34,7 +34,7 @@ bool Metallic::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& atte
 
 Dielectric::Dielectric() :
 	mAbsorption(0.0f, 0.0f, 0.0f),
-	mRefractiveIdx(1.0f)
+	mIor(1.0f)
 {}
 
 bool Dielectric::Scatter(Ray const& in, Ray& out, float3 const& intersection, float3 const& normal) const
@@ -68,12 +68,12 @@ bool Dielectric::Scatter(Ray const& in, Ray& out, float3 const& intersection, fl
 bool Dielectric::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const
 {
 	float3 tempN = normal;
-	float ior = 1.0f / mRefractiveIdx;
+	float ior = 1.0f / mIor; 
 
 	if (in.inside) // inside 
 	{
-		ior		= mRefractiveIdx; 
-		color	= expf(-mAbsorption * in.t); 
+		ior		= mIor; 
+		color	= expf(-mAbsorption * in.t);  
 	}
 
 	float const cosTheta = std::fmin(dot(-in.D, tempN), 1.0f);
@@ -95,28 +95,27 @@ bool Dielectric::Scatter2(Ray const& in, Ray& out, color& color, float3 const& i
 
 bool Dielectric::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const
 {
-	float ri = 1.0f / mRefractiveIdx;
+	float ior = 1.0f / mIor; 
 
 	if (in.inside)
 	{
-		ri = mRefractiveIdx;
+		ior			= mIor; 
 		attenuation = expf(-mAbsorption * in.t);
 	}
 
 	float const cosTheta = std::fmin(dot(-in.D, info.mN), 1.0f);
 	float const sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
  
-	if (ri * sinTheta > 1.0f || schlickApprox(cosTheta, ri) > RandomFloat()) 
+	if (ior * sinTheta > 1.0f || schlickApprox(cosTheta, ior) > RandomFloat()) 
 	{
 		out = Ray(info.mI + info.mN * Renderer::sEps, reflect(in.D, info.mN)); 
 		out.inside = in.inside;
-		return true;
 	}
-
-	float3 const rPerp = ri * (in.D + cosTheta * info.mN);
-	float3 const rPara = -std::sqrt(std::fabs(1.0f - sqrLength(rPerp))) * info.mN;
-	out = Ray(info.mI + -info.mN * Renderer::sEps, rPerp + rPara); 
-	out.inside = !in.inside;
+	else
+	{
+		out = Ray(info.mI + -info.mN * Renderer::sEps, refract(info.mN, in.D, cosTheta, ior)); 
+		out.inside = !in.inside;
+	}
 	return true;
 }
 

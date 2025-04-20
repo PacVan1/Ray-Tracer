@@ -77,10 +77,16 @@ float randomFloatUnit()
 	return RandomFloat() * 2.0f - 1.0f; 
 }
 
-float schlickApprox(float const cosTheta, float const ior)
+float schlickApprox(float cosTheta, float const ior)
 {
-	float r = (1 - ior) / (1 + ior);
-	r = r * r;
-	float const cosTheta2 = (1 - cosTheta);
-	return r + (1 - r) * cosTheta2 * cosTheta2 * cosTheta2 * cosTheta2 * cosTheta2;
+	float r = (1 - ior) / (1 + ior); r = r * r;
+	cosTheta = (1 - cosTheta); cosTheta = cosTheta * cosTheta * cosTheta * cosTheta * cosTheta; 
+	return r + (1 - r) * cosTheta;  
+}
+
+float3 refract(float3 const& normal, float3 const& in, float const cosTheta, float const ior)
+{
+	float3 const rPerp = ior * (in + cosTheta * normal); 
+	float3 const rPara = -std::sqrt(std::fabs(1.0f - sqrLength(rPerp))) * normal;  
+	return rPerp + rPara;
 }

@@ -48,3 +48,4 @@ enum controls : uint8_t
 [[nodiscard]] float3	cosineWeightedDiffuseReflection(float3 const& normal);  
 [[nodiscard]] float		randomFloatUnit();
 [[nodiscard]] float		schlickApprox(float const cosTheta, float const ior);
+[[nodiscard]] float3	refract(float3 const& normal, float3 const& in, float cosTheta, float const ior);  

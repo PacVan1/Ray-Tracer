@@ -136,6 +136,7 @@ private:
 	[[nodiscard]] color		MissIntensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 	[[nodiscard]] color		MissIntensity2(Scene const& scene, HitInfo const& info) const;
 	[[nodiscard]] HitInfo	CalcHitInfo(Ray const& ray) const;
+	[[nodiscard]] bool		DidHit(Ray const& ray) const;
 	void					PerformanceReport(); 
 
 	void					UI() override;
