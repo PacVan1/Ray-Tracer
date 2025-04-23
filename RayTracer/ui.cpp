@@ -97,10 +97,10 @@ void Ui::EnhancementsUi() const
 	{
 		mRenderer->SetAa(aa);
 	}
-	bool accum = mRenderer->GetAccum();
-	if (ImGui::Checkbox("Accumulator", &accum)) 
+	int accumMode = mRenderer->GetAccumMode(); 
+	if (ImGui::Combo("Accum Mode", &accumMode, STR_ACCUM_MODES))   
 	{
-		mRenderer->SetAccum(accum);
+		mRenderer->SetAccumMode(accumMode); 
 	}
 	bool dof = mRenderer->GetDof();
 	if (ImGui::Checkbox("Depth of field", &dof))

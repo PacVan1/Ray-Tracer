@@ -10,16 +10,31 @@ float3 const	INIT_CAMERA_POSITION		= float3(-1.793f, 1.109f, 6.860f);
 float3 const	INIT_CAMERA_TARGET			= float3( 0.000f, 0.109f, 2.000f);
 
 float constexpr INIT_CAMERA_SPEED			= 0.0025f;
+float constexpr INIT_CAMERA_SENSITIVITY		= 0.0025f;
 float constexpr INIT_CAMERA_FOV				= 50.0f;
 float constexpr INIT_CAMERA_DEFOCUS_ANGLE	= 0.02f;
 float constexpr INIT_CAMERA_FOCUS_DIST		= 10.0f;
 float constexpr INIT_CAMERA_MAX_FOCUS_DIST	= 300.0f;
 float constexpr INIT_CAMERA_MAX_FOV			= 180.0f;
 
+struct FrustumPlane
+{
+	float3	mNormal; 
+	float	mDistance; 
+};
+
+struct Frustum 
+{
+	FrustumPlane mPlanes[4]; 
+};
+
 class Camera
 {
 public:
 	float	mSpeed;
+	float	mSensitivity;
+	float3	mPrevPosition;   
+	Frustum mPrevFrustum;
 
 private: 
 	float3	mPosition;
@@ -47,6 +62,7 @@ private:
 public:
 						Camera();
 	bool				Update(float const dt);
+	void				UpdateFrustum();    
 	void				Focus(Scene const& scene); 
 	[[nodiscard]] Ray	GetPrimaryRay(float2 const pixel) const;
 	[[nodiscard]] Ray	GetPrimaryRayFocused(float2 const pixel) const;

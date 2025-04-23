@@ -1,11 +1,12 @@
 #pragma once
 
 #include "color.h"
+#include "camera.h" 
 
 namespace Tmpl8 { class Ray; }
 
 int constexpr	SCRWIDTH		= 1280;
-int constexpr	SCRHEIGHT		= 720;
+int constexpr	SCRHEIGHT		= 720; 
 float constexpr ASPECT_RATIO	= static_cast<float>(SCRWIDTH) / static_cast<float>(SCRHEIGHT); 
 // #define FULLSCREEN
 // #define DOUBLESIZE
@@ -49,3 +50,4 @@ enum controls : uint8_t
 [[nodiscard]] float		randomFloatUnit();
 [[nodiscard]] float		schlickApprox(float const cosTheta, float const ior);
 [[nodiscard]] float3	refract(float3 const& normal, float3 const& in, float cosTheta, float const ior);  
+[[nodiscard]] float		distanceToFrustum(FrustumPlane const& frustumPlane, float3 const& point);   

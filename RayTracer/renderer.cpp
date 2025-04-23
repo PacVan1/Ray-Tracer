@@ -5,6 +5,9 @@ void Renderer::Tick(float deltaTime)
 {
 #if DEBUG_MODE
 	mTimer.reset();
+
+	if (mAnimating) mScene.SetTime(mAnimTime += deltaTime * 0.002f);   
+
 	if (mFrame < mMaxFrames || !mMaxFramesActive) 
 	{
 		mBreakPixel = input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive;
@@ -48,34 +51,52 @@ void Renderer::Tick(float deltaTime)
 			}
 			case RENDER_MODES_SHADED:
 			{
-				float2 pixelCoord = float2(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
-				if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f);
-				Ray primRay;
-				if (mDofActive) primRay = mCamera.GetPrimaryRayFocused(pixelCoord);
-				else			primRay = mCamera.GetPrimaryRay(pixelCoord); 
-				color pixel = BLACK;
+				float2	pixelCoord	= float2(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+				color	sample		= BLACK;
 
-				if (mDebugViewerActive && y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
+				switch (mAccumMode)
 				{
-					debug debug = {};
-					debugRayIdx++;
-					debug.mIsSelected = debugRayIdx == mDebugViewer.mSelected;
-					pixel = TraceDebug(primRay, debug);  
-				}
-				else
+				case ACCUM_MODES_ACCUMULATION:
 				{
-					pixel = Trace(primRay);
-				}
-
-				if (mAccumActive)
-				{
-					mAccumulator[pixelIdx] += pixel; 
+					if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f);
+					Ray primRay = mDofActive ? mCamera.GetPrimaryRayFocused(pixelCoord) :
+						mCamera.GetPrimaryRay(pixelCoord);
+					sample = Trace2(primRay);
+					mAccumulator[pixelIdx] += sample;   
 					color const average = mAccumulator[pixelIdx] * scale;
 					mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(average);
+					break;
 				}
-				else
+				case ACCUM_MODES_REPROJECTION:
 				{
-					mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);  
+					Ray primRay		= mCamera.GetPrimaryRay(pixelCoord);   
+					sample			= Trace2(primRay);  
+					color const rep = Reproject(primRay, sample);    
+					mAccumulator[pixelIdx]		= rep;  
+					mScreen->pixels[pixelIdx]	= RGBF32_to_RGB8(rep);  
+					break;
+				}
+				default:
+				{
+					if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f); 
+					Ray primRay = mDofActive ? mCamera.GetPrimaryRayFocused(pixelCoord) :
+						mCamera.GetPrimaryRay(pixelCoord);
+
+					if (mDebugViewerActive && y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
+					{
+						debug debug = {};
+						debugRayIdx++;
+						debug.mIsSelected = debugRayIdx == mDebugViewer.mSelected;
+						sample = TraceDebug(primRay, debug);
+					}
+					else
+					{
+						sample = Trace2(primRay);
+					}
+
+					mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(sample);
+					break;
+				}
 				}
 
 				break;
@@ -92,11 +113,38 @@ void Renderer::Tick(float deltaTime)
 		mScreen->Line(static_cast<float>(input.mMousePos.x), 0, static_cast<float>(input.mMousePos.x), SCRHEIGHT - 1, RED_U);
 		mScreen->Line(0, static_cast<float>(input.mMousePos.y), SCRWIDTH - 1, static_cast<float>(input.mMousePos.y), RED_U); 
 	}
+
+	if (mAccumMode == ACCUM_MODES_REPROJECTION)
+	{
+		mCamera.UpdateFrustum(); 
+		mCamera.Update(deltaTime); 
+		swap(mHistory, mAccumulator);   
+	}
+	else if (mAccumMode == ACCUM_MODES_ACCUMULATION)
+	{
+		if (mCamera.Update(deltaTime))
+		{
+			if (mAutoFocusActive) mCamera.Focus(mScene);   
+			ResetAccumulator();  
+		}
+	}
+
+#else
+	mTimer.reset();
+	float const scale = 1.0f / static_cast<float>(mSpp++); 
+	#pragma omp parallel for schedule(dynamic) 
+	for (int y = 0; y < SCRHEIGHT; y++) for (int x = 0; x < SCRWIDTH; x++)
+	{
+		int const	pixelIdx = x + y * SCRWIDTH;
+		mAccumulator[pixelIdx] += Trace(mCamera.GetPrimaryRayFocused(RandomOnPixel(x, y))); 
+		mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(mAccumulator[pixelIdx] * scale); 
+	}
 	if (mCamera.Update(deltaTime))
 	{
-		if (mAutoFocusActive) mCamera.Focus(mScene);  
-		ResetAccumulator(); 
+		mCamera.Focus(mScene); 
+		ResetAccumulator();  
 	}
+	PerformanceReport();
 #endif
 }
 
@@ -122,6 +170,13 @@ void Renderer::SetAccum(bool const accumActive)
 {
 	mAccumActive = accumActive;
 	ResetAccumulator(); 
+}
+
+void Renderer::SetAccumMode(int const accumMode)
+{
+	mAccumMode = accumMode; 
+	ResetAccumulator(); 
+	ResetHistory(); 
 }
 
 void Renderer::SetAutoFocus(bool const autoFocusActive)
@@ -179,6 +234,55 @@ color Renderer::Trace(Ray& ray) const
 		}
 	}
 	return light;    
+}
+
+color Renderer::Trace2(Ray& primRay) const
+{
+	Ray		ray			= {};
+	color	light		= BLACK; 
+	color	throughput	= WHITE; 
+
+	mScene.FindNearest(primRay);  
+	ray = primRay; 
+
+	for (int bounce = 0; bounce < mMaxBounces; bounce++)  
+	{
+		if (DidHit(ray))
+		{
+			HitInfo const info = CalcHitInfo(ray);
+
+			color albedo = mScene.GetAlbedo(ray.objIdx, info.mI);
+			color emission = BLACK;
+
+			if (info.mMat)
+			{
+				albedo = info.mMat->GetAlbedo();
+				emission = info.mMat->GetEmission();
+
+				Ray		scattered;
+				color	attenuation = albedo;
+				if (info.mMat->Scatter(ray, info, scattered, attenuation))
+				{
+					color const directLight = CalcDirectLight2(mScene, info) * albedo; 
+					color const indirectLight = attenuation; 
+					light += (directLight + emission) * throughput; 
+					throughput *= indirectLight; // indirect light   
+					ray = scattered;  
+					mScene.FindNearest(ray); 
+					continue;
+				}
+			}
+
+			light += (CalcDirectLightWithArea2(mScene, info) * albedo + emission) * throughput;
+			return light;
+		}
+		else
+		{
+			light += Miss(ray.D) * throughput;
+			return light;
+		}
+	}
+	return light;
 }
 
 color Renderer::TraceDebug(Ray& ray, debug debug)
@@ -410,13 +514,60 @@ HitInfo Renderer::CalcHitInfo(Ray const& ray) const
 	return info;
 }
 
+color Renderer::Reproject(Ray const& primRay, color const& sample) const
+{
+	if (!DidHit(primRay)) return sample;  
+
+	color historySample = 0.0f;
+	float historyWeight = 0.0f;
+
+	float3 const primI	= calcIntersection(primRay);  
+	float const dLeft	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[0], primI);   
+	float const dRight	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[1], primI);   
+	float const dTop	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[2], primI);   
+	float const dBottom = distanceToFrustum(mCamera.mPrevFrustum.mPlanes[3], primI);   
+	float const prevX	= (SCRWIDTH * dLeft) / (dLeft + dRight) - 1.0f; 
+	float const prevY	= (SCRHEIGHT * dTop) / (dTop + dBottom) - 1.0f;   
+
+	if (prevX >= 1 && prevX <= SCRWIDTH - 2 && prevY >= 1 && prevY <= SCRHEIGHT - 2) 
+	{
+		Ray repRay = Ray(mCamera.mPrevPosition, normalize(primI - mCamera.mPrevPosition)); 
+		mScene.FindNearest(repRay);
+		float3 const repI = calcIntersection(repRay);   
+		if (sqrLength(primI - repI) < 0.0001f)  
+		{
+			historyWeight = 0.80f;
+			float const fx = fracf(prevX), fy = fracf(prevY);
+			float const w1 = (1 - fx) * (1 - fy);
+			float const w2 = fx * (1 - fy);
+			float const w3 = (1 - fx) * fy;
+			float const w4 = fx * fy;
+			
+			int const x = static_cast<int>(prevX);  
+			int const y = static_cast<int>(prevY);
+			int const a = x + y * SCRWIDTH;
+
+			color const p1 = mHistory[a]; 
+			color const p2 = mHistory[a + 1]; 
+			color const p3 = mHistory[a + SCRWIDTH];  
+			color const p4 = mHistory[a + SCRWIDTH + 1];   
+			historySample = p1 * w1 + p2 * w2 + p3 * w3 + p4 * w4;  
+		}
+	}
+
+	return historyWeight * historySample + (1.0f - historyWeight) * sample;
+}
+
 void Renderer::ResetAccumulator()
 {
-	if (!mAccumActive) return; 
-
 	mSpp = 1;
 	mFrame = 0; 
 	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));
+} 
+
+void Renderer::ResetHistory()
+{
+	memset(mHistory, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));  
 }
 
 void Renderer::PerformanceReport()
@@ -452,8 +603,9 @@ void Renderer::Init()
 	InitAccumulator(); 
 
 	mMiss				= INIT_MISS;
-	sEps				= INIT_EPS;
 	mRenderMode			= INIT_RENDER_MODE;
+	mAccumMode			= INIT_ACCUM_MODE;
+	sEps				= INIT_EPS;
 	mMaxBounces			= INIT_MAX_BOUNCES;
 
 	mDirLightActive		= INIT_LIGHTS_DIR_LIGHT_ACTIVE;
@@ -462,7 +614,7 @@ void Renderer::Init()
 	mSkydomeActive		= INIT_LIGHTS_SKYDOME_ACTIVE;
 
 	mDofActive			= INIT_DOF_ACTIVE; 
-	mBreakPixel			= INIT_BREAK_PIXEL;
+	mBreakPixelActive	= INIT_BREAK_PIXEL;
 	mAaActive			= INIT_AA_ACTIVE;
 	mAccumActive		= INIT_ACCUM_ACTIVE;
 	mAutoFocusActive	= INIT_AUTO_FOCUS_ACTIVE;
@@ -472,15 +624,14 @@ void Renderer::Init()
 	mDirLight.mStrength		= 1.0f;
 	mDirLight.mColor		= WHITE;   
 
-	mSphereMaterial = &mDielectric;        
-	mTorusMaterial	= &mDielectric;         
-	mCubeMaterial	= &mDielectric;        
-	mFloorMaterial	= new Lambertian3();   
-	mQuadMaterial	= new Glossy2();
-	mQuadMaterial->mAlbedo		= WHITE;
-	mQuadMaterial->mEmission	= WHITE;
-	//mSphereMaterial->mAlbedo	= RED;  
-	//mSphereMaterial->mEmission	= RED * 2.0f;       
+	//mSphereMaterial = new Glossy2();  
+	//mTorusMaterial	= new Glossy2();
+	//mCubeMaterial	= new Glossy2(); 
+	//mFloorMaterial	= new Lambertian3();     
+	mQuadMaterial	= new Glossy2(); 
+
+	mQuadMaterial->mAlbedo		= WHITE; 
+	mQuadMaterial->mEmission	= WHITE * 5.0f;      
 
 	mSkydome = Skydome("../assets/hdr/kloppenheim_06_puresky_4k.hdr");  
 }
@@ -493,7 +644,14 @@ inline void Renderer::InitUi()
 inline void Renderer::InitAccumulator()
 {
 	mAccumulator = static_cast<float4*>(MALLOC64(SCRWIDTH * SCRHEIGHT * sizeof(float4)));
-	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4)); 
+	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));  
+	mHistory = static_cast<float4*>(MALLOC64(SCRWIDTH * SCRHEIGHT * sizeof(float4))); 
+	memset(mHistory, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4)); 
+}
+
+float2 Renderer::RandomOnPixel(int const x, int const y) const
+{
+	return { static_cast<float>(x) + RandomFloat(), static_cast<float>(y) + RandomFloat() }; 
 }
 
 bool Renderer::DidHit(Ray const& ray) const  

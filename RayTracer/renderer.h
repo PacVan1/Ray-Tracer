@@ -18,21 +18,29 @@ enum renderModes : uint8_t
 	RENDER_MODES_SHADED
 };
 
+enum accumModes : uint8_t
+{
+	ACCUM_MODES_NONE, 
+	ACCUM_MODES_ACCUMULATION, 
+	ACCUM_MODES_REPROJECTION
+};
+
 color const		INIT_MISS						= BLACK;  
 int constexpr	INIT_RENDER_MODE				= RENDER_MODES_SHADED;
+int constexpr	INIT_ACCUM_MODE					= ACCUM_MODES_REPROJECTION;     
 float constexpr INIT_EPS						= 1e-3f;
 int constexpr	INIT_MAX_BOUNCES				= 10; 
 
-bool constexpr	INIT_LIGHTS_DIR_LIGHT_ACTIVE	= false; 
+bool constexpr	INIT_LIGHTS_DIR_LIGHT_ACTIVE	= true;  
 bool constexpr	INIT_LIGHTS_POINT_LIGHTS_ACTIVE	= false;
 bool constexpr	INIT_LIGHTS_SPOT_LIGHTS_ACTIVE	= false;
 bool constexpr	INIT_LIGHTS_SKYDOME_ACTIVE		= false; 
 
 bool constexpr	INIT_DOF_ACTIVE					= false; 
-bool constexpr	INIT_BREAK_PIXEL				= true;
-bool constexpr	INIT_AA_ACTIVE					= true;
-bool constexpr	INIT_ACCUM_ACTIVE				= true;
-bool constexpr	INIT_AUTO_FOCUS_ACTIVE			= true;  
+bool constexpr	INIT_BREAK_PIXEL				= false;      
+bool constexpr	INIT_AA_ACTIVE					= false;
+bool constexpr	INIT_ACCUM_ACTIVE				= false;
+bool constexpr	INIT_AUTO_FOCUS_ACTIVE			= false;  
 
 namespace Tmpl8
 {
@@ -77,13 +85,16 @@ public:
 private:
 	Ui						mUi;
 
+	// BUFFERS
 	float4*					mAccumulator;
+	float4*					mHistory; 
 
 	DirectionalLight		mDirLight;
 	Skydome					mSkydome; 
 	color					mMiss;
 
 	int						mRenderMode;
+	int						mAccumMode; 
 	int						mMaxBounces;
 	bool					mDofActive;
 	bool					mBreakPixel; 
@@ -96,14 +107,19 @@ private:
 	Timer					mTimer; 
 	float					mAvg = 10, mFps, mRps, mAlpha = 1;
 
+	bool					mAnimating = true;  
+	float					mAnimTime = 0.0f;  
+
 public:
 	void					Tick( float deltaTime ) override;
 	void					ResetAccumulator(); 
+	void					ResetHistory(); 
 
 	void					SetRenderMode(int const renderMode);
 	void					SetMaxBounces(int const maxBounces);
 	void					SetAa(bool const aaActive); 
 	void					SetAccum(bool const accumActive); 
+	void					SetAccumMode(int const accumMode);  
 	void					SetAutoFocus(bool const autoFocusActive); 
 	void					SetDof(bool const dofActive); 
 
@@ -111,6 +127,7 @@ public:
 	inline int				GetMaxBounces() const	{ return mMaxBounces; }
 	inline int				GetAa() const			{ return mAaActive; }
 	inline int				GetAccum() const		{ return mAccumActive; } 
+	inline int				GetAccumMode() const	{ return mAccumMode; }
 	inline int				GetAutoFocus() const	{ return mAutoFocusActive; } 
 	inline int				GetDof() const			{ return mDofActive; }
 	inline int				GetSpp() const			{ return mSpp; }
@@ -121,6 +138,7 @@ public:
 
 private:
 	[[nodiscard]] color		Trace(Ray& ray) const;
+	[[nodiscard]] color		Trace2(Ray& primRay) const;  
 	[[nodiscard]] color		TraceDebug(Ray& ray, debug debug = {});
 	[[nodiscard]] color		TraceRecursive(Ray& ray, int const bounces = 0) const;
 	[[nodiscard]] color		TraceDebugRecursive(Ray& ray, debug debug = {}, int const bounces = 0);
@@ -136,8 +154,11 @@ private:
 	[[nodiscard]] color		MissIntensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 	[[nodiscard]] color		MissIntensity2(Scene const& scene, HitInfo const& info) const;
 	[[nodiscard]] HitInfo	CalcHitInfo(Ray const& ray) const;
-	[[nodiscard]] bool		DidHit(Ray const& ray) const;
-	void					PerformanceReport(); 
+	[[nodiscard]] color		Reproject(Ray const& primRay, color const& sample) const;  
+	void					PerformanceReport();  
+
+	[[nodiscard]] inline float2		RandomOnPixel(int const x, int const y) const; 
+	[[nodiscard]] inline bool		DidHit(Ray const& ray) const;
 
 	void					UI() override;
 	void					RenderDebugViewer(); 

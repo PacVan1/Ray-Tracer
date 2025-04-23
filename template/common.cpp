@@ -79,8 +79,11 @@ float randomFloatUnit()
 
 float schlickApprox(float cosTheta, float const ior)
 {
+	// src: https://raytracing.github.io/
+
 	float r = (1 - ior) / (1 + ior); r = r * r;
-	cosTheta = (1 - cosTheta); cosTheta = cosTheta * cosTheta * cosTheta * cosTheta * cosTheta; 
+	cosTheta = (1 - cosTheta); 
+	cosTheta = cosTheta * cosTheta * cosTheta * cosTheta * cosTheta; 
 	return r + (1 - r) * cosTheta;  
 }
 
@@ -89,4 +92,9 @@ float3 refract(float3 const& normal, float3 const& in, float const cosTheta, flo
 	float3 const rPerp = ior * (in + cosTheta * normal); 
 	float3 const rPara = -std::sqrt(std::fabs(1.0f - sqrLength(rPerp))) * normal;  
 	return rPerp + rPara;
+}
+
+float distanceToFrustum(FrustumPlane const& frustumPlane, float3 const& point)  
+{ 
+	return dot(frustumPlane.mNormal, point) - frustumPlane.mDistance;  
 }
