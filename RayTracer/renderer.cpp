@@ -6,7 +6,7 @@ void Renderer::Tick(float deltaTime)
 #if DEBUG_MODE
 	mTimer.reset();
 
-	if (mAnimating) mScene.SetTime(mAnimTime += deltaTime * 0.002f);   
+	//if (mAnimating) mScene.SetTime(mAnimTime += deltaTime * 0.002f);   
 
 	if (mFrame < mMaxFrames || !mMaxFramesActive) 
 	{
@@ -71,10 +71,10 @@ void Renderer::Tick(float deltaTime)
 				{
 					Ray primRay		= mCamera.GetPrimaryRay(pixelCoord);   
 					sample			= Trace2(primRay);  
-					color const rep = Reproject(primRay, sample);    
-					mAccumulator[pixelIdx]		= rep;  
-					mScreen->pixels[pixelIdx]	= RGBF32_to_RGB8(rep);  
-					break;
+					color const pix = Reproject(primRay, sample); 
+					mAccumulator[pixelIdx]		= pix;     
+					mScreen->pixels[pixelIdx]	= RGBF32_to_RGB8(pix); 
+					break; 
 				}
 				default:
 				{
@@ -118,14 +118,21 @@ void Renderer::Tick(float deltaTime)
 	{
 		mCamera.UpdateFrustum(); 
 		mCamera.Update(deltaTime); 
-		swap(mHistory, mAccumulator);   
+		swap(mHistory, mAccumulator);    
 	}
 	else if (mAccumMode == ACCUM_MODES_ACCUMULATION)
 	{
 		if (mCamera.Update(deltaTime))
 		{
 			if (mAutoFocusActive) mCamera.Focus(mScene);   
-			ResetAccumulator();  
+			ResetAccumulator(); 
+		}
+	}
+	else
+	{
+		if (mCamera.Update(deltaTime))
+		{
+			if (mAutoFocusActive) mCamera.Focus(mScene);
 		}
 	}
 
@@ -558,6 +565,48 @@ color Renderer::Reproject(Ray const& primRay, color const& sample) const
 	return historyWeight * historySample + (1.0f - historyWeight) * sample;
 }
 
+color Renderer::Reproject2(Ray const& primRay, color const& sample) const 
+{
+	if (!DidHit(primRay)) return sample;
+
+	float3 const primI	= calcIntersection(primRay);
+	float const dLeft	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[0], primI);
+	float const dRight	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[1], primI);
+	float const dTop	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[2], primI);
+	float const dBottom = distanceToFrustum(mCamera.mPrevFrustum.mPlanes[3], primI);
+	float const prevX	= (SCRWIDTH * dLeft) / (dLeft + dRight) - 1.0f;
+	float const prevY	= (SCRHEIGHT * dTop) / (dTop + dBottom) - 1.0f;
+
+	if (prevX >= 1 && prevX <= SCRWIDTH - 2 && prevY >= 1 && prevY <= SCRHEIGHT - 2)
+	{
+		Ray repRay = Ray(mCamera.mPrevPosition, normalize(primI - mCamera.mPrevPosition));
+		mScene.FindNearest(repRay);
+		float3 const repI = calcIntersection(repRay);
+		if (sqrLength(primI - repI) < 0.0001f)
+		{
+			//int2 const prev = int2(static_cast<int>(prevX), static_cast<int>(prevY));  
+			//
+			//color minColor = 9999.0f, maxColor = -9999.0f;  
+			//color prevColor = mHistory[prev.x + prev.y * SCRWIDTH];  
+			//
+			//for (int y = -1; y < 1; y++) for (int x = -1; x < 1; x++) 
+			//{
+			//	color const color = mHistory[(prev.x + x) + (prev.y + y) * SCRWIDTH]; 
+			//	//prevColor = mHistory[(prev.x + x) + (prev.y + y) * SCRWIDTH]; 
+			//	minColor = minColor < color ? minColor : color;      
+			//	maxColor = std::max(maxColor, color);  
+			//}
+			
+			//color const prevColorClamped = clamp(prevColor, minColor, maxColor);  
+			//return sample * 0.1f * prevColorClamped * 0.9f; 
+
+			//return prevColor; 
+		}
+	}
+
+	return sample; 
+}
+
 void Renderer::ResetAccumulator()
 {
 	mSpp = 1;
@@ -624,11 +673,17 @@ void Renderer::Init()
 	mDirLight.mStrength		= 1.0f;
 	mDirLight.mColor		= WHITE;   
 
-	//mSphereMaterial = new Glossy2();  
-	//mTorusMaterial	= new Glossy2();
-	//mCubeMaterial	= new Glossy2(); 
-	//mFloorMaterial	= new Lambertian3();     
+	mSphereMaterial = new Glossy2();  
+	mTorusMaterial	= new Glossy2();
+	mCubeMaterial	= new Glossy2();  
+	mFloorMaterial	= new Lambertian3();   
+	//mFloorMaterial = new Glossy2();     
 	mQuadMaterial	= new Glossy2(); 
+
+	mSphereMaterial->mAlbedo = WHITE * 0.4f; 
+	mTorusMaterial->mAlbedo = WHITE * 0.4f; 
+	mCubeMaterial->mAlbedo = WHITE * 0.4f; 
+	mFloorMaterial->mAlbedo = WHITE * 0.4f;
 
 	mQuadMaterial->mAlbedo		= WHITE; 
 	mQuadMaterial->mEmission	= WHITE * 5.0f;      

@@ -155,7 +155,7 @@ bool Glossy::Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenu
 }
 
 Glossy2::Glossy2() :
-	mSmoothness(1.0f)
+	mSmoothness(0.75f)
 {}
 
 bool Glossy2::Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const

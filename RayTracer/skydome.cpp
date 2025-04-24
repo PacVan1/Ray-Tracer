@@ -8,8 +8,12 @@ Skydome::Skydome() :
 {}
 
 Skydome::Skydome(char const* path) :
-	mTexture(new HdrTexture(path)) 
-{}
+	mTexture(new HdrTexture(path))
+{ 
+	mTestTexture.mData		= mTexture->mPixels;     
+	mTestTexture.mWidth		= mTexture->mWidth;  
+	mTestTexture.mHeight	= mTexture->mHeight;  
+}
 
 color Skydome::Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
@@ -29,5 +33,5 @@ color Skydome::Intensity2(Scene const& scene, HitInfo const& info) const
 
 color Skydome::Sample(float3 const& direction) const
 {
-    return mTexture->Sample(calcSphereUv(direction));
+	return mTestTexture.SampleFiltered(calcSphereUv(direction));   
 }
