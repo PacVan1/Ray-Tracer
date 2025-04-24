@@ -1,12 +1,4 @@
-﻿  renderer.cpp
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(636,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file '/renderer.cpp')
-  
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(636,31): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  (compiling source file '/renderer.cpp')
-  
-  skydome.cpp
-  Generating Code...
+﻿  lights.cpp
   RayTracer.vcxproj -> C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Ray Tracer_debug.exe
   'pwsh.exe' is not recognized as an internal or external command,
   operable program or batch file.

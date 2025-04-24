@@ -135,6 +135,10 @@ void Renderer::Tick(float deltaTime)
 		}
 	}
 
+	//mTexturedSpotlight.mPosition	= mCamera.GetPosition();  
+	//mTexturedSpotlight.mTarget		= mCamera.GetTarget();   
+	//mTexturedSpotlight.Update(); 
+
 	PerformanceReport();
 
 #else
@@ -414,7 +418,7 @@ color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, 
 	color result = BLACK; 
 	if (mDirLightActive)	result += mDirLight.Intensity(scene, intersection, normal);
 	if (mPointLightsActive) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity(scene, intersection, normal);
-	if (mSpotLightsActive)	for (SpotLight const& spotLight : mSpotLights) result += spotLight.Intensity(scene, intersection, normal);
+	if (mSpotLightsActive)	for (Spotlight const& spotLight : mSpotLights) result += spotLight.Intensity(scene, intersection, normal);
 	return result; 
 }
 
@@ -422,8 +426,9 @@ color Renderer::CalcDirectLight2(Scene const& scene, HitInfo const& info) const
 {
 	color result = BLACK;
 	if (mDirLightActive)	result += mDirLight.Intensity2(scene, info);
+	result += mTexturedSpotlight.Intensity(scene, info); 
 	if (mPointLightsActive) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity2(scene, info);
-	if (mSpotLightsActive)	for (SpotLight const& spotLight : mSpotLights) result += spotLight.Intensity2(scene, info);
+	if (mSpotLightsActive)	for (Spotlight const& spotLight : mSpotLights) result += spotLight.Intensity2(scene, info);
 	return result;
 }  
 
@@ -669,14 +674,14 @@ void Renderer::Init()
 	mSphereMaterial = new Glossy2();  
 	mTorusMaterial	= new Glossy2();
 	mCubeMaterial	= new Glossy2();  
-	mFloorMaterial	= new Lambertian3();    
+	mFloorMaterial	= new Lambertian3();     
 	//mFloorMaterial = new Glossy2();     
 	mQuadMaterial	= new Glossy2(); 
 
-	mSphereMaterial->mAlbedo = WHITE * 0.4f; 
-	mTorusMaterial->mAlbedo = WHITE * 0.4f; 
-	mCubeMaterial->mAlbedo = WHITE * 0.4f; 
-	mFloorMaterial->mAlbedo = WHITE * 0.4f;
+	mSphereMaterial->mAlbedo = RED; 
+	mTorusMaterial->mAlbedo = WHITE; 
+	mCubeMaterial->mAlbedo = BLUE; 
+	mFloorMaterial->mAlbedo = GREEN; 
 
 	mQuadMaterial->mAlbedo		= WHITE; 
 	mQuadMaterial->mEmission	= WHITE * 5.0f;      

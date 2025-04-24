@@ -176,6 +176,7 @@
     <ClInclude Include="input.h" />
     <ClInclude Include="lights.h" />
     <ClInclude Include="materials.h" />
+    <ClInclude Include="added_math.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="skydome.h" />
     <ClInclude Include="textures.h" />

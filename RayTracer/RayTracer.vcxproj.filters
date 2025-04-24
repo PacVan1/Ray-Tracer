@@ -119,6 +119,9 @@
     <ClInclude Include="input.h" />
     <ClInclude Include="hitinfo.h" />
     <ClInclude Include="files.h" />
+    <ClInclude Include="added_math.h">
+      <Filter>additional</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">

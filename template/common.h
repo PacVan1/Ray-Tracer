@@ -1,5 +1,6 @@
 #pragma once
 
+#include "added_math.h" 
 #include "files.h" 
 #include "color.h"
 #include "camera.h" 
@@ -11,15 +12,6 @@ int constexpr	SCRHEIGHT		= 720;
 float constexpr ASPECT_RATIO	= static_cast<float>(SCRWIDTH) / static_cast<float>(SCRHEIGHT); 
 // #define FULLSCREEN
 // #define DOUBLESIZE
-
-// constants
-#define PI				3.14159265358979323846264f
-#define INVPI			0.31830988618379067153777f
-#define INV2PI			0.15915494309189533576888f
-#define TWOPI			6.28318530717958647692528f
-#define DEG_OVER_RAD	57.2957795131572957795131f 
-#define SQRT_PI_INV		0.56418958355f
-#define LARGE_FLOAT		1e34f
 
 #define DEBUG_MODE		1
 

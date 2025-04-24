@@ -122,8 +122,8 @@ void Camera::UpdateBasisVectors()
 
 void Camera::UpdateViewport()
 {
-	float const theta = mFov / DEG_OVER_RAD;
-	float const height = tan(theta * 0.5f);
+	float const theta	= mFov / DEG_OVER_RAD;
+	float const height	= tan(theta * 0.5f);
 
 	mViewportHeight = 2.0f * height * mFocusDist;
 	mViewportWidth	= mViewportHeight * ASPECT_RATIO;

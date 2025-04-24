@@ -36,7 +36,7 @@ public:
 	[[nodiscard]] float3	Intensity2(Scene const& scene, HitInfo const& info) const;
 };
 
-class SpotLight
+class Spotlight 
 {
 public:
 	float3	mPosition;
@@ -51,8 +51,38 @@ private:
 	float	mEpsilon;
 
 public:
-							SpotLight();
+							Spotlight(); 
 	[[nodiscard]] float3	Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
 	[[nodiscard]] float3	Intensity2(Scene const& scene, HitInfo const& info) const;
 	void					DirectionFromLookAt();
+};
+
+class TexturedSpotlight 
+{
+public:
+	Texture<color>	mTexture;  
+	Frustum			mFrustum; 
+	float3			mPosition; 
+	float3			mTarget;   
+	float			mStrength; 
+
+	float3			mAhead;
+	float3			mRight;
+	float3			mUp; 
+	float			mFocusDist;
+	float			mFov; 
+
+	float3			mTopLeft;
+	float3			mTopRight;
+	float3			mBottomLeft;
+	float3			mViewportU;
+	float3			mViewportV;
+	float			mViewportWidth;
+	float			mViewportHeight; 
+	float			mAspectRatio; 
+
+public:
+						TexturedSpotlight(); 
+	[[nodiscard]] color	Intensity(Scene const& scene, HitInfo const& info) const; 
+	void				Update();
 };

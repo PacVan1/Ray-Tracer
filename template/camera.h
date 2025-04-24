@@ -21,17 +21,6 @@ float constexpr INIT_CAMERA_FOCUS_DIST		= 10.0f;
 float constexpr INIT_CAMERA_MAX_FOCUS_DIST	= 300.0f;
 float constexpr INIT_CAMERA_MAX_FOV			= 180.0f;
 
-struct FrustumPlane
-{
-	float3	mNormal; 
-	float	mDistance; 
-};
-
-struct Frustum 
-{
-	FrustumPlane mPlanes[4]; 
-};
-
 class Camera
 {
 public:

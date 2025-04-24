@@ -133,11 +133,13 @@ public:
 
 			if ((ix + iz) & 1)
 			{
-				return float3(1.0f, 0.0f, 0.0f); 
+				//return float3(1.0f, 0.0f, 0.0f); 
+				return float3(1.0f); 
 			}
 			else
 			{
-				return float3(1.0f, 1.0f, 0.0f); 
+				//return float3(1.0f, 1.0f, 0.0f); 
+				return float3(1.0f); 
 			}
 		}
 		else if (N.z == -1)
