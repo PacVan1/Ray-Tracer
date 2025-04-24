@@ -97,11 +97,6 @@ void Ui::EnhancementsUi() const
 	{
 		mRenderer->SetAa(aa);
 	}
-	int accumMode = mRenderer->GetAccumMode(); 
-	if (ImGui::Combo("Accum Mode", &accumMode, STR_ACCUM_MODES))   
-	{
-		mRenderer->SetAccumMode(accumMode); 
-	}
 	bool dof = mRenderer->GetDof();
 	if (ImGui::Checkbox("Depth of field", &dof))
 	{
@@ -111,6 +106,34 @@ void Ui::EnhancementsUi() const
 	if (ImGui::Checkbox("Auto-focus", &autoFocus))
 	{
 		mRenderer->SetAutoFocus(autoFocus);
+	}
+
+	if (ImGui::CollapsingHeader("Skydome")) 
+	{
+		ImGui::Separator();
+		TextureUi(mRenderer->mSkydome.mTestTexture, 0);  
+		ImGui::Separator(); 
+	}
+	if (ImGui::CollapsingHeader("Converging"))  
+	{
+		int accumMode = mRenderer->GetAccumMode();
+		if (ImGui::Combo("Accum Mode", &accumMode, STR_ACCUM_MODES)) 
+		{
+			mRenderer->SetAccumMode(accumMode);
+		}
+		if (ImGui::CollapsingHeader("Accumulation")) 
+		{
+			ImGui::Separator();
+			TextureUi(mRenderer->mAccumulator, 0);
+			ImGui::Separator();
+		}
+		if (ImGui::CollapsingHeader("Reprojection"))  
+		{
+			ImGui::Separator();
+			TextureUi(mRenderer->mHistory, 0);
+			ImGui::DragFloat("History Weight", &mRenderer->mHistoryWeight, 0.01f, 0.0f, 1.0f); 
+			ImGui::Separator();
+		}
 	}
 }
 

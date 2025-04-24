@@ -37,6 +37,7 @@ enum controls : uint8_t
 	CONTROLS_LOOK_DOWN		= GLFW_KEY_DOWN, 
 
 	CONTROLS_BREAK_PIXEL	= GLFW_KEY_B,
+	CONTROLS_PICTURE_MODE	= GLFW_KEY_P
 };
 
 [[nodiscard]] float2	calcSphereUv(float3 const& direction);  

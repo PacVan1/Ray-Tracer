@@ -2,12 +2,16 @@
 
 #include "scene.h" 
 
-// position 1: 
+// preset 1: 
 //float3 const	INIT_CAMERA_POSITION		= float3(-3.018f, 1.146f, -3.449f);  
 //float3 const	INIT_CAMERA_TARGET			= float3(-2.530f, 0.931f, -2.603f);
-// position 2: 
+// preset 2: 
 float3 const	INIT_CAMERA_POSITION		= float3(-1.793f, 1.109f, 6.860f);  
 float3 const	INIT_CAMERA_TARGET			= float3( 0.000f, 0.109f, 2.000f);
+// preset 3: 
+//float3 const	INIT_CAMERA_POSITION		= float3( 1.022f, 2.199f, 3.879f);
+//float3 const	INIT_CAMERA_TARGET			= float3( 1.813f, 2.280f, 3.269f);
+//float constexpr INIT_CAMERA_FOV				= 8.8f;  
 
 float constexpr INIT_CAMERA_SPEED			= 0.0025f;
 float constexpr INIT_CAMERA_SENSITIVITY		= 0.0025f;

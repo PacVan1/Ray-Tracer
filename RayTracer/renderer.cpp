@@ -10,7 +10,6 @@ void Renderer::Tick(float deltaTime)
 
 	if (mFrame < mMaxFrames || !mMaxFramesActive) 
 	{
-		mBreakPixel = input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive;
 		float const scale = 1.0f / static_cast<float>(mSpp++); mFrame++; 
 		int			debugRayIdx	= 0;
 #pragma omp parallel for schedule(dynamic)
@@ -105,7 +104,6 @@ void Renderer::Tick(float deltaTime)
 			}
 		}
 	}
-	PerformanceReport();
 
 	if (mDebugViewerActive) RenderDebugViewer();
 	if (mBreakPixelActive)
@@ -118,7 +116,8 @@ void Renderer::Tick(float deltaTime)
 	{
 		mCamera.UpdateFrustum(); 
 		mCamera.Update(deltaTime); 
-		swap(mHistory, mAccumulator);    
+		swap(mHistory, mAccumulator);   
+
 	}
 	else if (mAccumMode == ACCUM_MODES_ACCUMULATION)
 	{
@@ -135,6 +134,8 @@ void Renderer::Tick(float deltaTime)
 			if (mAutoFocusActive) mCamera.Focus(mScene);
 		}
 	}
+
+	PerformanceReport();
 
 #else
 	mTimer.reset();
@@ -532,33 +533,24 @@ color Renderer::Reproject(Ray const& primRay, color const& sample) const
 	float const dLeft	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[0], primI);   
 	float const dRight	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[1], primI);   
 	float const dTop	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[2], primI);   
-	float const dBottom = distanceToFrustum(mCamera.mPrevFrustum.mPlanes[3], primI);   
-	float const prevX	= (SCRWIDTH * dLeft) / (dLeft + dRight) - 1.0f; 
-	float const prevY	= (SCRHEIGHT * dTop) / (dTop + dBottom) - 1.0f;   
+	float const dBottom = distanceToFrustum(mCamera.mPrevFrustum.mPlanes[3], primI); 
+	float x = dLeft / (dLeft + dRight); 
+	float y = dTop  / (dTop + dBottom);  
+	float const prevX	= SCRWIDTH * x - 1.0f; 
+	float const prevY	= SCRHEIGHT * y - 1.0f;    
+	x = prevX / SCRWIDTH; 
+	y = prevY / SCRHEIGHT;  
 
-	if (prevX >= 1 && prevX <= SCRWIDTH - 2 && prevY >= 1 && prevY <= SCRHEIGHT - 2) 
+	if (prevX >= 1 && prevX <= SCRWIDTH - 2 && prevY >= 1 && prevY <= SCRHEIGHT - 2)  
 	{
 		Ray repRay = Ray(mCamera.mPrevPosition, normalize(primI - mCamera.mPrevPosition)); 
 		mScene.FindNearest(repRay);
 		float3 const repI = calcIntersection(repRay);   
 		if (sqrLength(primI - repI) < 0.0001f)  
 		{
-			historyWeight = 0.80f;
-			float const fx = fracf(prevX), fy = fracf(prevY);
-			float const w1 = (1 - fx) * (1 - fy);
-			float const w2 = fx * (1 - fy);
-			float const w3 = (1 - fx) * fy;
-			float const w4 = fx * fy;
-			
-			int const x = static_cast<int>(prevX);  
-			int const y = static_cast<int>(prevY);
-			int const a = x + y * SCRWIDTH;
-
-			color const p1 = mHistory[a]; 
-			color const p2 = mHistory[a + 1]; 
-			color const p3 = mHistory[a + SCRWIDTH];  
-			color const p4 = mHistory[a + SCRWIDTH + 1];   
-			historySample = p1 * w1 + p2 * w2 + p3 * w3 + p4 * w4;  
+			historyWeight = mHistoryWeight;   
+			float4 const data = mHistory.Sample(float2(x, y));      
+			historySample = static_cast<color>(data);  
 		}
 	}
 
@@ -611,12 +603,12 @@ void Renderer::ResetAccumulator()
 {
 	mSpp = 1;
 	mFrame = 0; 
-	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));
+	mAccumulator.Clear();   
 } 
 
 void Renderer::ResetHistory()
 {
-	memset(mHistory, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));  
+	mHistory.Clear();  
 }
 
 void Renderer::PerformanceReport()
@@ -629,7 +621,7 @@ void Renderer::PerformanceReport()
 
 void Renderer::UI()
 {
-	mUi.General();
+	if (!mPictureModeActive) mUi.General(); 
 }
 
 void Renderer::RenderDebugViewer()
@@ -655,6 +647,7 @@ void Renderer::Init()
 	mRenderMode			= INIT_RENDER_MODE;
 	mAccumMode			= INIT_ACCUM_MODE;
 	sEps				= INIT_EPS;
+	mHistoryWeight		= INIT_HISTORY_WEIGHT;
 	mMaxBounces			= INIT_MAX_BOUNCES;
 
 	mDirLightActive		= INIT_LIGHTS_DIR_LIGHT_ACTIVE;
@@ -676,7 +669,7 @@ void Renderer::Init()
 	mSphereMaterial = new Glossy2();  
 	mTorusMaterial	= new Glossy2();
 	mCubeMaterial	= new Glossy2();  
-	mFloorMaterial	= new Lambertian3();   
+	mFloorMaterial	= new Lambertian3();    
 	//mFloorMaterial = new Glossy2();     
 	mQuadMaterial	= new Glossy2(); 
 
@@ -698,10 +691,10 @@ inline void Renderer::InitUi()
 
 inline void Renderer::InitAccumulator()
 {
-	mAccumulator = static_cast<float4*>(MALLOC64(SCRWIDTH * SCRHEIGHT * sizeof(float4)));
-	memset(mAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));  
-	mHistory = static_cast<float4*>(MALLOC64(SCRWIDTH * SCRHEIGHT * sizeof(float4))); 
-	memset(mHistory, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4)); 
+	mAccumulator	= Texture<float4>(SCRWIDTH, SCRHEIGHT); 
+	mHistory		= Texture<float4>(SCRWIDTH, SCRHEIGHT);  
+	mHistory.mSampleMode = TEXTURE_SAMPLE_MODES_CLAMPED;    
+	mHistory.mFilterMode = TEXTURE_FILTER_MODES_LINEAR;     
 }
 
 float2 Renderer::RandomOnPixel(int const x, int const y) const
@@ -716,5 +709,13 @@ bool Renderer::DidHit(Ray const& ray) const
 
 void Renderer::Shutdown()
 {
-	delete[] mAccumulator;  
+	//delete[] mAccumulator; 
+	delete[] mAccumulator.mData; 
+	//delete[] mHistory.mData;  
+}
+
+void Renderer::Input()
+{
+	mBreakPixel			= input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive; 
+	mPictureModeActive	= input.IsKeyReleased(CONTROLS_PICTURE_MODE) ? !mPictureModeActive : mPictureModeActive; 
 }

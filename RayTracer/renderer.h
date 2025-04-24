@@ -27,8 +27,9 @@ enum accumModes : uint8_t
 
 color const		INIT_MISS						= BLACK;  
 int constexpr	INIT_RENDER_MODE				= RENDER_MODES_SHADED;
-int constexpr	INIT_ACCUM_MODE					= ACCUM_MODES_ACCUMULATION;      
+int constexpr	INIT_ACCUM_MODE					= ACCUM_MODES_REPROJECTION;       
 float constexpr INIT_EPS						= 1e-3f;
+float constexpr INIT_HISTORY_WEIGHT				= 0.8f; 
 int constexpr	INIT_MAX_BOUNCES				= 10; 
 
 bool constexpr	INIT_LIGHTS_DIR_LIGHT_ACTIVE	= false;  
@@ -54,6 +55,7 @@ public:
 	DebugViewer2D			mDebugViewer; 
 	bool					mDebugViewerActive	= false;
 	bool					mBreakPixelActive	= false;
+	bool					mPictureModeActive	= false;
 	bool					mMaxFramesActive	= false;
 	int						mMaxFrames			= 1;
 	Camera					mCamera;
@@ -75,6 +77,7 @@ public:
 
 	std::vector<PointLight> mPointLights; 
 	std::vector<SpotLight>	mSpotLights;
+	Skydome					mSkydome;  
 
 	bool					mDirLightActive;
 	bool					mPointLightsActive;
@@ -82,15 +85,14 @@ public:
 	bool					mQuadLightActive = true;  
 	bool					mSkydomeActive;
 
-private:
 	Ui						mUi;
 
 	// BUFFERS
-	float4*					mAccumulator;
-	float4*					mHistory; 
+	Texture<float4>			mAccumulator;
+	Texture<float4>			mHistory;  
+	float					mHistoryWeight; 
 
 	DirectionalLight		mDirLight;
-	Skydome					mSkydome; 
 	color					mMiss;
 
 	int						mRenderMode;
@@ -162,6 +164,7 @@ private:
 	[[nodiscard]] inline bool		DidHit(Ray const& ray) const;
 
 	void					UI() override;
+	void					Input() override;
 	void					RenderDebugViewer(); 
 
 	void					Init() override;

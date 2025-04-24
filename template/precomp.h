@@ -334,6 +334,7 @@ public:
 public:
 	virtual void Init() = 0;
 	virtual void Tick( float deltaTime ) {}
+	virtual void Input() {}
 	virtual void UI() { mUiUpdated = false; }
 	virtual void Shutdown() {}
 	virtual void MouseUp( int button ) {}
