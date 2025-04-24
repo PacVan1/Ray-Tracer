@@ -111,7 +111,7 @@ void Ui::EnhancementsUi() const
 	if (ImGui::CollapsingHeader("Skydome")) 
 	{
 		ImGui::Separator();
-		TextureUi(mRenderer->mSkydome.mTestTexture, 0);  
+		TextureUi(mRenderer->mSkydome.mTexture, 0);  
 		ImGui::Separator(); 
 	}
 	if (ImGui::CollapsingHeader("Converging"))  

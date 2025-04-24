@@ -142,6 +142,7 @@
     <ClCompile Include="..\template\tmpl8math.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="files.cpp" />
     <ClCompile Include="hitinfo.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="lights.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="..\template\tmpl8math.h" />
     <ClInclude Include="color.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="files.h" />
     <ClInclude Include="hitinfo.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="lights.h" />

@@ -693,8 +693,10 @@ inline void Renderer::InitAccumulator()
 {
 	mAccumulator	= Texture<float4>(SCRWIDTH, SCRHEIGHT); 
 	mHistory		= Texture<float4>(SCRWIDTH, SCRHEIGHT);  
-	mHistory.mSampleMode = TEXTURE_SAMPLE_MODES_CLAMPED;    
-	mHistory.mFilterMode = TEXTURE_FILTER_MODES_LINEAR;     
+	//mAccumulator.mOwnData	= true; 
+	//mHistory.mOwnData		= true; 
+	mHistory.mSampleMode	= TEXTURE_SAMPLE_MODES_CLAMPED;    
+	mHistory.mFilterMode	= TEXTURE_FILTER_MODES_LINEAR;     
 }
 
 float2 Renderer::RandomOnPixel(int const x, int const y) const
@@ -709,9 +711,6 @@ bool Renderer::DidHit(Ray const& ray) const
 
 void Renderer::Shutdown()
 {
-	//delete[] mAccumulator; 
-	delete[] mAccumulator.mData; 
-	//delete[] mHistory.mData;  
 }
 
 void Renderer::Input()

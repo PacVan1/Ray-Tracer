@@ -7,8 +7,7 @@
 class Skydome
 {
 public:
-	HdrTexture*		mTexture;
-	Texture<float3>	mTestTexture;  
+	Texture<color> mTexture;  
 
 public:
 						Skydome(); 

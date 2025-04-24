@@ -47,9 +47,7 @@ private:
 	[[nodiscard]] T SampleLinearUnsafe(float2 uv) const; 
 	[[nodiscard]] T SampleLinearLooped(float2 uv) const; 
 	[[nodiscard]] T SampleLinearClamped(float2 uv) const; 
-};
-
-Texture<float3> loadTexture(char const* path);  
+}; 
 
 template <typename T> 
 static void swap(Texture<T>& a, Texture<T>& b) noexcept 
@@ -63,7 +61,7 @@ Texture<T>::Texture() :
 	mData(nullptr),
 	mWidth(0), 
 	mHeight(0), 
-	mOwnData(false),
+	mOwnData(false), 
 	mSampleMode(TEXTURE_SAMPLE_MODES_NONE),  
 	mFilterMode(TEXTURE_FILTER_MODES_NONE) 
 {}
@@ -93,7 +91,7 @@ Texture<T>::Texture(T* data, int const width, int const height) :
 	mData(data),
 	mWidth(width),
 	mHeight(height),
-	mOwnData(false),
+	mOwnData(false), 
 	mSampleMode(TEXTURE_SAMPLE_MODES_NONE),  
 	mFilterMode(TEXTURE_FILTER_MODES_NONE) 
 {}
@@ -101,7 +99,7 @@ Texture<T>::Texture(T* data, int const width, int const height) :
 template <typename T> 
 Texture<T>::~Texture()  
 {
-	if (mOwnData) FREE64(mData);   
+	if (mOwnData) FREE64(mData);
 }
 
 template <typename T>

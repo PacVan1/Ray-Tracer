@@ -1,0 +1,10 @@
+#pragma once
+
+#include "textures.h"
+
+FILE*			openForRead(char const* path); 
+void			printLoading(char const* path); 
+void			printSuccess(char const* path); 
+void			printFailure(char const* path);  
+void			fileNotFound(char const* path); 
+Texture<float3>	loadTexture(char const* path);   

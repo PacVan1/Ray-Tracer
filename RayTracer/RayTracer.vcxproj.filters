@@ -51,6 +51,7 @@
       <Filter>additional</Filter>
     </ClCompile>
     <ClCompile Include="hitinfo.cpp" />
+    <ClCompile Include="files.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -117,6 +118,7 @@
     <ClInclude Include="skydome.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="hitinfo.h" />
+    <ClInclude Include="files.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
