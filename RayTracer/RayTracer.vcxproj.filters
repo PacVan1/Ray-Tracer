@@ -133,5 +133,40 @@
     <Filter Include="additional">
       <UniqueIdentifier>{3fab4d46-6e11-4c65-8384-b97814d20949}</UniqueIdentifier>
     </Filter>
+    <Filter Include="additional\shaders">
+      <UniqueIdentifier>{822ba477-e6f7-4757-bea0-cb56beff5673}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\source\shaders\basic.frag">
+      <Filter>additional\shaders</Filter>
+    </None>
+    <None Include="..\source\shaders\basic.vert">
+      <Filter>additional\shaders</Filter>
+    </None>
+    <None Include="..\source\shaders\gamma_correction.vert">
+      <Filter>additional\shaders</Filter>
+    </None>
+    <None Include="..\source\shaders\gamma_correction.frag">
+      <Filter>additional\shaders</Filter>
+    </None>
+    <None Include="..\source\shaders\aces.vert">
+      <Filter>additional\shaders</Filter>
+    </None>
+    <None Include="..\source\shaders\aces.frag">
+      <Filter>additional\shaders</Filter>
+    </None>
+    <None Include="..\source\shaders\chromatic_aberration.vert">
+      <Filter>additional\shaders</Filter>
+    </None>
+    <None Include="..\source\shaders\chromatic_aberration.frag">
+      <Filter>additional\shaders</Filter>
+    </None>
+    <None Include="..\source\shaders\vignetting.vert">
+      <Filter>additional\shaders</Filter>
+    </None>
+    <None Include="..\source\shaders\vignetting.frag">
+      <Filter>additional\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

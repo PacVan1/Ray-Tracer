@@ -27,7 +27,7 @@ enum accumModes : uint8_t
 
 color const		INIT_MISS						= BLACK;  
 int constexpr	INIT_RENDER_MODE				= RENDER_MODES_SHADED;
-int constexpr	INIT_ACCUM_MODE					= ACCUM_MODES_NONE;        
+int constexpr	INIT_ACCUM_MODE					= ACCUM_MODES_ACCUMULATION;        
 float constexpr INIT_EPS						= 1e-3f;
 float constexpr INIT_HISTORY_WEIGHT				= 0.8f; 
 int constexpr	INIT_MAX_BOUNCES				= 10; 
@@ -35,13 +35,13 @@ int constexpr	INIT_MAX_BOUNCES				= 10;
 bool constexpr	INIT_LIGHTS_DIR_LIGHT_ACTIVE	= false;  
 bool constexpr	INIT_LIGHTS_POINT_LIGHTS_ACTIVE	= false;
 bool constexpr	INIT_LIGHTS_SPOT_LIGHTS_ACTIVE	= false;
-bool constexpr	INIT_LIGHTS_SKYDOME_ACTIVE		= false;   
+bool constexpr	INIT_LIGHTS_SKYDOME_ACTIVE		= true;    
 
-bool constexpr	INIT_DOF_ACTIVE					= false; 
+bool constexpr	INIT_DOF_ACTIVE					= true;  
 bool constexpr	INIT_BREAK_PIXEL				= false;      
-bool constexpr	INIT_AA_ACTIVE					= false;
+bool constexpr	INIT_AA_ACTIVE					= true;
 bool constexpr	INIT_ACCUM_ACTIVE				= false;
-bool constexpr	INIT_AUTO_FOCUS_ACTIVE			= false;  
+bool constexpr	INIT_AUTO_FOCUS_ACTIVE			= true;  
 
 namespace Tmpl8
 {

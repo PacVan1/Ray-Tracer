@@ -182,6 +182,18 @@
     <ClInclude Include="textures.h" />
     <ClInclude Include="ui.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\source\shaders\aces.frag" />
+    <None Include="..\source\shaders\aces.vert" />
+    <None Include="..\source\shaders\basic.frag" />
+    <None Include="..\source\shaders\basic.vert" />
+    <None Include="..\source\shaders\chromatic_aberration.frag" />
+    <None Include="..\source\shaders\chromatic_aberration.vert" />
+    <None Include="..\source\shaders\gamma_correction.frag" />
+    <None Include="..\source\shaders\gamma_correction.vert" />
+    <None Include="..\source\shaders\vignetting.frag" />
+    <None Include="..\source\shaders\vignetting.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

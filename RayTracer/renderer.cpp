@@ -426,7 +426,7 @@ color Renderer::CalcDirectLight2(Scene const& scene, HitInfo const& info) const
 {
 	color result = BLACK;
 	if (mDirLightActive)	result += mDirLight.Intensity2(scene, info);
-	result += mTexturedSpotlight.Intensity(scene, info); 
+	//result += mTexturedSpotlight.Intensity(scene, info); 
 	if (mPointLightsActive) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity2(scene, info);
 	if (mSpotLightsActive)	for (Spotlight const& spotLight : mSpotLights) result += spotLight.Intensity2(scene, info);
 	return result;
@@ -678,10 +678,13 @@ void Renderer::Init()
 	//mFloorMaterial = new Glossy2();     
 	mQuadMaterial	= new Glossy2(); 
 
-	mSphereMaterial->mAlbedo = RED; 
-	mTorusMaterial->mAlbedo = WHITE; 
-	mCubeMaterial->mAlbedo = BLUE; 
-	mFloorMaterial->mAlbedo = GREEN; 
+	//mSphereMaterial->mAlbedo	= RED; 
+	//mTorusMaterial->mAlbedo		= GREEN; 
+	//mCubeMaterial->mAlbedo		= BLUE; 
+	mSphereMaterial->mAlbedo = WHITE * 0.4f;
+	mTorusMaterial->mAlbedo = WHITE * 0.4f;
+	mCubeMaterial->mAlbedo = WHITE * 0.4f;
+	mFloorMaterial->mAlbedo		= WHITE * 0.4f;  
 
 	mQuadMaterial->mAlbedo		= WHITE; 
 	mQuadMaterial->mEmission	= WHITE * 5.0f;      
