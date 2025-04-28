@@ -135,7 +135,8 @@ color TexturedSpotlight::Intensity(Scene const& scene, HitInfo const& info) cons
 }
 
 TexturedSpotlight::TexturedSpotlight() : 
-	mTexture(loadTexture("../assets/mario_bros_1.jpeg")), 
+	//mTexture(loadTextureF("../assets/mario_bros_1.jpeg")),  
+	mTexture(loadTextureI("../assets/LDR_RG01_0.png")),    
 	mPosition(0.0f, 4.0f, -2.5f), 
 	mTarget(0.0f), 
 	mFov(60.0f),  

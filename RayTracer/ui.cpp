@@ -19,26 +19,17 @@ void Ui::General() const
 	ImGui::Text("Performance report"); 
 	ImGui::Text("%5.2fms (%.1ffps) - %.1fMrays/s\n", mRenderer->GetAvg(), mRenderer->GetFps(), mRenderer->GetRps() / 1000);
 
-	ImGui::Separator();
+	Settings& settings = mRenderer->GetSettings(); 
 
-	int renderMode = mRenderer->GetRenderMode(); 
-	if (ImGui::Combo("Render Mode", &renderMode, STR_RENDER_MODES))
-	{
-		mRenderer->SetRenderMode(renderMode); 
-	}
-	int maxBounces = mRenderer->GetMaxBounces();
-	if (ImGui::SliderInt("Max Bounces", &maxBounces, 1, 10))
-	{
-		mRenderer->SetMaxBounces(maxBounces);
-	}
+	ImGui::Separator();
 
 	if (ImGui::BeginTabBar("Main"))
 	{
+		if (ImGui::BeginTabItem("Settings"))		{ SettingsUi();		ImGui::EndTabItem(); } 
 		if (ImGui::BeginTabItem("Camera"))			{ CameraUi();		ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Materials"))		{ MaterialsUi();	ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Lights"))			{ LightsUi();		ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Debug"))			{ DebugUi();		ImGui::EndTabItem(); }
-		if (ImGui::BeginTabItem("Enhancements"))	{ EnhancementsUi();	ImGui::EndTabItem(); }
 	}
 
 	ImGui::End(); 
@@ -46,17 +37,20 @@ void Ui::General() const
 
 void Ui::DebugUi() const
 {
+	Settings& settings			= mRenderer->GetSettings();
+	DebugViewer2D debugViewer	= mRenderer->GetDebugViewer(); 
+
 	if (ImGui::CollapsingHeader("2D Slice Viewer"))
 	{
 		ImGui::Separator(); 
-		ImGui::Checkbox("Active", &mRenderer->mDebugViewerActive);
-		ImGui::DragFloat("Zoom", &mRenderer->mDebugViewer.mZoom, 0.1f, 1.0f, SCRHEIGHT);
-		ImGui::DragFloat2("Position", mRenderer->mDebugViewer.mPosition.cell, 0.05f);
-		if (ImGui::SliderInt("Every", &mRenderer->mDebugViewer.mEvery, 1, 15)) 
+		ImGui::Checkbox("Enabled", &settings.mDebugViewerEnabled); 
+		ImGui::DragFloat("Zoom", &debugViewer.mZoom, 0.1f, 1.0f, SCRHEIGHT);
+		ImGui::DragFloat2("Position", debugViewer.mPosition.cell, 0.05f);
+		if (ImGui::SliderInt("Every", &debugViewer.mEvery, 1, 15))
 		{
-			mRenderer->mDebugViewer.SetSelection();
-		}
-		ImGui::SliderInt("Selected", &mRenderer->mDebugViewer.mSelected, 0, mRenderer->mDebugViewer.mSelectionCount);
+			debugViewer.SetSelection(); 
+		} 
+		ImGui::SliderInt("Selected", &debugViewer.mSelected, 0, debugViewer.mSelectionCount); 
 		ImGui::Separator();
 
 		ImGui::Text("Color legenda"); 
@@ -76,64 +70,53 @@ void Ui::DebugUi() const
 	if (ImGui::CollapsingHeader("Pixel Break"))
 	{
 		ImGui::Separator();
-		ImGui::Checkbox("Active", &mRenderer->mBreakPixelActive);
+		ImGui::Checkbox("Active", &settings.mBreakPixelEnabled);
 		ImGui::Text("Pixel Coordinate: (%d, %d)", input.mMousePos.x, input.mMousePos.y);
 		ImGui::Separator();
 	}
 	if (ImGui::CollapsingHeader("Frame Controller"))
 	{
 		ImGui::Separator();
-		ImGui::Checkbox("Active", &mRenderer->mMaxFramesActive); 
-		ImGui::DragInt("Number of frames", &mRenderer->mMaxFrames, 1, 1, 1000); 
-		ImGui::ProgressBar(static_cast<float>(mRenderer->GetFrame()) / static_cast<float>(mRenderer->mMaxFrames), ImVec2(0.0f, 0.0f), "Progress"); 
+		ImGui::Checkbox("Active", &settings.mMaxFramesEnabled); 
+		ImGui::DragInt("Number of frames", &settings.mMaxFrames, 1, 1, 1000); 
+		ImGui::ProgressBar(static_cast<float>(mRenderer->GetFrame()) / static_cast<float>(settings.mMaxFrames), ImVec2(0.0f, 0.0f), "Progress"); 
 		ImGui::Separator();
 	}
 }
 
-void Ui::EnhancementsUi() const
+void Ui::SettingsUi() const
 {
-	bool aa = mRenderer->GetAa();
-	if (ImGui::Checkbox("Anti-aliasing", &aa))
-	{
-		mRenderer->SetAa(aa);
-	}
-	bool dof = mRenderer->GetDof();
-	if (ImGui::Checkbox("Depth of field", &dof))
-	{
-		mRenderer->SetDof(dof);
-	}
-	bool autoFocus = mRenderer->GetAutoFocus();
-	if (ImGui::Checkbox("Auto-focus", &autoFocus))
-	{
-		mRenderer->SetAutoFocus(autoFocus);
-	}
+	Settings& settings = mRenderer->GetSettings();
 
-	if (ImGui::CollapsingHeader("Skydome")) 
+	ImGui::Separator(); 
+	if (ImGui::Combo("Converge mode", &settings.mConvergeMode, STR_CONVERGE_MODES)) mRenderer->ResetAccumulator();   
+	if (ImGui::Combo("Render mode", &settings.mRenderMode, STR_RENDER_MODES))		mRenderer->ResetAccumulator();  
+	if (ImGui::SliderInt("Max bounces", &settings.mMaxBounces, 1, 10))				mRenderer->ResetAccumulator(); 
+	ImGui::Separator(); 
+	if (ImGui::Checkbox("Anti-aliasing", &settings.mAaEnabled))						mRenderer->ResetAccumulator(); 
+	if (ImGui::Checkbox("Depth of field", &settings.mDofEnabled))					mRenderer->ResetAccumulator(); 
+	if (ImGui::Checkbox("Auto-focus", &settings.mAutoFocusEnabled))					mRenderer->ResetAccumulator(); 
+	if (ImGui::Checkbox("Blue noise", &settings.mBlueNoiseEnabled))					mRenderer->ResetAccumulator(); 
+	ImGui::Separator();   
+	if (ImGui::Checkbox("Point lights", &settings.mPointLightsEnabled))				mRenderer->ResetAccumulator(); 
+	if (ImGui::Checkbox("Spotlights", &settings.mSpotlightsEnabled))				mRenderer->ResetAccumulator();
+	if (ImGui::Checkbox("Directional light", &settings.mDirLightEnabled))			mRenderer->ResetAccumulator(); 
+	if (ImGui::Checkbox("Quad light", &settings.mQuadLightEnabled))					mRenderer->ResetAccumulator();
+	if (ImGui::Checkbox("Textured spotlight", &settings.mTexturedSpotlightEnabled)) mRenderer->ResetAccumulator(); 
+	if (ImGui::Checkbox("Skydome illumination", &settings.mSkydomeEnabled))			mRenderer->ResetAccumulator();
+	ImGui::Separator(); 
+	if (ImGui::CollapsingHeader("Skydome"))  
 	{
-		ImGui::Separator();
-		TextureUi(mRenderer->mSkydome.mTexture, 0);  
-		ImGui::Separator(); 
+		TextureUi(mRenderer->mSkydome.mTexture);  
 	}
-	if (ImGui::CollapsingHeader("Converging"))  
+	if (ImGui::CollapsingHeader("Accumulator"))
 	{
-		int accumMode = mRenderer->GetAccumMode();
-		if (ImGui::Combo("Accum Mode", &accumMode, STR_ACCUM_MODES)) 
-		{
-			mRenderer->SetAccumMode(accumMode);
-		}
-		if (ImGui::CollapsingHeader("Accumulation")) 
-		{
-			ImGui::Separator();
-			TextureUi(mRenderer->mAccumulator, 0);
-			ImGui::Separator();
-		}
-		if (ImGui::CollapsingHeader("Reprojection"))  
-		{
-			ImGui::Separator();
-			TextureUi(mRenderer->mHistory, 0);
-			ImGui::DragFloat("History Weight", &mRenderer->mHistoryWeight, 0.01f, 0.0f, 1.0f); 
-			ImGui::Separator();
-		}
+		TextureUi(mRenderer->mAccumulator); 
+	}
+	if (ImGui::CollapsingHeader("Reprojector")) 
+	{
+		TextureUi(mRenderer->mHistory);  
+		ImGui::DragFloat("History Weight", &mRenderer->mHistoryWeight, 0.01f, 0.0f, 1.0f); 
 	}
 }
 
@@ -154,7 +137,8 @@ void Ui::CameraUi() const
 		mRenderer->ResetAccumulator();
 		camera.Focus(mRenderer->mScene); 
 	}
-	if (ImGui::DragFloat("Speed", &camera.mSpeed, 0.05f, 0.0f, 10.0f));
+	if (ImGui::DragFloat("Speed", &camera.mSpeed, 0.01f, 0.0f, 10.0f));
+	if (ImGui::DragFloat("Sensitivity", &camera.mSensitivity, 0.01f, 0.0f, 10.0f));
 	float focusDist = camera.GetFocusDist();
 	if (ImGui::DragFloat("Focus distance", &focusDist, 0.01f, 0.0f, INIT_CAMERA_FOCUS_DIST))
 	{
@@ -185,15 +169,6 @@ void Ui::MaterialsUi() const
 
 void Ui::LightsUi() const
 {
-	ImGui::Separator(); 
-
-	if (ImGui::Checkbox("Directional Light", &mRenderer->mDirLightActive))		mRenderer->ResetAccumulator();
-	if (ImGui::Checkbox("Point Lights", &mRenderer->mPointLightsActive))		mRenderer->ResetAccumulator();
-	if (ImGui::Checkbox("Spot Lights", &mRenderer->mSpotLightsActive))			mRenderer->ResetAccumulator();
-	if (ImGui::Checkbox("Skydome Illumination", &mRenderer->mSkydomeActive))	mRenderer->ResetAccumulator();
-
-	ImGui::Separator(); 
-
 	static int lightTypeIdx = 0;
 	if (ImGui::Combo("Light Type", &lightTypeIdx, STR_LIGHT_TYPES));  
 	if (ImGui::Button("Add Light"))

@@ -14,11 +14,11 @@ static constexpr ImGuiWindowFlags UI_WINDOW_FLAGS =
 	ImGuiWindowFlags_NoFocusOnAppearing		|
 	ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-inline auto constexpr STR_RENDER_MODES	= "Normals\0Depth\0Albedo\0Shaded\0"; 
-inline auto constexpr STR_ACCUM_MODES	= "None\0Accumulation\0Reprojection\0";
-inline auto constexpr STR_SAMPLE_MODES	= "None\0Unsafe/Fast\0Looped\0Clamped\0"; 
-inline auto constexpr STR_FILTER_MODES	= "None\0Nearest\0Linear\0";  
-inline auto constexpr STR_LIGHT_TYPES	= "Point\0Directional\0Spot\0"; 
+inline auto constexpr STR_RENDER_MODES		= "Normals\0Depth\0Albedo\0Shaded\0"; 
+inline auto constexpr STR_CONVERGE_MODES	= "None\0Accumulation\0Reprojection\0";
+inline auto constexpr STR_SAMPLE_MODES		= "None\0Unsafe/Fast\0Looped\0Clamped\0"; 
+inline auto constexpr STR_FILTER_MODES		= "None\0Nearest\0Linear\0";  
+inline auto constexpr STR_LIGHT_TYPES		= "Point\0Directional\0Spot\0"; 
 
 class Ui
 {
@@ -31,13 +31,13 @@ public:
 
 private:
 	void	DebugUi() const;
-	void	EnhancementsUi() const;
+	void	SettingsUi() const;
 	void	CameraUi() const;
 	void	MaterialsUi() const;
 	void	LightsUi() const; 
 
 	template <typename T> 
-	void	TextureUi(Texture<T>& texture, int const id) const; 
+	void	TextureUi(Texture<T>& texture, int const id = 0) const; 
 };
 
 template<typename T>

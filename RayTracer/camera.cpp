@@ -79,6 +79,16 @@ Ray Camera::GetPrimaryRayFocused(float2 const pixel) const
 	return { point, normalize(target - point) };
 }
 
+Ray Camera::GetPrimaryRayFocused(float2 const pixel, blueSeed const seed) const
+{
+	float const u = (pixel.x + 0.5f) * (1.0f / SCRWIDTH);
+	float const v = (pixel.y + 0.5f) * (1.0f / SCRHEIGHT);
+	float3 const random = randomUnitOnDisk(seed); 
+	float3 const point = mPosition + random.x * mDefocusDiskU + random.y * mDefocusDiskV;
+	float3 const target = mTopLeft + u * mViewportU + v * mViewportV;
+	return { point, normalize(target - point) }; 
+}
+
 void Camera::SetPosition(float3 const position)
 {
 	mPosition = position; 

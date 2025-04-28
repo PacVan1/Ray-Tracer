@@ -1,5 +1,7 @@
 #version 330
 
+// src: https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+
 uniform sampler2D c;
 in vec2 u;
 out vec4 f;

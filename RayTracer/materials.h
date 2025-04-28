@@ -12,6 +12,7 @@ public:
 public:
 					Material(); 
 	virtual bool	Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const = 0; 
+	virtual bool	Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation, blueSeed const seed) const = 0;
 
 	inline color	GetAlbedo() const	{ return mAlbedo; } 
 	inline color	GetEmission() const	{ return mEmission; } 
@@ -23,7 +24,8 @@ class Metallic : public Material
 public:
 	bool Scatter(Ray const& in, Ray& out, float3 const& intersection, float3 const& normal) const;
 	bool Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
-	bool Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const override;  
+	bool Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const override; 
+	bool Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation, blueSeed const seed) const override;  
 };
 
 // fresnel reflection + refraction
@@ -38,6 +40,7 @@ public:
 	bool	Scatter(Ray const& in, Ray& out, float3 const& intersection, float3 const& normal) const;
 	bool	Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
 	bool	Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const override;
+	bool	Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation, blueSeed const seed) const override;
 };
 
 // diffuse reflection + perfect reflection
@@ -51,6 +54,7 @@ public:
 					Glossy(); 
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
 	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const override;
+	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation, blueSeed const seed) const override;
 };
 
 // cosine weighted diffuse reflection + fresnel reflection 
@@ -63,6 +67,7 @@ public:
 					Glossy2(); 
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
 	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const override;
+	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation, blueSeed const seed) const override;
 };
 
 // diffuse reflection
@@ -71,6 +76,7 @@ class Lambertian : public Material
 public:
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
 	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const override;
+	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation, blueSeed const seed) const override;
 	inline color	GetAlbedo() const { return mAlbedo; }
 };
 
@@ -80,6 +86,7 @@ class Lambertian2 : public Material
 public:
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
 	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const override;
+	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation, blueSeed const seed) const override;
 	inline color	GetAlbedo() const { return mAlbedo; }
 };
 
@@ -89,6 +96,7 @@ class Lambertian3 : public Material
 public:
 	bool			Scatter2(Ray const& in, Ray& out, color& color, float3 const& intersection, float3 const& normal) const;
 	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation) const override;
+	bool			Scatter(Ray const& in, HitInfo const& info, Ray& out, color& attenuation, blueSeed const seed) const override;
 	inline color	GetAlbedo() const	{ return mAlbedo; }
 	inline color	GetEmission() const { return WHITE * 20.0f; }
 };

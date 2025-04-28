@@ -113,7 +113,7 @@ struct float3
 	float2 xy() { return float2( x, y ); }
 	float2 yz() { return float2( y, z ); }
 	float halfArea() { return x < -1e30f ? 0 : (x * y + y * z + z * x); } // for SAH calculations
-	union { struct { float x, y, z; }; float cell[3]; };
+	union { struct { float x, y, z; }; struct { float r, g, b; }; float cell[3]; }; 
 	float& operator [] ( const int n ) { return cell[n]; }
 	const float& operator [] ( const int n ) const { return cell[n]; }
 };
@@ -527,7 +527,7 @@ inline float2 ceilf( const float2& v ) { return make_float2( ceilf( v.x ), ceilf
 inline float3 ceilf( const float3& v ) { return make_float3( ceilf( v.x ), ceilf( v.y ), ceilf( v.z ) ); }
 inline float4 ceilf( const float4& v ) { return make_float4( ceilf( v.x ), ceilf( v.y ), ceilf( v.z ), ceilf( v.w ) ); }
 
-inline float fracf( float v ) { return v - floorf( v ); }
+inline float fracf( float v ) { return v - truncf( v ); } 
 inline float2 fracf( const float2& v ) { return make_float2( fracf( v.x ), fracf( v.y ) ); }
 inline float3 fracf( const float3& v ) { return make_float3( fracf( v.x ), fracf( v.y ), fracf( v.z ) ); }
 inline float4 fracf( const float4& v ) { return make_float4( fracf( v.x ), fracf( v.y ), fracf( v.z ), fracf( v.w ) ); }

@@ -8,21 +8,22 @@ void Renderer::Tick(float deltaTime)
 
 	//if (mAnimating) mScene.SetTime(mAnimTime += deltaTime * 0.002f);   
 
-	if (mFrame < mMaxFrames || !mMaxFramesActive) 
+	if (mFrame < mSet.mMaxFrames || !mSet.mMaxFramesEnabled) 
 	{
-		float const scale = 1.0f / static_cast<float>(mSpp++); mFrame++; 
+		float const scale = 1.0f / static_cast<float>(mSpp++);  
 		int			debugRayIdx	= 0;
 #pragma omp parallel for schedule(dynamic)
 		for (int y = 0; y < SCRHEIGHT; y++) for (int x = 0; x < SCRWIDTH; x++) 
 		{
 			int const pixelIdx = x + y * SCRWIDTH; 
+			blueSeed seed = { x, y, mFrame };  
 
 			if (mBreakPixel && input.mMousePos.x == x && input.mMousePos.y == y)
 			{
 				__debugbreak(); 
 			}
 
-			switch (mRenderMode)
+			switch (mSet.mRenderMode) 
 			{
 			case RENDER_MODES_NORMALS:
 			{
@@ -50,38 +51,35 @@ void Renderer::Tick(float deltaTime)
 			}
 			case RENDER_MODES_SHADED:
 			{
-				float2	pixelCoord	= float2(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
-				color	sample		= BLACK;
-
-				switch (mAccumMode)
+				switch (mSet.mConvergeMode)  
 				{
-				case ACCUM_MODES_ACCUMULATION:
+				case CONVERGE_MODES_ACCUMULATION:
 				{
-					if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f);
-					Ray primRay = mDofActive ? mCamera.GetPrimaryRayFocused(pixelCoord) :
-						mCamera.GetPrimaryRay(pixelCoord);
-					sample = Trace2(primRay);
-					mAccumulator[pixelIdx] += sample;   
-					color const average = mAccumulator[pixelIdx] * scale;
-					mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(average);
+					float2 const pixelCoord		= mSet.mAaEnabled ? mSet.mBlueNoiseEnabled ? RandomOnPixel(seed) : RandomOnPixel(x, y) : CenterOfPixel(x, y);
+					Ray primRay					= mSet.mDofEnabled ? mSet.mBlueNoiseEnabled ? mCamera.GetPrimaryRayFocused(pixelCoord, seed) : mCamera.GetPrimaryRayFocused(pixelCoord) : mCamera.GetPrimaryRay(pixelCoord); 
+					color const sample			= mSet.mBlueNoiseEnabled ? Trace(primRay, seed) : Trace(primRay);    
+					mAccumulator[pixelIdx]		+= sample;   
+					color const average			= mAccumulator[pixelIdx] * scale;
+					mScreen->pixels[pixelIdx]	= RGBF32_to_RGB8(average);
 					break;
 				}
-				case ACCUM_MODES_REPROJECTION:
+				case CONVERGE_MODES_REPROJECTION:
 				{
-					Ray primRay		= mCamera.GetPrimaryRay(pixelCoord);   
-					sample			= Trace2(primRay);  
-					color const pix = Reproject(primRay, sample); 
-					mAccumulator[pixelIdx]		= pix;     
-					mScreen->pixels[pixelIdx]	= RGBF32_to_RGB8(pix); 
+					float2 const pixelCoord		= CenterOfPixel(x, y);  
+					Ray primRay					= mCamera.GetPrimaryRay(pixelCoord);   
+					color const sample			= mSet.mBlueNoiseEnabled ? Trace(primRay, seed) : Trace(primRay); 
+					color const reprojected		= Reproject(primRay, sample); 
+					mAccumulator[pixelIdx]		= reprojected; 
+					mScreen->pixels[pixelIdx]	= RGBF32_to_RGB8(reprojected); 
 					break; 
 				}
 				default:
 				{
-					if (mAaActive) pixelCoord += float2(RandomFloat() - 0.5f, RandomFloat() - 0.5f); 
-					Ray primRay = mDofActive ? mCamera.GetPrimaryRayFocused(pixelCoord) :
-						mCamera.GetPrimaryRay(pixelCoord);
+					float2 const pixelCoord = mSet.mAaEnabled ? mSet.mBlueNoiseEnabled ? RandomOnPixel(seed) : RandomOnPixel(x, y) : CenterOfPixel(x, y); 
+					Ray primRay				= mSet.mDofEnabled ? mSet.mBlueNoiseEnabled ? mCamera.GetPrimaryRayFocused(pixelCoord, seed) : mCamera.GetPrimaryRayFocused(pixelCoord) : mCamera.GetPrimaryRay(pixelCoord);
+					color sample			= BLACK; 
 
-					if (mDebugViewerActive && y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
+					if (mSet.mDebugViewerEnabled && y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
 					{
 						debug debug = {};
 						debugRayIdx++;
@@ -89,8 +87,8 @@ void Renderer::Tick(float deltaTime)
 						sample = TraceDebug(primRay, debug);
 					}
 					else
-					{
-						sample = Trace2(primRay);
+					{  
+						sample = mSet.mBlueNoiseEnabled ? Trace(primRay, seed) : Trace(primRay); 
 					}
 
 					mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(sample);
@@ -102,28 +100,29 @@ void Renderer::Tick(float deltaTime)
 			}
 			default: break; 
 			}
-		}
+		}  
+		mFrame++; 
 	}
 
-	if (mDebugViewerActive) RenderDebugViewer();
-	if (mBreakPixelActive)
+	if (mSet.mDebugViewerEnabled) RenderDebugViewer();
+	if (mSet.mBreakPixelEnabled)
 	{
 		mScreen->Line(static_cast<float>(input.mMousePos.x), 0, static_cast<float>(input.mMousePos.x), SCRHEIGHT - 1, RED_U);
 		mScreen->Line(0, static_cast<float>(input.mMousePos.y), SCRWIDTH - 1, static_cast<float>(input.mMousePos.y), RED_U); 
 	}
 
-	if (mAccumMode == ACCUM_MODES_REPROJECTION)
+	if (mSet.mConvergeMode == CONVERGE_MODES_REPROJECTION) 
 	{
 		mCamera.UpdateFrustum(); 
 		mCamera.Update(deltaTime); 
 		swap(mHistory, mAccumulator);   
 
 	}
-	else if (mAccumMode == ACCUM_MODES_ACCUMULATION)
+	else if (mSet.mConvergeMode == CONVERGE_MODES_ACCUMULATION)
 	{
 		if (mCamera.Update(deltaTime))
 		{
-			if (mAutoFocusActive) mCamera.Focus(mScene);   
+			if (mSet.mAutoFocusEnabled) mCamera.Focus(mScene); 
 			ResetAccumulator(); 
 		}
 	}
@@ -131,14 +130,9 @@ void Renderer::Tick(float deltaTime)
 	{
 		if (mCamera.Update(deltaTime))
 		{
-			if (mAutoFocusActive) mCamera.Focus(mScene);
+			if (mSet.mAutoFocusEnabled) mCamera.Focus(mScene);
 		}
 	}
-
-	//mTexturedSpotlight.mPosition	= mCamera.GetPosition();  
-	//mTexturedSpotlight.mTarget		= mCamera.GetTarget();   
-	//mTexturedSpotlight.Update(); 
-
 	PerformanceReport();
 
 #else
@@ -160,104 +154,15 @@ void Renderer::Tick(float deltaTime)
 #endif
 }
 
-void Renderer::SetRenderMode(int const renderMode)
+color Renderer::Trace(Ray& primRay) const
 {
-	mRenderMode = renderMode;
-	ResetAccumulator();
-}
-
-void Renderer::SetMaxBounces(int const maxBounces)
-{
-	mMaxBounces = maxBounces;
-	ResetAccumulator(); 
-}
-
-void Renderer::SetAa(bool const aaActive)
-{
-	mAaActive = aaActive;
-	ResetAccumulator();
-}
-
-void Renderer::SetAccum(bool const accumActive)
-{
-	mAccumActive = accumActive;
-	ResetAccumulator(); 
-}
-
-void Renderer::SetAccumMode(int const accumMode)
-{
-	mAccumMode = accumMode; 
-	ResetAccumulator(); 
-	ResetHistory(); 
-}
-
-void Renderer::SetAutoFocus(bool const autoFocusActive)
-{
-	mAutoFocusActive = autoFocusActive;
-	mCamera.Focus(mScene);
-	ResetAccumulator();
-}
-
-void Renderer::SetDof(bool const dofActive)
-{
-	mDofActive = dofActive;
-	ResetAccumulator();
-}
-
-color Renderer::Trace(Ray& ray) const 
-{
-	color light			= BLACK; 
-	color throughput	= WHITE;
-	for (int bounce = 0; bounce < mMaxBounces; bounce++)
-	{
-		mScene.FindNearest(ray);
-		if (DidHit(ray)) 
-		{
-			HitInfo const info = CalcHitInfo(ray);  
-
-			color albedo	= mScene.GetAlbedo(ray.objIdx, info.mI);  
-			color emission	= BLACK;   
-
-			if (info.mMat)
-			{
-				albedo		= info.mMat->GetAlbedo(); 
-				emission	= info.mMat->GetEmission(); 
-
-				Ray		scattered;
-				color	attenuation = albedo;  
-				if (info.mMat->Scatter(ray, info, scattered, attenuation)) 
-				{
-					color const directLight		= CalcDirectLight2(mScene, info) * albedo; 
-					color const indirectLight	= attenuation; 
-					light		+= (directLight + emission) * throughput; 
-					throughput	*= indirectLight; // indirect light  
-					ray = scattered;
-					continue; 
-				}
-			}
-
-			light += (CalcDirectLightWithArea2(mScene, info) * albedo + emission) * throughput;  
-			return light; 
-		}
-		else
-		{
-			light += Miss(ray.D) * throughput;
-			return light; 
-		}
-	}
-	return light;    
-}
-
-color Renderer::Trace2(Ray& primRay) const
-{
-	Ray		ray			= {};
 	color	light		= BLACK; 
 	color	throughput	= WHITE; 
 
 	mScene.FindNearest(primRay);  
-	ray = primRay; 
+	Ray ray = primRay;  
 
-	for (int bounce = 0; bounce < mMaxBounces; bounce++)  
+	for (int bounce = 0; bounce < mSet.mMaxBounces; bounce++) 
 	{
 		if (DidHit(ray))
 		{
@@ -275,18 +180,68 @@ color Renderer::Trace2(Ray& primRay) const
 				color	attenuation = albedo;
 				if (info.mMat->Scatter(ray, info, scattered, attenuation))
 				{
-					color const directLight = CalcDirectLight2(mScene, info) * albedo; 
+					color const directLight = CalcDirectLight(info) * albedo; 
 					color const indirectLight = attenuation; 
 					light += (directLight + emission) * throughput; 
-					throughput *= indirectLight; // indirect light   
+					throughput *= indirectLight;   
 					ray = scattered;  
 					mScene.FindNearest(ray); 
 					continue;
 				}
 			}
 
-			light += (CalcDirectLightWithArea2(mScene, info) * albedo + emission) * throughput;
+			light += (CalcDirectLightWithArea(mScene, info) * albedo + emission) * throughput;
 			return light;
+		}
+		else
+		{
+			light += Miss(ray.D) * throughput;
+			return light;
+		}
+	}
+	return light;
+}
+
+color Renderer::Trace(Ray& primRay, blueSeed& seed) const    
+{
+	color	light		= BLACK;
+	color	throughput	= WHITE;
+
+	mScene.FindNearest(primRay);
+	Ray ray = primRay;
+
+	for (int bounce = 0; bounce < mSet.mMaxBounces; bounce++)
+	{
+		if (DidHit(ray))
+		{
+			HitInfo const info = CalcHitInfo(ray);
+
+			color albedo = mScene.GetAlbedo(ray.objIdx, info.mI);
+			color emission = BLACK;
+
+			if (info.mMat)
+			{
+				seed.mBounce = bounce; 
+
+				albedo = info.mMat->GetAlbedo();
+				emission = info.mMat->GetEmission();
+
+				Ray		scattered;
+				color	attenuation = albedo;
+				if (info.mMat->Scatter(ray, info, scattered, attenuation, seed)) 
+				{
+					color const directLight = CalcDirectLight(info) * albedo; 
+					color const indirectLight = attenuation;
+					light += (directLight + emission) * throughput;
+					throughput *= indirectLight; // indirect light   
+					ray = scattered;
+					mScene.FindNearest(ray);
+					continue;
+				}
+			}
+
+			//light += (CalcDirectLightWithArea(info, seed) * albedo + emission) * throughput; 
+			//return light;
 		}
 		else
 		{
@@ -299,9 +254,9 @@ color Renderer::Trace2(Ray& primRay) const
 
 color Renderer::TraceDebug(Ray& ray, debug debug)
 {
-	color light = BLACK;
-	color throughput = WHITE;
-	for (int bounce = 0; bounce < mMaxBounces; bounce++)
+	color light			= BLACK;
+	color throughput	= WHITE;
+	for (int bounce = 0; bounce < mSet.mMaxBounces; bounce++) 
 	{
 		mScene.FindNearest(ray);
 		if (ray.objIdx == -1) return throughput * Miss(ray.D) + light;
@@ -315,14 +270,14 @@ color Renderer::TraceDebug(Ray& ray, debug debug)
 		color	attenuation;  
 		if (info.mMat->Scatter(ray, info, scattered, attenuation)) 
 		{
-			color const directLight = CalcDirectLight2(mScene, info) * info.mMat->GetAlbedo();
+			color const directLight = CalcDirectLight(info) * info.mMat->GetAlbedo();
 			light		+= (directLight + info.mMat->GetEmission()) * throughput; 
 			throughput	*= attenuation; // indirect light
 			ray = scattered;
 			continue;
 		}
 
-		light += (CalcDirectLightWithArea2(mScene, info) * info.mMat->GetAlbedo() + info.mMat->GetEmission()) * throughput; 
+		light += (CalcDirectLightWithArea(mScene, info) * info.mMat->GetAlbedo() + info.mMat->GetEmission()) * throughput;  
 		return light;
 	}
 	return light;
@@ -330,7 +285,7 @@ color Renderer::TraceDebug(Ray& ray, debug debug)
 
 color Renderer::TraceRecursive(Ray& ray, int const bounces) const
 {
-	if (bounces >= mMaxBounces) return BLACK; 
+	if (bounces >= mSet.mMaxBounces) return BLACK;
 	mScene.FindNearest(ray);
 	if (ray.objIdx == -1) return Miss(ray.D);
 	HitInfo const info	= CalcHitInfo(ray);
@@ -343,18 +298,18 @@ color Renderer::TraceRecursive(Ray& ray, int const bounces) const
  		color	scatteredColor;   
 		if (mLambertian3.Scatter(ray, info, scattered, scatteredColor)) 
 		{
-			color const directLight		= CalcDirectLight2(mScene, info) * albedo; 
+			color const directLight		= CalcDirectLight(info) * albedo;  
 			color const indirectLight	= TraceRecursive(scattered, bounces + 1) * scatteredColor;
 			return indirectLight + directLight;  
 		}
 	}
 
-	return CalcDirectLightWithArea2(mScene, info) * albedo; 
+	return CalcDirectLightWithArea(mScene, info) * albedo;  
 }
 
 color Renderer::TraceDebugRecursive(Ray& ray, debug debug, int const bounces)
 {
-	if (bounces >= mMaxBounces) return BLACK;
+	if (bounces >= mSet.mMaxBounces) return BLACK; 
 	mScene.FindNearest(ray);
 	if (ray.objIdx == -1) return Miss(ray.D); 
 	float3 const intersection = calcIntersection(ray);
@@ -416,19 +371,19 @@ color Renderer::TraceAlbedo(Ray& ray) const
 color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const
 {
 	color result = BLACK; 
-	if (mDirLightActive)	result += mDirLight.Intensity(scene, intersection, normal);
-	if (mPointLightsActive) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity(scene, intersection, normal);
-	if (mSpotLightsActive)	for (Spotlight const& spotLight : mSpotLights) result += spotLight.Intensity(scene, intersection, normal);
+	if (mSet.mDirLightEnabled)	result += mDirLight.Intensity(scene, intersection, normal);
+	if (mSet.mPointLightsEnabled) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity(scene, intersection, normal);
+	if (mSet.mSpotlightsEnabled)	for (Spotlight const& spotLight : mSpotLights) result += spotLight.Intensity(scene, intersection, normal); 
 	return result; 
 }
 
-color Renderer::CalcDirectLight2(Scene const& scene, HitInfo const& info) const
+color Renderer::CalcDirectLight(HitInfo const& info) const
 {
 	color result = BLACK;
-	if (mDirLightActive)	result += mDirLight.Intensity2(scene, info);
-	//result += mTexturedSpotlight.Intensity(scene, info); 
-	if (mPointLightsActive) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity2(scene, info);
-	if (mSpotLightsActive)	for (Spotlight const& spotLight : mSpotLights) result += spotLight.Intensity2(scene, info);
+	if (mSet.mDirLightEnabled)	result += mDirLight.Intensity2(mScene, info); 
+	if (mSet.mTexturedSpotlightEnabled) result += mTexturedSpotlight.Intensity(mScene, info); 
+	if (mSet.mPointLightsEnabled) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity2(mScene, info); 
+	if (mSet.mSpotlightsEnabled)	for (Spotlight const& spotLight : mSpotLights) result += spotLight.Intensity2(mScene, info); 
 	return result;
 }  
 
@@ -436,17 +391,28 @@ color Renderer::CalcDirectLightWithArea(Scene const& scene, float3 const& inters
 {
 	color result = BLACK; 
 	result += CalcDirectLight(scene, intersection, normal);
-	result += mSkydomeActive ? mSkydome.Intensity(scene, intersection, normal) : MissIntensity(scene, intersection, normal);  
+	result += mSet.mSkydomeEnabled ? mSkydome.Intensity(scene, intersection, normal) : MissIntensity(scene, intersection, normal);
 	return result; 
 }
 
-color Renderer::CalcDirectLightWithArea2(Scene const& scene, HitInfo const& info) const
+color Renderer::CalcDirectLightWithArea(Scene const& scene, HitInfo const& info) const
 {
 	color result = BLACK;
-	result += CalcDirectLight2(scene, info);
+	result += CalcDirectLight(info);  
 
-	if (mQuadLightActive) result += CalcQuadLight(scene, info); 
-	result += mSkydomeActive ? mSkydome.Intensity2(scene, info) : MissIntensity2(scene, info);
+	if (mSet.mQuadLightEnabled) result += CalcQuadLight(scene, info);
+	result += mSet.mSkydomeEnabled ? mSkydome.Intensity(scene, info) : MissIntensity2(scene, info);
+
+	return result;
+} 
+
+color Renderer::CalcDirectLightWithArea(HitInfo const& info, blueSeed const seed) const  
+{
+	color result = BLACK;
+	result += CalcDirectLight(info); 
+
+	if (mSet.mQuadLightEnabled) result += CalcQuadLight(mScene, info, seed); 
+	result += mSet.mSkydomeEnabled ? mSkydome.Intensity(mScene, info, seed) : MissIntensity2(mScene, info);  
 
 	return result;
 }
@@ -467,9 +433,26 @@ color Renderer::CalcQuadLight(Scene const& scene, HitInfo const& info) const
 	return attenuation * cosa * probability;  
 }
 
+color Renderer::CalcQuadLight(Scene const& scene, HitInfo const& info, blueSeed const seed) const  
+{
+	float2 const noise = BlueNoise::GetInstance().Float2(seed);
+	float3 dir = info.mI - scene.RandomPointOnLight(noise.x, noise.y);  
+	float const dist = length(dir); 
+	dir = normalize(dir);
+
+	Ray shadow = Ray(info.mI - dir * sEps, -dir, dist - sEps);
+	if (scene.IsOccluded(shadow)) return BLACK;
+
+	float const cosa = max(0.0f, dot(info.mN, -dir));
+	float const attenuation = (1.0f / (dist * dist));
+	float const probability = scene.GetLightArea() * scene.GetLightCount();
+
+	return attenuation * cosa * probability;
+}
+
 color Renderer::Miss(float3 const direction) const
 {
-	return mSkydomeActive ? mSkydome.Sample(direction) : mMiss;   
+	return mSet.mSkydomeEnabled ? mSkydome.Sample(direction) : mMiss;
 }
 
 color Renderer::MissIntensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
@@ -626,7 +609,7 @@ void Renderer::PerformanceReport()
 
 void Renderer::UI()
 {
-	if (!mPictureModeActive) mUi.General(); 
+	if (!mSet.mPictureModeEnabled) mUi.General(); 
 }
 
 void Renderer::RenderDebugViewer()
@@ -645,51 +628,57 @@ void Renderer::RenderDebugViewer()
 
 void Renderer::Init()
 {
+	ResourceManager::Init();  
 	InitUi();
 	InitAccumulator(); 
 
-	mMiss				= INIT_MISS;
-	mRenderMode			= INIT_RENDER_MODE;
-	mAccumMode			= INIT_ACCUM_MODE;
-	sEps				= INIT_EPS;
-	mHistoryWeight		= INIT_HISTORY_WEIGHT;
-	mMaxBounces			= INIT_MAX_BOUNCES;
+	mFrame = 0; 
+	 
+	mMiss						= INIT_MISS; 
+	mSet.mRenderMode			= INIT_RENDER_MODE;
+	mSet.mConvergeMode			= INIT_CONVERGE_MODE;
+	sEps						= INIT_EPS;
+	mHistoryWeight				= INIT_HISTORY_WEIGHT;  
+	mSet.mMaxBounces			= INIT_MAX_BOUNCES;
 
-	mDirLightActive		= INIT_LIGHTS_DIR_LIGHT_ACTIVE;
-	mPointLightsActive	= INIT_LIGHTS_POINT_LIGHTS_ACTIVE;
-	mSpotLightsActive	= INIT_LIGHTS_SPOT_LIGHTS_ACTIVE;
-	mSkydomeActive		= INIT_LIGHTS_SKYDOME_ACTIVE;
+	mSet.mDirLightEnabled		= INIT_LIGHTS_DIR_LIGHT_ACTIVE;
+	mSet.mPointLightsEnabled	= INIT_LIGHTS_POINT_LIGHTS_ACTIVE;
+	mSet.mSpotlightsEnabled		= INIT_LIGHTS_SPOT_LIGHTS_ACTIVE; 
+	mSet.mSkydomeEnabled		= INIT_LIGHTS_SKYDOME_ACTIVE;
 
-	mDofActive			= INIT_DOF_ACTIVE; 
-	mBreakPixelActive	= INIT_BREAK_PIXEL;
-	mAaActive			= INIT_AA_ACTIVE;
-	mAccumActive		= INIT_ACCUM_ACTIVE;
-	mAutoFocusActive	= INIT_AUTO_FOCUS_ACTIVE;
+	mSet.mDofEnabled			= INIT_DOF_ACTIVE;
+	mSet.mBreakPixelEnabled		= INIT_BREAK_PIXEL;
+	mSet.mPictureModeEnabled	= INIT_PICTURE_MODE_ACTIVE;
+	mSet.mMaxFramesEnabled		= INIT_MAX_FRAMES_ACTIVE;
+	mSet.mAaEnabled				= INIT_AA_ACTIVE;
+	mSet.mAutoFocusEnabled		= INIT_AUTO_FOCUS_ACTIVE;
 
 	mDirLight.mDirection	= float3(0.8f, -0.3f, 0.5f);
 	mDirLight.mDirection	= normalize(mDirLight.mDirection); 
 	mDirLight.mStrength		= 1.0f;
 	mDirLight.mColor		= WHITE;   
 
-	mSphereMaterial = new Glossy2();  
-	mTorusMaterial	= new Glossy2();
-	mCubeMaterial	= new Glossy2();  
-	mFloorMaterial	= new Lambertian3();     
+	mGlossy2.mSmoothness = 0.5f; 
+
+	mSphereMaterial = &mDielectric;   
+	mTorusMaterial	= &mGlossy2;
+	mCubeMaterial	= &mGlossy2;
+	mFloorMaterial	= new Glossy2();
 	//mFloorMaterial = new Glossy2();     
 	mQuadMaterial	= new Glossy2(); 
 
-	//mSphereMaterial->mAlbedo	= RED; 
-	//mTorusMaterial->mAlbedo		= GREEN; 
-	//mCubeMaterial->mAlbedo		= BLUE; 
-	mSphereMaterial->mAlbedo = WHITE * 0.4f;
-	mTorusMaterial->mAlbedo = WHITE * 0.4f;
-	mCubeMaterial->mAlbedo = WHITE * 0.4f;
-	mFloorMaterial->mAlbedo		= WHITE * 0.4f;  
+	mSphereMaterial->mAlbedo	= WHITE; 
+	mTorusMaterial->mAlbedo		= GREEN * 0.4f;
+	mCubeMaterial->mAlbedo		= BLUE * 0.4f; 
+	//mSphereMaterial->mAlbedo = WHITE * 0.4f;
+	//mTorusMaterial->mAlbedo = WHITE * 0.4f;
+	//mCubeMaterial->mAlbedo = WHITE * 0.4f;
+	mFloorMaterial->mAlbedo		= RED;    
 
 	mQuadMaterial->mAlbedo		= WHITE; 
 	mQuadMaterial->mEmission	= WHITE * 5.0f;      
 
-	mSkydome = Skydome("../assets/hdr/kloppenheim_06_puresky_4k.hdr");  
+	mSkydome = Skydome("../assets/hdr/kloppenheim_06_puresky_4k.hdr");   
 }
 
 inline void Renderer::InitUi()
@@ -712,6 +701,16 @@ float2 Renderer::RandomOnPixel(int const x, int const y) const
 	return { static_cast<float>(x) + RandomFloat(), static_cast<float>(y) + RandomFloat() }; 
 }
 
+float2 Renderer::RandomOnPixel(blueSeed const seed) const 
+{
+	return float2(static_cast<float>(seed.mX), static_cast<float>(seed.mY)) + BlueNoise::GetInstance().Float2(seed);  
+}
+
+float2 Renderer::CenterOfPixel(int const x, int const y) const
+{
+	return { static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f };  
+}
+
 bool Renderer::DidHit(Ray const& ray) const  
 {
 	return ray.objIdx != -1; 
@@ -723,6 +722,6 @@ void Renderer::Shutdown()
 
 void Renderer::Input()
 {
-	mBreakPixel			= input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mBreakPixelActive; 
-	mPictureModeActive	= input.IsKeyReleased(CONTROLS_PICTURE_MODE) ? !mPictureModeActive : mPictureModeActive; 
+	mBreakPixel			= input.IsKeyReleased(CONTROLS_BREAK_PIXEL) && mSet.mBreakPixelEnabled; 
+	mSet.mPictureModeEnabled = input.IsKeyReleased(CONTROLS_PICTURE_MODE) ? !mSet.mPictureModeEnabled : mSet.mPictureModeEnabled; 
 }

@@ -40,18 +40,38 @@
     <ClCompile Include="lights.cpp">
       <Filter>additional</Filter>
     </ClCompile>
-    <ClCompile Include="ui.cpp" />
-    <ClCompile Include="materials.cpp" />
-    <ClCompile Include="debug.cpp" />
-    <ClCompile Include="textures.cpp" />
-    <ClCompile Include="skydome.cpp" />
-    <ClCompile Include="..\template\common.cpp" />
-    <ClCompile Include="input.cpp" />
     <ClCompile Include="camera.cpp">
       <Filter>additional</Filter>
     </ClCompile>
-    <ClCompile Include="hitinfo.cpp" />
-    <ClCompile Include="files.cpp" />
+    <ClCompile Include="..\template\common.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
+    <ClCompile Include="debug.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
+    <ClCompile Include="files.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
+    <ClCompile Include="hitinfo.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
+    <ClCompile Include="materials.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
+    <ClCompile Include="skydome.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
+    <ClCompile Include="textures.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
+    <ClCompile Include="ui.cpp">
+      <Filter>additional</Filter>
+    </ClCompile>
+    <ClCompile Include="noise.cpp" />
+    <ClCompile Include="resources.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -108,20 +128,40 @@
     <ClInclude Include="lights.h">
       <Filter>additional</Filter>
     </ClInclude>
-    <ClInclude Include="ui.h" />
     <ClInclude Include="color.h">
       <Filter>additional</Filter>
     </ClInclude>
-    <ClInclude Include="materials.h" />
-    <ClInclude Include="debug.h" />
-    <ClInclude Include="textures.h" />
-    <ClInclude Include="skydome.h" />
-    <ClInclude Include="input.h" />
-    <ClInclude Include="hitinfo.h" />
-    <ClInclude Include="files.h" />
-    <ClInclude Include="added_math.h">
+    <ClInclude Include="maths.h">
       <Filter>additional</Filter>
     </ClInclude>
+    <ClInclude Include="debug.h">
+      <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="files.h">
+      <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="hitinfo.h">
+      <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
+      <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="materials.h">
+      <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="skydome.h">
+      <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="textures.h">
+      <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="ui.h">
+      <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="noise.h">
+      <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="resources.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">

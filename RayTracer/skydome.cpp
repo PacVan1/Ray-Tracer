@@ -7,7 +7,7 @@ Skydome::Skydome()
 {}
 
 Skydome::Skydome(char const* path) :
-	mTexture(loadTexture(path)) 
+	mTexture(loadTextureF(path)) 
 { 
 	mTexture.mSampleMode	= TEXTURE_SAMPLE_MODES_LOOPED;
 	mTexture.mFilterMode	= TEXTURE_FILTER_MODES_LINEAR;  
@@ -22,11 +22,19 @@ color Skydome::Intensity(Scene const& scene, float3 const& intersection, float3 
 	return cosa * Sample(random);
 }
 
-color Skydome::Intensity2(Scene const& scene, HitInfo const& info) const 
+color Skydome::Intensity(Scene const& scene, HitInfo const& info) const 
 {
 	float3 const random = randomUnitOnHemisphere(info.mN); 
 	if (scene.IsOccluded({ info.mI + random * Renderer::sEps, random })) return BLACK; 
 	float const cosa = max(0.0f, dot(info.mN, random)); 
+	return cosa * Sample(random);
+}
+
+color Skydome::Intensity(Scene const& scene, HitInfo const& info, blueSeed const seed) const 
+{
+	float3 const random = randomUnitOnHemisphere(info.mN, seed); 
+	if (scene.IsOccluded({ info.mI + random * Renderer::sEps, random })) return BLACK;
+	float const cosa = max(0.0f, dot(info.mN, random));
 	return cosa * Sample(random);
 }
 

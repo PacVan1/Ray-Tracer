@@ -35,6 +35,7 @@ public:
 	[[nodiscard]] T Sample(float2 const uv) const;  
 	[[nodiscard]] T SampleNearest(float2 const uv) const; 
 	[[nodiscard]] T SampleLinear(float2 const uv) const;  
+	[[nodiscard]] T SampleLinearLooped(int2 const uv) const;
 	void			Clear(); 
 
 	T&				operator[](int index);
@@ -45,7 +46,7 @@ private:
 	[[nodiscard]] T SampleNearestLooped(float2 const uv) const; 
 	[[nodiscard]] T SampleNearestClamped(float2 const uv) const;  
 	[[nodiscard]] T SampleLinearUnsafe(float2 uv) const; 
-	[[nodiscard]] T SampleLinearLooped(float2 uv) const; 
+	[[nodiscard]] T SampleLinearLooped(float2 uv) const;  
 	[[nodiscard]] T SampleLinearClamped(float2 uv) const; 
 }; 
 
@@ -216,6 +217,30 @@ T Texture<T>::SampleLinearLooped(float2 uv) const
 	return c1 * w1 + c2 * w2 + c3 * w3 + c4 * w4;
 } 
 
+template <typename T>
+T Texture<T>::SampleLinearLooped(int2 const uv) const 
+{
+	int const u1 = static_cast<int>(uv.x) % mWidth;
+	int const v1 = static_cast<int>(uv.y) % mHeight;
+	int const u2 = (u1 + 1) % mWidth;
+	int const v2 = (v1 + 1) % mHeight;
+
+	// calculate weight factors: 
+	float2 const	frac = fracf(uv);
+	float const		w1 = (1.0f - frac.u) * (1.0f - frac.v);
+	float const		w2 = frac.u * (1.0f - frac.v);
+	float const		w3 = (1.0f - frac.u) * frac.v;
+	float const		w4 = frac.u * frac.v;
+
+	// fetch four texels: 
+	T const c1 = mData[u1 + v1 * mWidth];
+	T const c2 = mData[u2 + v1 * mWidth];
+	T const c3 = mData[u1 + v2 * mWidth];
+	T const c4 = mData[u2 + v2 * mWidth];
+
+	// blend:
+	return c1 * w1 + c2 * w2 + c3 * w3 + c4 * w4;
+}
 template <typename T>
 T Texture<T>::SampleLinearClamped(float2 uv) const
 {

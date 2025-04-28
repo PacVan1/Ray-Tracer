@@ -1,14 +1,16 @@
 #pragma once
 
-#include "added_math.h" 
+#include "maths.h"  
 #include "files.h" 
 #include "color.h"
+#include "noise.h" 
 #include "camera.h" 
+#include "resources.h" 
 
 namespace Tmpl8 { class Ray; }
 
 int constexpr	SCRWIDTH		= 1280;
-int constexpr	SCRHEIGHT		= 720; 
+int constexpr	SCRHEIGHT		= 720;  
 float constexpr ASPECT_RATIO	= static_cast<float>(SCRWIDTH) / static_cast<float>(SCRHEIGHT); 
 // #define FULLSCREEN
 // #define DOUBLESIZE
@@ -34,13 +36,18 @@ enum controls : uint8_t
 };
 
 [[nodiscard]] float2	calcSphereUv(float3 const& direction);  
+[[nodiscard]] float2	randomFloat2(); 
 [[nodiscard]] float3	calcIntersection(Ray const& ray);
 [[nodiscard]] float3	randomUnitOnDisk();
+[[nodiscard]] float3	randomUnitOnDisk(blueSeed const seed); 
 [[nodiscard]] float3	randomFloat3();
 [[nodiscard]] float3	randomFloat3Unit();
 [[nodiscard]] float3	randomUnitOnHemisphere(float3 const& normal);
+[[nodiscard]] float3	randomUnitOnHemisphere(float3 const& normal, blueSeed const seed); 
 [[nodiscard]] float3	diffuseReflection(float3 const& normal);
+[[nodiscard]] float3	diffuseReflection(float3 const& normal, blueSeed const seed); 
 [[nodiscard]] float3	cosineWeightedDiffuseReflection(float3 const& normal);  
+[[nodiscard]] float3	cosineWeightedDiffuseReflection(float3 const& normal, blueSeed const seed);   
 [[nodiscard]] float		randomFloatUnit();
 [[nodiscard]] float		schlickApprox(float const cosTheta, float const ior);
 [[nodiscard]] float3	refract(float3 const& normal, float3 const& in, float cosTheta, float const ior);  

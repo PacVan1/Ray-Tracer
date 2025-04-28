@@ -147,7 +147,9 @@
     <ClCompile Include="input.cpp" />
     <ClCompile Include="lights.cpp" />
     <ClCompile Include="materials.cpp" />
+    <ClCompile Include="noise.cpp" />
     <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="resources.cpp" />
     <ClCompile Include="skydome.cpp" />
     <ClCompile Include="textures.cpp" />
     <ClCompile Include="ui.cpp" />
@@ -176,8 +178,10 @@
     <ClInclude Include="input.h" />
     <ClInclude Include="lights.h" />
     <ClInclude Include="materials.h" />
-    <ClInclude Include="added_math.h" />
+    <ClInclude Include="maths.h" />
+    <ClInclude Include="noise.h" />
     <ClInclude Include="renderer.h" />
+    <ClInclude Include="resources.h" />
     <ClInclude Include="skydome.h" />
     <ClInclude Include="textures.h" />
     <ClInclude Include="ui.h" />
