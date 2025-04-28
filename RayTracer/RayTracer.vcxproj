@@ -146,6 +146,7 @@
     <ClCompile Include="hitinfo.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="lights.cpp" />
+    <ClCompile Include="lights2.cpp" />
     <ClCompile Include="materials.cpp" />
     <ClCompile Include="noise.cpp" />
     <ClCompile Include="renderer.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="hitinfo.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="lights.h" />
+    <ClInclude Include="lights2.h" />
     <ClInclude Include="materials.h" />
     <ClInclude Include="maths.h" />
     <ClInclude Include="noise.h" />

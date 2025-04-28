@@ -145,8 +145,8 @@ void main()
 	io.IniFilename = "./imgui.ini";
 	// done, enter main loop
 
-	//Shader* shader = new Shader("../source/shaders/basic.vert", "../source/shaders/basic.frag", false);  
-	Shader* shader = new Shader("../source/shaders/gamma_correction.vert", "../source/shaders/gamma_correction.frag", false); 
+	Shader* shader = new Shader("../source/shaders/basic.vert", "../source/shaders/basic.frag", false);   
+	//Shader* shader = new Shader("../source/shaders/gamma_correction.vert", "../source/shaders/gamma_correction.frag", false); 
 	//Shader* shader = new Shader("../source/shaders/aces.vert", "../source/shaders/aces.frag", false);  
 	//Shader* shader = new Shader("../source/shaders/chromatic_aberration.vert", "../source/shaders/chromatic_aberration.frag", false);  
 	//Shader* shader = new Shader("../source/shaders/vignetting.vert", "../source/shaders/vignetting.frag", false); 

@@ -1,6 +1,10 @@
 #include "precomp.h"
 #include "renderer.h"
 
+#include "lights2.h" 
+
+Lights lights;   
+
 void Renderer::Tick(float deltaTime)
 {
 #if DEBUG_MODE
@@ -56,9 +60,8 @@ void Renderer::Tick(float deltaTime)
 				case CONVERGE_MODES_ACCUMULATION:
 				{
 					float2 const pixelCoord		= mSet.mAaEnabled ? mSet.mBlueNoiseEnabled ? RandomOnPixel(seed) : RandomOnPixel(x, y) : CenterOfPixel(x, y);
-					Ray primRay					= mSet.mDofEnabled ? mSet.mBlueNoiseEnabled ? mCamera.GetPrimaryRayFocused(pixelCoord, seed) : mCamera.GetPrimaryRayFocused(pixelCoord) : mCamera.GetPrimaryRay(pixelCoord); 
-					color const sample			= mSet.mBlueNoiseEnabled ? Trace(primRay, seed) : Trace(primRay);    
-					mAccumulator[pixelIdx]		+= sample;   
+					Ray primRay					= mSet.mDofEnabled ? mSet.mBlueNoiseEnabled ? mCamera.GetPrimaryRayFocused(pixelCoord, seed) : mCamera.GetPrimaryRayFocused(pixelCoord) : mCamera.GetPrimaryRay(pixelCoord);   
+					mAccumulator[pixelIdx]		+= mSet.mBlueNoiseEnabled ? Trace(primRay, seed) : Trace(primRay); 
 					color const average			= mAccumulator[pixelIdx] * scale;
 					mScreen->pixels[pixelIdx]	= RGBF32_to_RGB8(average);
 					break;
@@ -180,7 +183,7 @@ color Renderer::Trace(Ray& primRay) const
 				color	attenuation = albedo;
 				if (info.mMat->Scatter(ray, info, scattered, attenuation))
 				{
-					color const directLight = CalcDirectLight(info) * albedo; 
+					color const directLight = CalcDirectLight(info) * albedo;  
 					color const indirectLight = attenuation; 
 					light += (directLight + emission) * throughput; 
 					throughput *= indirectLight;   
@@ -382,8 +385,7 @@ color Renderer::CalcDirectLight(HitInfo const& info) const
 	color result = BLACK;
 	if (mSet.mDirLightEnabled)	result += mDirLight.Intensity2(mScene, info); 
 	if (mSet.mTexturedSpotlightEnabled) result += mTexturedSpotlight.Intensity(mScene, info); 
-	if (mSet.mPointLightsEnabled) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity2(mScene, info); 
-	if (mSet.mSpotlightsEnabled)	for (Spotlight const& spotLight : mSpotLights) result += spotLight.Intensity2(mScene, info); 
+	result += mSet.mStochasticLights ? lights.EvaluateStochastic(info) : lights.Evaluate(info); 
 	return result;
 }  
 
@@ -476,6 +478,7 @@ HitInfo Renderer::CalcHitInfo(Ray const& ray) const
 	HitInfo info;
 	info.mI		= calcIntersection(ray);
 	info.mN		= mScene.GetNormal(ray.objIdx, info.mI, ray.D);
+	info.mScene = &mScene; 
 	if (ray.objIdx == mScene.sphere.objIdx)
 	{
 		info.mMat = mSphereMaterial;   
@@ -632,6 +635,16 @@ void Renderer::Init()
 	InitUi();
 	InitAccumulator(); 
 
+	lights.Add(LIGHT_TYPES_POINT_LIGHT);  
+	lights.mData[0].mPointLight.mColor = RED;
+	lights.mData[0].mPointLight.mIntensity = 0.4f;
+	lights.Add(LIGHT_TYPES_POINT_LIGHT);
+	lights.mData[1].mPointLight.mColor = GREEN;
+	lights.mData[1].mPointLight.mIntensity = 0.4f;
+	lights.Add(LIGHT_TYPES_SPOTLIGHT);   
+	lights.mData[2].mSpotlight.mColor = BLUE;
+	lights.mData[2].mSpotlight.mIntensity = 0.4f;
+
 	mFrame = 0; 
 	 
 	mMiss						= INIT_MISS; 
@@ -673,10 +686,10 @@ void Renderer::Init()
 	//mSphereMaterial->mAlbedo = WHITE * 0.4f;
 	//mTorusMaterial->mAlbedo = WHITE * 0.4f;
 	//mCubeMaterial->mAlbedo = WHITE * 0.4f;
-	mFloorMaterial->mAlbedo		= RED;    
+	mFloorMaterial->mAlbedo		= WHITE;     
 
 	mQuadMaterial->mAlbedo		= WHITE; 
-	mQuadMaterial->mEmission	= WHITE * 5.0f;      
+	//mQuadMaterial->mEmission	= WHITE * 5.0f;      
 
 	mSkydome = Skydome("../assets/hdr/kloppenheim_06_puresky_4k.hdr");   
 }

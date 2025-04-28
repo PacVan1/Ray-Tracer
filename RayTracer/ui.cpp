@@ -97,6 +97,7 @@ void Ui::SettingsUi() const
 	if (ImGui::Checkbox("Depth of field", &settings.mDofEnabled))					mRenderer->ResetAccumulator(); 
 	if (ImGui::Checkbox("Auto-focus", &settings.mAutoFocusEnabled))					mRenderer->ResetAccumulator(); 
 	if (ImGui::Checkbox("Blue noise", &settings.mBlueNoiseEnabled))					mRenderer->ResetAccumulator(); 
+	if (ImGui::Checkbox("Stochastic lights", &settings.mStochasticLights))			mRenderer->ResetAccumulator(); 
 	ImGui::Separator();   
 	if (ImGui::Checkbox("Point lights", &settings.mPointLightsEnabled))				mRenderer->ResetAccumulator(); 
 	if (ImGui::Checkbox("Spotlights", &settings.mSpotlightsEnabled))				mRenderer->ResetAccumulator();

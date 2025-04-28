@@ -22,6 +22,7 @@ public:
 	T*			mData;
 	int			mWidth;
 	int			mHeight;
+	float		mAspectRatio;  
 	bool		mOwnData;  
 	int8_t		mSampleMode; 
 	int8_t		mFilterMode;  
@@ -62,6 +63,7 @@ Texture<T>::Texture() :
 	mData(nullptr),
 	mWidth(0), 
 	mHeight(0), 
+	mAspectRatio(static_cast<float>(mWidth) / static_cast<float>(mHeight)), 
 	mOwnData(false), 
 	mSampleMode(TEXTURE_SAMPLE_MODES_NONE),  
 	mFilterMode(TEXTURE_FILTER_MODES_NONE) 

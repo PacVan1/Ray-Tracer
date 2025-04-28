@@ -72,6 +72,7 @@
     </ClCompile>
     <ClCompile Include="noise.cpp" />
     <ClCompile Include="resources.cpp" />
+    <ClCompile Include="lights2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -162,6 +163,7 @@
       <Filter>additional</Filter>
     </ClInclude>
     <ClInclude Include="resources.h" />
+    <ClInclude Include="lights2.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
