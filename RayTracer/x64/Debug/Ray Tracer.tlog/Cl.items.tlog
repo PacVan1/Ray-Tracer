@@ -15,6 +15,8 @@ C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\files.cpp;C:\Perforce\
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\hitinfo.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Debug\hitinfo.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\input.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Debug\input.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\lights.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Debug\lights.obj
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\lights_stochastic.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Debug\lights_stochastic.obj
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\lights_vectorized.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Debug\lights_vectorized.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\materials.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Debug\materials.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\noise.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Debug\noise.obj
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp;C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Debug\renderer.obj

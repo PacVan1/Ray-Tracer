@@ -1,9 +1,12 @@
 #include "precomp.h"
 #include "renderer.h"
 
-#include "lights2.h" 
+#include "lights_stochastic.h" 
+#include "lights_vectorized.h" 
 
-Lights lights;   
+Lights lights;    
+Lights2 lights2;    
+NewLights lights3; 
 
 void Renderer::Tick(float deltaTime)
 {
@@ -383,9 +386,10 @@ color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, 
 color Renderer::CalcDirectLight(HitInfo const& info) const
 {
 	color result = BLACK;
-	if (mSet.mDirLightEnabled)	result += mDirLight.Intensity2(mScene, info); 
-	if (mSet.mTexturedSpotlightEnabled) result += mTexturedSpotlight.Intensity(mScene, info); 
-	result += mSet.mStochasticLights ? lights.EvaluateStochastic(info) : lights.Evaluate(info); 
+	//if (mSet.mDirLightEnabled)	result += mDirLight.Intensity2(mScene, info); 
+	//if (mSet.mTexturedSpotlightEnabled) result += mTexturedSpotlight.Intensity(mScene, info); 
+	//result += mSet.mStochasticLights ? lights.EvaluateStochastic(info) : lights.Evaluate(info); 
+	result += lights3.Evaluate(info);  
 	return result;
 }  
 
@@ -635,17 +639,24 @@ void Renderer::Init()
 	InitUi();
 	InitAccumulator(); 
 
-	lights.Add(LIGHT_TYPES_POINT_LIGHT);  
-	lights.mData[0].mPointLight.mColor = RED;
-	lights.mData[0].mPointLight.mIntensity = 0.4f;
-	lights.Add(LIGHT_TYPES_POINT_LIGHT);
-	lights.mData[1].mPointLight.mColor = GREEN;
-	lights.mData[1].mPointLight.mIntensity = 0.4f;
-	lights.Add(LIGHT_TYPES_SPOTLIGHT);   
-	lights.mData[2].mSpotlight.mColor = BLUE;
-	lights.mData[2].mSpotlight.mIntensity = 0.4f;
+	//lights2.Add(LIGHT_TYPES_TEXTURED_SPOTLIGHT2); 
+	//lights2.mData[0].mTs.mIntensity = 20.0f;     
+	//lights2.mData[0].mTs.mTexture = loadTextureI("../assets/LDR_RG01_0.png");
+	//lights2.mData[0].mTs.mTexture.mSampleMode = TEXTURE_SAMPLE_MODES_CLAMPED;
+	//lights2.mData[0].mTs.mTexture.mFilterMode = TEXTURE_FILTER_MODES_NEAREST;  
+	//transformTexturedSpotlight(lights2.mData[0], { 0.0f, 4.0f, -2.5f }, 0.0f); 
 
-	mFrame = 0; 
+	lights3.Add(NEW_LIGHT_TYPES_POINT_LIGHT); 
+	//lights3.mData[0].mPs[0].mColor = WHITE; 
+	//lights3.mData[0].mPs[1].mColor = WHITE;
+	//lights3.mData[0].mPs[2].mColor = WHITE; 
+	//lights3.mData[0].mPs[3].mColor = WHITE;  
+	lights3.mData[0].mPs.mR4 = _mm_set1_ps(1.0f);  
+	lights3.mData[0].mPs.mR4 = _mm_set1_ps(1.0f);  
+	lights3.mData[0].mPs.mB4 = _mm_set1_ps(1.0f);  
+	lights3.mData[0].mPs.mI4 = _mm_set1_ps(1.0f);   
+
+	mFrame = 0;  
 	 
 	mMiss						= INIT_MISS; 
 	mSet.mRenderMode			= INIT_RENDER_MODE;

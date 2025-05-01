@@ -1,26 +1,29 @@
 ﻿  template.cpp
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(29,2): warning C4309: 'initializing': truncation of constant value
-  (compiling source file '../template/template.cpp')
-  
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(29,2): warning C4369: 'CONTROLS_LOOK_RIGHT':  enumerator value '262' cannot be represented as 'unsigned char', value is '262'
-  (compiling source file '../template/template.cpp')
-  
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(30,2): warning C4309: 'initializing': truncation of constant value
-  (compiling source file '../template/template.cpp')
-  
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(30,2): warning C4369: 'CONTROLS_LOOK_UP':  enumerator value '265' cannot be represented as 'unsigned char', value is '265'
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\noise.h(4,1): warning C5208: unnamed class used in typedef name cannot declare members other than non-static data members, member enumerations, or member classes
   (compiling source file '../template/template.cpp')
   
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(31,2): warning C4309: 'initializing': truncation of constant value
   (compiling source file '../template/template.cpp')
   
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(31,2): warning C4369: 'CONTROLS_LOOK_LEFT':  enumerator value '263' cannot be represented as 'unsigned char', value is '263'
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(31,2): warning C4369: 'CONTROLS_LOOK_RIGHT':  enumerator value '262' cannot be represented as 'unsigned char', value is '262'
   (compiling source file '../template/template.cpp')
   
 C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(32,2): warning C4309: 'initializing': truncation of constant value
   (compiling source file '../template/template.cpp')
   
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(32,2): warning C4369: 'CONTROLS_LOOK_DOWN':  enumerator value '264' cannot be represented as 'unsigned char', value is '264'
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(32,2): warning C4369: 'CONTROLS_LOOK_UP':  enumerator value '265' cannot be represented as 'unsigned char', value is '265'
+  (compiling source file '../template/template.cpp')
+  
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(33,2): warning C4309: 'initializing': truncation of constant value
+  (compiling source file '../template/template.cpp')
+  
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(33,2): warning C4369: 'CONTROLS_LOOK_LEFT':  enumerator value '263' cannot be represented as 'unsigned char', value is '263'
+  (compiling source file '../template/template.cpp')
+  
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(34,2): warning C4309: 'initializing': truncation of constant value
+  (compiling source file '../template/template.cpp')
+  
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\template\common.h(34,2): warning C4369: 'CONTROLS_LOOK_DOWN':  enumerator value '264' cannot be represented as 'unsigned char', value is '264'
   (compiling source file '../template/template.cpp')
   
   imgui.cpp
@@ -72,38 +75,53 @@ C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\debug.cpp(77,37): warn
   hitinfo.cpp
   input.cpp
   lights.cpp
+  lights_stochastic.cpp
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\lights_stochastic.cpp(199,21): warning C4267: '=': conversion from 'size_t' to 'uint8_t', possible loss of data
+  (compiling source file '/lights_stochastic.cpp')
+  
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\lights_stochastic.cpp(231,21): warning C4267: '=': conversion from 'size_t' to 'uint8_t', possible loss of data
+  (compiling source file '/lights_stochastic.cpp')
+  
+  lights_vectorized.cpp
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\lights_vectorized.cpp(181,21): warning C4267: '=': conversion from 'size_t' to 'uint8_t', possible loss of data
+  (compiling source file '/lights_vectorized.cpp')
+  
   materials.cpp
   noise.cpp
+  Generating Code...
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\lights_vectorized.cpp(91,1): warning C4715: 'evaluateSpotlights2': not all control paths return a value
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\lights_stochastic.cpp(84,1): warning C4715: 'evaluateSpotlights2': not all control paths return a value
+  Compiling...
   renderer.cpp
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(19,28): warning C4838: conversion from 'int' to 'uint16_t' requires a narrowing conversion
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(26,22): warning C4838: conversion from 'int' to 'uint16_t' requires a narrowing conversion
   (compiling source file '/renderer.cpp')
   
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(19,31): warning C4838: conversion from 'int' to 'uint16_t' requires a narrowing conversion
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(26,25): warning C4838: conversion from 'int' to 'uint16_t' requires a narrowing conversion
   (compiling source file '/renderer.cpp')
   
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(19,34): warning C4838: conversion from 'int' to 'uint' requires a narrowing conversion
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(26,28): warning C4838: conversion from 'int' to 'uint16_t' requires a narrowing conversion
   (compiling source file '/renderer.cpp')
   
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(712,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(631,60): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   (compiling source file '/renderer.cpp')
   
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(712,31): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\renderer.cpp(631,31): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   (compiling source file '/renderer.cpp')
   
   resources.cpp
-  Generating Code...
-  Compiling...
   skydome.cpp
   textures.cpp
   ui.cpp
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\ui.cpp(157,68): warning C4390: ';': empty controlled statement found; is this the intent?
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\ui.cpp(141,68): warning C4390: ';': empty controlled statement found; is this the intent?
   (compiling source file '/ui.cpp')
   
-C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\ui.cpp(198,65): warning C4390: ';': empty controlled statement found; is this the intent?
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\ui.cpp(142,80): warning C4390: ';': empty controlled statement found; is this the intent?
+  (compiling source file '/ui.cpp')
+  
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\ui.cpp(174,65): warning C4390: ';': empty controlled statement found; is this the intent?
   (compiling source file '/ui.cpp')
   
   Generating Code...
-  LINK : C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Ray Tracer_debug.exe not found or not built by the last incremental link; performing full link
      Creating library C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Ray Tracer_debug.lib and object C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Ray Tracer_debug.exp
   RayTracer.vcxproj -> C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Ray Tracer_debug.exe
   'pwsh.exe' is not recognized as an internal or external command,

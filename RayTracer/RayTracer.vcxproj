@@ -146,7 +146,8 @@
     <ClCompile Include="hitinfo.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="lights.cpp" />
-    <ClCompile Include="lights2.cpp" />
+    <ClCompile Include="lights_stochastic.cpp" />
+    <ClCompile Include="lights_vectorized.cpp" />
     <ClCompile Include="materials.cpp" />
     <ClCompile Include="noise.cpp" />
     <ClCompile Include="renderer.cpp" />
@@ -174,11 +175,13 @@
     <ClInclude Include="..\template\tmpl8math.h" />
     <ClInclude Include="color.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="directions.h" />
     <ClInclude Include="files.h" />
     <ClInclude Include="hitinfo.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="lights.h" />
-    <ClInclude Include="lights2.h" />
+    <ClInclude Include="lights_stochastic.h" />
+    <ClInclude Include="lights_vectorized.h" />
     <ClInclude Include="materials.h" />
     <ClInclude Include="maths.h" />
     <ClInclude Include="noise.h" />

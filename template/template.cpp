@@ -81,6 +81,10 @@ void ErrorCallback( int, const char* description )
 // Application entry point
 void main()
 {
+#ifdef SINGLE_THREADED
+	omp_set_num_threads(1);   
+#endif
+
 	// open a window
 	if (!glfwInit()) FatalError( "glfwInit failed." );
 	glfwSetErrorCallback( ErrorCallback );

@@ -74,6 +74,7 @@ Texture<T>::Texture(Texture<T> const& other) :
 	mData(other.mData), 
 	mWidth(other.mWidth),
 	mHeight(other.mHeight),
+	mAspectRatio(static_cast<float>(mWidth) / static_cast<float>(mHeight)), 
 	mOwnData(other.mOwnData),
 	mSampleMode(other.mSampleMode),
 	mFilterMode(other.mFilterMode)
@@ -81,9 +82,10 @@ Texture<T>::Texture(Texture<T> const& other) :
 
 template <typename T>
 Texture<T>::Texture(int const width, int const height) :
-	mData(static_cast<T*>(MALLOC64(sizeof(T) * width * height))),
+	mData(static_cast<T*>(MALLOC64(sizeof(T) * width * height))), 
 	mWidth(width),
 	mHeight(height),
+	mAspectRatio(static_cast<float>(mWidth) / static_cast<float>(mHeight)), 
 	mOwnData(false),
 	mSampleMode(TEXTURE_SAMPLE_MODES_NONE), 
 	mFilterMode(TEXTURE_FILTER_MODES_NONE) 
@@ -94,6 +96,7 @@ Texture<T>::Texture(T* data, int const width, int const height) :
 	mData(data),
 	mWidth(width),
 	mHeight(height),
+	mAspectRatio(static_cast<float>(mWidth) / static_cast<float>(mHeight)),
 	mOwnData(false), 
 	mSampleMode(TEXTURE_SAMPLE_MODES_NONE),  
 	mFilterMode(TEXTURE_FILTER_MODES_NONE) 

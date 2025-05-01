@@ -18,6 +18,7 @@ void Ui::General() const
 
 	ImGui::Text("Performance report"); 
 	ImGui::Text("%5.2fms (%.1ffps) - %.1fMrays/s\n", mRenderer->GetAvg(), mRenderer->GetFps(), mRenderer->GetRps() / 1000);
+	ImGui::Text("OpenMP thread count: %d", omp_get_num_threads());
 
 	Settings& settings = mRenderer->GetSettings(); 
 

@@ -72,7 +72,8 @@
     </ClCompile>
     <ClCompile Include="noise.cpp" />
     <ClCompile Include="resources.cpp" />
-    <ClCompile Include="lights2.cpp" />
+    <ClCompile Include="lights_stochastic.cpp" />
+    <ClCompile Include="lights_vectorized.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -163,7 +164,11 @@
       <Filter>additional</Filter>
     </ClInclude>
     <ClInclude Include="resources.h" />
-    <ClInclude Include="lights2.h" />
+    <ClInclude Include="lights_stochastic.h" />
+    <ClInclude Include="lights_vectorized.h" />
+    <ClInclude Include="directions.h">
+      <Filter>additional</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">

@@ -3,6 +3,7 @@
 #include "maths.h"  
 #include "files.h" 
 #include "color.h"
+#include "directions.h" 
 #include "noise.h" 
 #include "camera.h" 
 #include "resources.h" 
@@ -16,6 +17,7 @@ float constexpr ASPECT_RATIO	= static_cast<float>(SCRWIDTH) / static_cast<float>
 // #define DOUBLESIZE
 
 #define DEBUG_MODE		1
+//#define SINGLE_THREADED 
 
 enum controls : uint8_t
 {

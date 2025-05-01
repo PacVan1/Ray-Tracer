@@ -211,6 +211,7 @@ void TextFileWrite( const string& text, const char* _File );
 // global project settigs; shared with OpenCL.
 // If you change these a lot, consider moving the include out of precomp.h.
 #include "common.h"
+#include <omp.h> 
 
 // low-level: instruction set detection
 #ifdef _WIN32
