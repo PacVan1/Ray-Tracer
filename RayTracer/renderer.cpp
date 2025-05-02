@@ -172,31 +172,24 @@ color Renderer::Trace(Ray& primRay) const
 	{
 		if (DidHit(ray))
 		{
-			HitInfo const info = CalcHitInfo(ray);
+			Intersection const hit = CalcIntersection(ray);  
 
-			color albedo = mScene.GetAlbedo(ray.objIdx, info.mI);
-			color emission = BLACK;
+			color albedo	= hit.mat->GetAlbedo();    
+			color emission	= hit.mat->GetEmission();   
 
-			if (info.mMat)
+			Ray		scattered;
+			color	indirect = albedo; 
+			if (hit.mat->Scatter(hit, scattered, indirect))  
 			{
-				albedo = info.mMat->GetAlbedo();
-				emission = info.mMat->GetEmission();
-
-				Ray		scattered;
-				color	attenuation = albedo;
-				if (info.mMat->Scatter(ray, info, scattered, attenuation))
-				{
-					color const directLight = CalcDirectLight(info) * albedo;  
-					color const indirectLight = attenuation; 
-					light += (directLight + emission) * throughput; 
-					throughput *= indirectLight;   
-					ray = scattered;  
-					mScene.FindNearest(ray); 
-					continue;
-				}
+				color const direct = CalcDirectLight(hit) * albedo;  
+				light += (direct + emission) * throughput;  
+				throughput *= indirect;   
+				ray = scattered;  
+				mScene.FindNearest(ray); 
+				continue;
 			}
 
-			light += (CalcDirectLightWithArea(mScene, info) * albedo + emission) * throughput;
+			light += (CalcDirectLightWithArea(hit) * albedo + emission) * throughput;  
 			return light;
 		}
 		else
@@ -220,34 +213,27 @@ color Renderer::Trace(Ray& primRay, blueSeed& seed) const
 	{
 		if (DidHit(ray))
 		{
-			HitInfo const info = CalcHitInfo(ray);
+			Intersection const hit = CalcIntersection(ray);
 
-			color albedo = mScene.GetAlbedo(ray.objIdx, info.mI);
-			color emission = BLACK;
+			seed.mBounce = bounce; 
 
-			if (info.mMat)
+			color albedo	= hit.mat->GetAlbedo();
+			color emission	= hit.mat->GetEmission(); 
+
+			Ray		scattered;
+			color	indirect = albedo;
+			if (hit.mat->Scatter(hit, seed, scattered, indirect))
 			{
-				seed.mBounce = bounce; 
-
-				albedo = info.mMat->GetAlbedo();
-				emission = info.mMat->GetEmission();
-
-				Ray		scattered;
-				color	attenuation = albedo;
-				if (info.mMat->Scatter(ray, info, scattered, attenuation, seed)) 
-				{
-					color const directLight = CalcDirectLight(info) * albedo; 
-					color const indirectLight = attenuation;
-					light += (directLight + emission) * throughput;
-					throughput *= indirectLight; // indirect light   
-					ray = scattered;
-					mScene.FindNearest(ray);
-					continue;
-				}
+				color const direct = CalcDirectLight(hit) * albedo;   
+				light += (direct + emission) * throughput; 
+				throughput *= indirect;   
+				ray = scattered;
+				mScene.FindNearest(ray);
+				continue;
 			}
 
-			//light += (CalcDirectLightWithArea(info, seed) * albedo + emission) * throughput; 
-			//return light;
+			light += (CalcDirectLightWithArea(hit, seed) * albedo + emission) * throughput;  
+			return light;
 		}
 		else
 		{
@@ -266,84 +252,27 @@ color Renderer::TraceDebug(Ray& ray, debug debug)
 	{
 		mScene.FindNearest(ray);
 		if (ray.objIdx == -1) return throughput * Miss(ray.D) + light;
-		HitInfo const info = CalcHitInfo(ray);
+		Intersection const hit = CalcIntersection(ray);
 
 		debug.mIsPrimary	= bounce == 0;
 		debug.mIsInside		= ray.inside;
-		mDebugViewer.RenderRay(ray.O, info.mI, info.mN, debug);
+		mDebugViewer.RenderRay(ray.O, hit.point, hit.normal, debug);  
 
 		Ray		scattered;
 		color	attenuation;  
-		if (info.mMat->Scatter(ray, info, scattered, attenuation)) 
+		if (hit.mat->Scatter(hit, scattered, attenuation))   
 		{
-			color const directLight = CalcDirectLight(info) * info.mMat->GetAlbedo();
-			light		+= (directLight + info.mMat->GetEmission()) * throughput; 
+			color const directLight = CalcDirectLight(hit) * WHITE;  
+			light		+= (directLight + BLACK * throughput);  
 			throughput	*= attenuation; // indirect light
 			ray = scattered;
 			continue;
 		}
 
-		light += (CalcDirectLightWithArea(mScene, info) * info.mMat->GetAlbedo() + info.mMat->GetEmission()) * throughput;  
+		light += (CalcDirectLightWithArea(hit) * WHITE) * throughput;    
 		return light;
 	}
 	return light;
-}
-
-color Renderer::TraceRecursive(Ray& ray, int const bounces) const
-{
-	if (bounces >= mSet.mMaxBounces) return BLACK;
-	mScene.FindNearest(ray);
-	if (ray.objIdx == -1) return Miss(ray.D);
-	HitInfo const info	= CalcHitInfo(ray);
-	color albedo		= mScene.GetAlbedo(ray.objIdx, info.mI); 
-
-	if (ray.objIdx == mScene.sphere.objIdx || ray.objIdx == mScene.cube.objIdx || ray.objIdx == mScene.torus.objIdx)
-	{
-		albedo = mLambertian3.GetAlbedo();
-		Ray		scattered;
- 		color	scatteredColor;   
-		if (mLambertian3.Scatter(ray, info, scattered, scatteredColor)) 
-		{
-			color const directLight		= CalcDirectLight(info) * albedo;  
-			color const indirectLight	= TraceRecursive(scattered, bounces + 1) * scatteredColor;
-			return indirectLight + directLight;  
-		}
-	}
-
-	return CalcDirectLightWithArea(mScene, info) * albedo;  
-}
-
-color Renderer::TraceDebugRecursive(Ray& ray, debug debug, int const bounces)
-{
-	if (bounces >= mSet.mMaxBounces) return BLACK; 
-	mScene.FindNearest(ray);
-	if (ray.objIdx == -1) return Miss(ray.D); 
-	float3 const intersection = calcIntersection(ray);
-	float3 const normal = mScene.GetNormal(ray.objIdx, intersection, ray.D);
-	color const	 albedo = mScene.GetAlbedo(ray.objIdx, intersection);
-
-	debug.mIsPrimary	= bounces == 0; 
-	debug.mIsInside		= ray.inside;  
-	mDebugViewer.RenderRay(ray.O, intersection, normal, debug);   
-
-	if (ray.objIdx == mScene.cube.objIdx)
-	{
-		Ray scattered;
-		if (mMetallic.Scatter(ray, scattered, intersection, normal))
-		{
-			return TraceDebugRecursive(scattered, debug, (bounces + 1));
-		}
-	}
-	if (ray.objIdx == mScene.sphere.objIdx)
-	{
-		Ray scattered;
-		if (mDielectric.Scatter(ray, scattered, intersection, normal))
-		{
-			return TraceDebugRecursive(scattered, debug, (bounces + 1));
-		}
-	}
-
-	return CalcDirectLight(mScene, intersection, normal) * albedo;
 }
 
 color Renderer::TraceNormals(Ray& ray) const
@@ -351,7 +280,7 @@ color Renderer::TraceNormals(Ray& ray) const
 	mScene.FindNearest(ray);
 	if (ray.objIdx == -1) return BLACK;
 
-	float3 const intersection	= calcIntersection(ray);
+	float3 const intersection	= calcIntersectionPoint(ray); 
 	float3 const normal			= mScene.GetNormal(ray.objIdx, intersection, ray.D);
 
 	return (normal + 1) * 0.5f;
@@ -369,89 +298,72 @@ color Renderer::TraceAlbedo(Ray& ray) const
 {
 	mScene.FindNearest(ray);
 	if (ray.objIdx == -1) return BLACK; // or a fancy sky color
-	float3 const intersection	= calcIntersection(ray);
+	float3 const intersection	= calcIntersectionPoint(ray); 
 	color const	 albedo			= mScene.GetAlbedo(ray.objIdx, intersection);
 	return albedo; 
 }
 
-color Renderer::CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const
-{
-	color result = BLACK; 
-	if (mSet.mDirLightEnabled)	result += mDirLight.Intensity(scene, intersection, normal);
-	if (mSet.mPointLightsEnabled) for (PointLight const& pointLight : mPointLights) result += pointLight.Intensity(scene, intersection, normal);
-	if (mSet.mSpotlightsEnabled)	for (Spotlight const& spotLight : mSpotLights) result += spotLight.Intensity(scene, intersection, normal); 
-	return result; 
-}
-
-color Renderer::CalcDirectLight(HitInfo const& info) const
+color Renderer::CalcDirectLight(Intersection const& hit) const
 {
 	color result = BLACK;
-	//if (mSet.mDirLightEnabled)	result += mDirLight.Intensity2(mScene, info); 
-	//if (mSet.mTexturedSpotlightEnabled) result += mTexturedSpotlight.Intensity(mScene, info); 
+	if (mSet.mDirLightEnabled)	result += mDirLight.Intensity(hit);
+	if (mSet.mTexturedSpotlightEnabled) result += mTexturedSpotlight.Intensity(hit); 
 	//result += mSet.mStochasticLights ? lights.EvaluateStochastic(info) : lights.Evaluate(info); 
-	result += lights3.Evaluate(info);  
+	//result += lights3.Evaluate(info);  
 	return result;
 }  
 
-color Renderer::CalcDirectLightWithArea(Scene const& scene, float3 const& intersection, float3 const& normal) const
-{
-	color result = BLACK; 
-	result += CalcDirectLight(scene, intersection, normal);
-	result += mSet.mSkydomeEnabled ? mSkydome.Intensity(scene, intersection, normal) : MissIntensity(scene, intersection, normal);
-	return result; 
-}
-
-color Renderer::CalcDirectLightWithArea(Scene const& scene, HitInfo const& info) const
+color Renderer::CalcDirectLightWithArea(Intersection const& hit) const
 {
 	color result = BLACK;
-	result += CalcDirectLight(info);  
+	result += CalcDirectLight(hit);  
 
-	if (mSet.mQuadLightEnabled) result += CalcQuadLight(scene, info);
-	result += mSet.mSkydomeEnabled ? mSkydome.Intensity(scene, info) : MissIntensity2(scene, info);
+	if (mSet.mQuadLightEnabled) result += CalcQuadLight(hit);
+	result += mSet.mSkydomeEnabled ? mSkydome.Intensity(hit) : MissIntensity(hit);   
 
 	return result;
 } 
 
-color Renderer::CalcDirectLightWithArea(HitInfo const& info, blueSeed const seed) const  
+color Renderer::CalcDirectLightWithArea(Intersection const& hit, blueSeed const seed) const  
 {
 	color result = BLACK;
-	result += CalcDirectLight(info); 
+	result += CalcDirectLight(hit); 
 
-	if (mSet.mQuadLightEnabled) result += CalcQuadLight(mScene, info, seed); 
-	result += mSet.mSkydomeEnabled ? mSkydome.Intensity(mScene, info, seed) : MissIntensity2(mScene, info);  
+	if (mSet.mQuadLightEnabled) result += CalcQuadLight(hit, seed); 
+	result += mSet.mSkydomeEnabled ? mSkydome.Intensity(hit, seed) : MissIntensity(hit);   
 
 	return result;
 }
 
-color Renderer::CalcQuadLight(Scene const& scene, HitInfo const& info) const 
+color Renderer::CalcQuadLight(Intersection const& hit) const 
 {
-	float3 dir			= info.mI - scene.RandomPointOnLight(RandomFloat(), RandomFloat());  
+	float3 dir			= hit.point - hit.scene->RandomPointOnLight(RandomFloat(), RandomFloat());   
 	float const dist	= length(dir); 
 	dir					= normalize(dir);   
 
-	Ray shadow = Ray(info.mI - dir * sEps, -dir, dist - sEps);  
-	if (scene.IsOccluded(shadow)) return BLACK;  
+	Ray shadow = Ray(hit.point - dir * sEps, -dir, dist - sEps);
+	if (hit.scene->IsOccluded(shadow)) return BLACK;
 
-	float const cosa		= max(0.0f, dot(info.mN, -dir));
+	float const cosa		= max(0.0f, dot(hit.normal, -dir));  
 	float const attenuation = (1.0f / (dist * dist));
-	float const probability = scene.GetLightArea() * scene.GetLightCount();
+	float const probability = hit.scene->GetLightArea() * hit.scene->GetLightCount(); 
 
 	return attenuation * cosa * probability;  
 }
 
-color Renderer::CalcQuadLight(Scene const& scene, HitInfo const& info, blueSeed const seed) const  
+color Renderer::CalcQuadLight(Intersection const& hit, blueSeed const seed) const  
 {
 	float2 const noise = BlueNoise::GetInstance().Float2(seed);
-	float3 dir = info.mI - scene.RandomPointOnLight(noise.x, noise.y);  
+	float3 dir = hit.point - hit.scene->RandomPointOnLight(noise.x, noise.y);  
 	float const dist = length(dir); 
 	dir = normalize(dir);
 
-	Ray shadow = Ray(info.mI - dir * sEps, -dir, dist - sEps);
-	if (scene.IsOccluded(shadow)) return BLACK;
+	Ray shadow = Ray(hit.point - dir * sEps, -dir, dist - sEps);
+	if (hit.scene->IsOccluded(shadow)) return BLACK;
 
-	float const cosa = max(0.0f, dot(info.mN, -dir));
+	float const cosa = max(0.0f, dot(hit.normal, -dir));
 	float const attenuation = (1.0f / (dist * dist));
-	float const probability = scene.GetLightArea() * scene.GetLightCount();
+	float const probability = hit.scene->GetLightArea() * hit.scene->GetLightCount(); 
 
 	return attenuation * cosa * probability;
 }
@@ -461,60 +373,54 @@ color Renderer::Miss(float3 const direction) const
 	return mSet.mSkydomeEnabled ? mSkydome.Sample(direction) : mMiss;
 }
 
-color Renderer::MissIntensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
+color Renderer::MissIntensity(Intersection const& hit) const
 {
-	float3 const random = randomUnitOnHemisphere(normal);
-	if (scene.IsOccluded({ intersection + random * sEps, random })) return BLACK;
-	float const cosa = max(0.0f, dot(normal, random));
-	return cosa * mMiss; 
-}
-
-color Renderer::MissIntensity2(Scene const& scene, HitInfo const& info) const
-{
-	float3 const random = randomUnitOnHemisphere(info.mN); 
-	if (scene.IsOccluded({ info.mI + random * sEps, random })) return BLACK;
-	float const cosa = max(0.0f, dot(info.mN, random));
+	float3 const random = randomUnitOnHemisphere(hit.normal);
+	if (hit.scene->IsOccluded({ hit.point + random * sEps, random })) return BLACK; 
+	float const cosa = max(0.0f, dot(hit.normal, random));
 	return cosa * mMiss;
 }
 
-HitInfo Renderer::CalcHitInfo(Ray const& ray) const
+Intersection Renderer::CalcIntersection(Ray const& ray) const
 {
-	HitInfo info;
-	info.mI		= calcIntersection(ray);
-	info.mN		= mScene.GetNormal(ray.objIdx, info.mI, ray.D);
-	info.mScene = &mScene; 
+	Intersection hit; 
+	hit.point		= calcIntersectionPoint(ray);  
+	hit.normal		= mScene.GetNormal(ray.objIdx, hit.point, ray.D); 
+	hit.in			= ray.D; 
 	if (ray.objIdx == mScene.sphere.objIdx)
 	{
-		info.mMat = mSphereMaterial;   
+		hit.mat = &mSphereMaterial;
 	}
 	else if (ray.objIdx == mScene.torus.objIdx)
 	{
-		info.mMat = mTorusMaterial;
+		hit.mat = &mTorusMaterial;
 	}
 	else if (ray.objIdx == mScene.cube.objIdx)
 	{
-		info.mMat = mCubeMaterial;
+		hit.mat = &mCubeMaterial;
 	}
 	else if (ray.objIdx == mScene.plane[2].objIdx)  
 	{
-		info.mMat = mFloorMaterial;  
+		hit.mat = &mFloorMaterial;
 	}
 #ifdef FOURLIGHTS  
 	else if (ray.objIdx == mScene.quad[0].objIdx)
 	{
-		info.mMat = mQuadMaterial; 
+		hit.mat = &mQuadMaterial;
 	}
 #else
 	else if (ray.objIdx == mScene.quad.objIdx) 
 	{
-		info.mMat = mQuadMaterial; 
+		hit.mat = &mQuadMaterial;
 	}
 #endif
 	else
 	{
-		info.mMat = nullptr;  
+		hit.mat = nullptr; 
 	}
-	return info;
+	hit.scene		= &mScene;
+	hit.t			= ray.t; 
+	return hit; 
 }
 
 color Renderer::Reproject(Ray const& primRay, color const& sample) const
@@ -524,7 +430,7 @@ color Renderer::Reproject(Ray const& primRay, color const& sample) const
 	color historySample = 0.0f;
 	float historyWeight = 0.0f;
 
-	float3 const primI	= calcIntersection(primRay);  
+	float3 const primI	= calcIntersectionPoint(primRay);
 	float const dLeft	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[0], primI);   
 	float const dRight	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[1], primI);   
 	float const dTop	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[2], primI);   
@@ -540,7 +446,7 @@ color Renderer::Reproject(Ray const& primRay, color const& sample) const
 	{
 		Ray repRay = Ray(mCamera.mPrevPosition, normalize(primI - mCamera.mPrevPosition)); 
 		mScene.FindNearest(repRay);
-		float3 const repI = calcIntersection(repRay);   
+		float3 const repI = calcIntersectionPoint(repRay); 
 		if (sqrLength(primI - repI) < 0.0001f)  
 		{
 			historyWeight = mHistoryWeight;   
@@ -556,7 +462,7 @@ color Renderer::Reproject2(Ray const& primRay, color const& sample) const
 {
 	if (!DidHit(primRay)) return sample;
 
-	float3 const primI	= calcIntersection(primRay);
+	float3 const primI	= calcIntersectionPoint(primRay);
 	float const dLeft	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[0], primI);
 	float const dRight	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[1], primI);
 	float const dTop	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[2], primI);
@@ -568,7 +474,7 @@ color Renderer::Reproject2(Ray const& primRay, color const& sample) const
 	{
 		Ray repRay = Ray(mCamera.mPrevPosition, normalize(primI - mCamera.mPrevPosition));
 		mScene.FindNearest(repRay);
-		float3 const repI = calcIntersection(repRay);
+		float3 const repI = calcIntersectionPoint(repRay); 
 		if (sqrLength(primI - repI) < 0.0001f)
 		{
 			//int2 const prev = int2(static_cast<int>(prevX), static_cast<int>(prevY));  
@@ -647,14 +553,14 @@ void Renderer::Init()
 	//transformTexturedSpotlight(lights2.mData[0], { 0.0f, 4.0f, -2.5f }, 0.0f); 
 
 	lights3.Add(NEW_LIGHT_TYPES_POINT_LIGHT); 
-	//lights3.mData[0].mPs[0].mColor = WHITE; 
-	//lights3.mData[0].mPs[1].mColor = WHITE;
-	//lights3.mData[0].mPs[2].mColor = WHITE; 
-	//lights3.mData[0].mPs[3].mColor = WHITE;  
-	lights3.mData[0].mPs.mR4 = _mm_set1_ps(1.0f);  
-	lights3.mData[0].mPs.mR4 = _mm_set1_ps(1.0f);  
-	lights3.mData[0].mPs.mB4 = _mm_set1_ps(1.0f);  
-	lights3.mData[0].mPs.mI4 = _mm_set1_ps(1.0f);   
+	lights3.mData[0].mPs[0].mColor = WHITE; 
+	lights3.mData[0].mPs[1].mColor = WHITE;
+	lights3.mData[0].mPs[2].mColor = WHITE;  
+	lights3.mData[0].mPs[3].mColor = WHITE;   
+	//lights3.mData[0].mPs.mR4 = _mm_set1_ps(1.0f);  
+	//lights3.mData[0].mPs.mR4 = _mm_set1_ps(1.0f);  
+	//lights3.mData[0].mPs.mB4 = _mm_set1_ps(1.0f);  
+	//lights3.mData[0].mPs.mI4 = _mm_set1_ps(1.0f);   
 
 	mFrame = 0;  
 	 
@@ -680,29 +586,17 @@ void Renderer::Init()
 	mDirLight.mDirection	= float3(0.8f, -0.3f, 0.5f);
 	mDirLight.mDirection	= normalize(mDirLight.mDirection); 
 	mDirLight.mStrength		= 1.0f;
-	mDirLight.mColor		= WHITE;   
+	mDirLight.mColor		= WHITE;    
 
-	mGlossy2.mSmoothness = 0.5f; 
+	mSphereMaterial = Material(MATERIAL_TYPES_GLOSSY);     
+	mTorusMaterial	= Material(MATERIAL_TYPES_GLOSSY);  
+	mCubeMaterial	= Material(MATERIAL_TYPES_GLOSSY);  
+	mFloorMaterial	= Material(MATERIAL_TYPES_GLOSSY);  
+	mQuadMaterial	= Material(MATERIAL_TYPES_GLOSSY); 
 
-	mSphereMaterial = &mDielectric;   
-	mTorusMaterial	= &mGlossy2;
-	mCubeMaterial	= &mGlossy2;
-	mFloorMaterial	= new Glossy2();
-	//mFloorMaterial = new Glossy2();     
-	mQuadMaterial	= new Glossy2(); 
+	mCubeMaterial.emission = WHITE * 2.0f;  
 
-	mSphereMaterial->mAlbedo	= WHITE; 
-	mTorusMaterial->mAlbedo		= GREEN * 0.4f;
-	mCubeMaterial->mAlbedo		= BLUE * 0.4f; 
-	//mSphereMaterial->mAlbedo = WHITE * 0.4f;
-	//mTorusMaterial->mAlbedo = WHITE * 0.4f;
-	//mCubeMaterial->mAlbedo = WHITE * 0.4f;
-	mFloorMaterial->mAlbedo		= WHITE;     
-
-	mQuadMaterial->mAlbedo		= WHITE; 
-	//mQuadMaterial->mEmission	= WHITE * 5.0f;      
-
-	mSkydome = Skydome("../assets/hdr/kloppenheim_06_puresky_4k.hdr");   
+	mSkydome = Skydome("../assets/hdr/kloppenheim_06_puresky_4k.hdr");    
 }
 
 inline void Renderer::InitUi()

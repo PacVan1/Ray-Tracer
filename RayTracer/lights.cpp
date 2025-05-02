@@ -1,7 +1,7 @@
 #include "precomp.h"
 #include "lights.h"
 
-#include "Renderer.h" 
+#include "renderer.h" 
 
 PointLight::PointLight() :
 	mPosition(0.0f),
@@ -9,30 +9,16 @@ PointLight::PointLight() :
 	mStrength(1.0f)
 {}
 
-float3 PointLight::Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
+float3 PointLight::Intensity(Intersection const& hit) const 
 {
-	float3 dir			= mPosition - intersection; 
-	float const dist	= length(dir);
-	dir					= normalize(dir); 
-
-	if (scene.IsOccluded({ intersection + -dir * Renderer::sEps, -dir, dist })) return BLACK;  
-
-	float const cosa		= max(0.0f, dot(normal, dir));
-	float const attenuation = 1.0f / (dist * dist); 
-
-	return cosa * attenuation * mColor * mStrength; 
-}
-
-float3 PointLight::Intensity2(Scene const& scene, HitInfo const& info) const
-{
-	float3 dir			= info.mI - mPosition; 
+	float3 dir			= hit.point - mPosition; 
 	float const dist	= length(dir);
 	dir					= normalize(dir);
 
-	Ray shadow = Ray(info.mI - dir * Renderer::sEps, -dir, dist - Renderer::sEps);    
-	if (scene.IsOccluded(shadow)) return BLACK;  
+	Ray shadow = Ray(hit.point - dir * Renderer::sEps, -dir, dist - Renderer::sEps);
+	if (hit.scene->IsOccluded(shadow)) return BLACK;
 
-	float const cosa		= max(0.0f, dot(info.mN, -dir)); 
+	float const cosa		= max(0.0f, dot(hit.normal, -dir)); 
 	float const attenuation = 1.0f / (dist * dist);
 
 	return cosa * attenuation * mColor * mStrength;
@@ -44,19 +30,11 @@ DirectionalLight::DirectionalLight() :
 	mStrength(1.0f)
 {}
 
-float3 DirectionalLight::Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
+float3 DirectionalLight::Intensity(Intersection const& hit) const
 {
-	if (scene.IsOccluded({ intersection + -mDirection * Renderer::sEps, -mDirection })) return BLACK;
+	if (hit.scene->IsOccluded({ hit.point + -mDirection * Renderer::sEps, -mDirection })) return BLACK;
 
-	float const cosa = max(0.0f, dot(normal, -mDirection));
-	return cosa * mColor * mStrength;
-}
-
-float3 DirectionalLight::Intensity2(Scene const& scene, HitInfo const& info) const
-{
-	if (scene.IsOccluded({ info.mI + -mDirection * Renderer::sEps, -mDirection })) return BLACK;
-
-	float const cosa = max(0.0f, dot(info.mN, -mDirection));
+	float const cosa = max(0.0f, dot(hit.normal, -mDirection)); 
 	return cosa * mColor * mStrength;
 }
 
@@ -73,35 +51,18 @@ Spotlight::Spotlight() :
 	DirectionFromLookAt(); 
 }
 
-float3 Spotlight::Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
+float3 Spotlight::Intensity(Intersection const& hit) const 
 {
-	float3 dir			= mPosition - intersection; 
-	float const dist	= length(dir);
-	dir					= normalize(dir);
-
-	if (scene.IsOccluded({ intersection + -dir * Renderer::sEps, -dir, dist })) return BLACK;
-
-	float const theta		= dot(dir, -mDirection);
-	float const intensity	= clamp((theta - mOuterScalar) / mEpsilon, 0.0f, 1.0f);
-  
-	float const cosa			= max(0.0f, dot(normal , dir)); 
-	float const attenuation		= 1.0f / (dist * dist); 
-
-	return attenuation * cosa * intensity * mColor * mStrength;
-}
-
-float3 Spotlight::Intensity2(Scene const& scene, HitInfo const& info) const
-{
-	float3 dir = mPosition - info.mI; 
+	float3 dir = mPosition - hit.point; 
 	float const dist = length(dir);
 	dir = normalize(dir);
 
-	if (scene.IsOccluded({ info.mI + -dir * Renderer::sEps, -dir, dist })) return BLACK; 
+	if (hit.scene->IsOccluded({ hit.point + -dir * Renderer::sEps, -dir, dist })) return BLACK; 
 
 	float const theta = dot(dir, -mDirection);
 	float const intensity = clamp((theta - mOuterScalar) / mEpsilon, 0.0f, 1.0f);
 
-	float const cosa = max(0.0f, dot(info.mN, dir));
+	float const cosa = max(0.0f, dot(hit.normal, dir));
 	float const attenuation = 1.0f / (dist * dist);
 
 	return attenuation * cosa * intensity * mColor * mStrength;
@@ -112,22 +73,22 @@ void Spotlight::DirectionFromLookAt()
 	mDirection = normalize(mLookAt - mPosition);  
 }
 
-color TexturedSpotlight::Intensity(Scene const& scene, HitInfo const& info) const
+color TexturedSpotlight::Intensity(Intersection const& hit) const
 {
-	float3 dir = info.mI - mPosition;
+	float3 dir = hit.point - mPosition; 
 	float const dist = length(dir);
 	dir = normalize(dir);
 
-	Ray shadow = Ray(info.mI - dir * Renderer::sEps, -dir, dist - Renderer::sEps); 
-	if (scene.IsOccluded(shadow)) return BLACK; 
+	Ray shadow = Ray(hit.point - dir * Renderer::sEps, -dir, dist - Renderer::sEps);
+	if (hit.scene->IsOccluded(shadow)) return BLACK;  
 
-	float const cosa		= max(0.0f, dot(info.mN, -dir));
+	float const cosa		= max(0.0f, dot(hit.normal, -dir));
 	float const attenuation = 1.0f / (dist * dist);
 
-	float const dLeft	= distanceToFrustum(mFrustum.mPlanes[0], info.mI); 
-	float const dRight	= distanceToFrustum(mFrustum.mPlanes[1], info.mI);
-	float const dTop	= distanceToFrustum(mFrustum.mPlanes[2], info.mI);
-	float const dBottom = distanceToFrustum(mFrustum.mPlanes[3], info.mI); 
+	float const dLeft	= distanceToFrustum(mFrustum.mPlanes[0], hit.point); 
+	float const dRight	= distanceToFrustum(mFrustum.mPlanes[1], hit.point); 
+	float const dTop	= distanceToFrustum(mFrustum.mPlanes[2], hit.point); 
+	float const dBottom = distanceToFrustum(mFrustum.mPlanes[3], hit.point); 
 	float const x		= dLeft / (dLeft + dRight);   
 	float const y		= dTop / (dTop + dBottom);   
 	return x >= 0.0f && x <= 1.0f && y >= 0.0f && y <= 1.0f ? 

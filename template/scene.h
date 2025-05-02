@@ -21,12 +21,14 @@
 #define PLANE_Y(o,i) {t=-(ray.O.y+o)*ray.rD.y;if(t<ray.t&&t>0)ray.t=t,ray.objIdx=i;}
 #define PLANE_Z(o,i) {t=-(ray.O.z+o)*ray.rD.z;if(t<ray.t&&t>0)ray.t=t,ray.objIdx=i;}
 
+#define RAY_FAR 1e34f
+
 namespace Tmpl8 {
 __declspec(align(64)) class Ray
 {
 public:
 	Ray() = default;
-	Ray( const float3 origin, const float3 direction, const float distance = 1e34f, const int idx = -1 )
+	Ray( const float3 origin, const float3 direction, const float distance = RAY_FAR, const int idx = -1 ) 
 	{
 		O = origin, D = direction, t = distance;
 		// calculate reciprocal ray direction for triangles and AABBs
@@ -39,7 +41,7 @@ public:
 	union { struct { float3 O; float d0; }; __m128 O4; };
 	union { struct { float3 D; float d1; }; __m128 D4; };
 	union { struct { float3 rD; float d2; }; __m128 rD4; };
-	float t = 1e34f;
+	float t = RAY_FAR; 
 	int objIdx = -1;
 	bool inside = false; // true when in medium
 };

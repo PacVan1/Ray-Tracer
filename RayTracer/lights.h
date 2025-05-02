@@ -1,7 +1,6 @@
 #pragma once
 
-#include "scene.h" 
-#include "hitinfo.h" 
+struct Intersection; 
 
 enum lightTypes : uint8_t
 {
@@ -19,8 +18,7 @@ public:
 
 public:
 							PointLight();
-	[[nodiscard]] float3	Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const; 
-	[[nodiscard]] float3	Intensity2(Scene const& scene, HitInfo const& info) const;
+	[[nodiscard]] float3	Intensity(Intersection const& hit) const;
 };
 
 class DirectionalLight
@@ -32,8 +30,7 @@ public:
 
 public:
 							DirectionalLight();
-	[[nodiscard]] float3	Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
-	[[nodiscard]] float3	Intensity2(Scene const& scene, HitInfo const& info) const;
+	[[nodiscard]] float3	Intensity(Intersection const& hit) const;
 };
 
 class Spotlight 
@@ -52,8 +49,7 @@ private:
 
 public:
 							Spotlight(); 
-	[[nodiscard]] float3	Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
-	[[nodiscard]] float3	Intensity2(Scene const& scene, HitInfo const& info) const;
+	[[nodiscard]] float3	Intensity(Intersection const& hit) const;
 	void					DirectionFromLookAt();
 };
 
@@ -83,6 +79,6 @@ public:
 
 public:
 						TexturedSpotlight(); 
-	[[nodiscard]] color	Intensity(Scene const& scene, HitInfo const& info) const; 
+	[[nodiscard]] color	Intensity(Intersection const& hit) const; 
 	void				Update();
 };

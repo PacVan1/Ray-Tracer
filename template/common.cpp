@@ -18,7 +18,7 @@ float2 randomFloat2()
 	return { randomFloatUnit(), randomFloatUnit() };
 }
 
-float3 calcIntersection(Ray const& ray)
+float3 calcIntersectionPoint(Ray const& ray)
 {
 	return ray.O + ray.D * ray.t;
 }

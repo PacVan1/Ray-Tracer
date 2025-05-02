@@ -14,27 +14,19 @@ Skydome::Skydome(char const* path) :
 	//mTexture.mOwnData		= true;  
 }
 
-color Skydome::Intensity(Scene const& scene, float3 const& intersection, float3 const& normal) const
+color Skydome::Intensity(Intersection const& hit) const 
 {
-	float3 const random = randomUnitOnHemisphere(normal); 
-	if (scene.IsOccluded({ intersection + random * Renderer::sEps, random })) return BLACK;
-	float const cosa = max(0.0f, dot(normal, random));
+	float3 const random = randomUnitOnHemisphere(hit.normal);
+	if (hit.scene->IsOccluded({ hit.point + random * Renderer::sEps, random })) return BLACK;
+	float const cosa = max(0.0f, dot(hit.normal, random));  
 	return cosa * Sample(random);
 }
 
-color Skydome::Intensity(Scene const& scene, HitInfo const& info) const 
+color Skydome::Intensity(Intersection const& hit, blueSeed const seed) const 
 {
-	float3 const random = randomUnitOnHemisphere(info.mN); 
-	if (scene.IsOccluded({ info.mI + random * Renderer::sEps, random })) return BLACK; 
-	float const cosa = max(0.0f, dot(info.mN, random)); 
-	return cosa * Sample(random);
-}
-
-color Skydome::Intensity(Scene const& scene, HitInfo const& info, blueSeed const seed) const 
-{
-	float3 const random = randomUnitOnHemisphere(info.mN, seed); 
-	if (scene.IsOccluded({ info.mI + random * Renderer::sEps, random })) return BLACK;
-	float const cosa = max(0.0f, dot(info.mN, random));
+	float3 const random = randomUnitOnHemisphere(hit.normal, seed);
+	if (hit.scene->IsOccluded({ hit.point + random * Renderer::sEps, random })) return BLACK; 
+	float const cosa = max(0.0f, dot(hit.normal, random)); 
 	return cosa * Sample(random);
 }
 

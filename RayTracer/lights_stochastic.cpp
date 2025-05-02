@@ -3,54 +3,54 @@
 
 #include "renderer.h"  
 
-typedef color(*lightFunction)(LightData const& light, HitInfo const& hit); 
-typedef color(*lightFunction2)(LightData2 const& light, HitInfo const& hit); 
+typedef color(*lightFunc)(LightData const& light, Intersection const& hit); 
+typedef color(*lightFunc2)(LightData2 const& light, Intersection const& hit); 
 
-color evaluatePointLight(LightData const& light, HitInfo const& hit)
+static color evaluatePointLight(LightData const& light, Intersection const& hit) 
 {
-	float3 dir			= hit.mI - light.mPointLight.mPosition;   
+	float3 dir			= hit.point - light.mPointLight.mPosition;    
 	float const dist	= length(dir); 
 	dir					= normalize(dir); 
 
-	Ray shadow = Ray(hit.mI - dir * Renderer::sEps, -dir, dist - Renderer::sEps); 
-	if (hit.mScene->IsOccluded(shadow)) return BLACK;  
+	Ray shadow = Ray(hit.point - dir * Renderer::sEps, -dir, dist - Renderer::sEps);  
+	if (hit.scene->IsOccluded(shadow)) return BLACK;   
 
-	float const cosa		= max(0.0f, dot(hit.mN, -dir)); 
+	float const cosa		= max(0.0f, dot(hit.normal, -dir));  
 	float const attenuation = 1.0f / (dist * dist); 
 
 	return cosa * attenuation * light.mPointLight.mColor * light.mPointLight.mIntensity; 
 }
 
-color evaluateSpotlight(LightData const& light, HitInfo const& hit) 
+static color evaluateSpotlight(LightData const& light, Intersection const& hit) 
 {
-	float3 dir = hit.mI - light.mSpotlight.mPosition;  
+	float3 dir = hit.point - light.mSpotlight.mPosition;  
 	float const dist = length(dir); 
 	dir = normalize(dir); 
 
-	Ray shadow = Ray(hit.mI - dir * Renderer::sEps, -dir, dist - Renderer::sEps); 
-	if (hit.mScene->IsOccluded(shadow)) return BLACK; 
+	Ray shadow = Ray(hit.point - dir * Renderer::sEps, -dir, dist - Renderer::sEps); 
+	if (hit.scene->IsOccluded(shadow)) return BLACK; 
 
 	float const theta		= dot(dir, light.mSpotlight.mDirection); 
 	float const fallOff		= clamp((theta - SPOTLIGHT_OUTER_ANGLE) / SPOTLIGHT_EPSILON, 0.0f, 1.0f);
-	float const cosa		= max(0.0f, dot(hit.mN, -dir));
+	float const cosa		= max(0.0f, dot(hit.normal, -dir)); 
 	float const attenuation = 1.0f / (dist * dist);
 
 	return attenuation * cosa * fallOff * light.mSpotlight.mColor * light.mSpotlight.mIntensity; 
 }
 
-color evaluatePointLights4(LightData2 const& light, HitInfo const& hit)  
+static color evaluatePointLights4(LightData2 const& light, Intersection const& hit)  
 {
 	color result = BLACK; 
 	for (int i = 0; i < 4; i++)
 	{
-		float3 dir = hit.mI - light.mPs[i].mPosition;
+		float3 dir = hit.point - light.mPs[i].mPosition;
 		float const dist = length(dir);
 		dir = normalize(dir);
 
-		Ray shadow = Ray(hit.mI - dir * Renderer::sEps, -dir, dist - Renderer::sEps);
-		if (hit.mScene->IsOccluded(shadow)) return BLACK;
+		Ray shadow = Ray(hit.point - dir * Renderer::sEps, -dir, dist - Renderer::sEps);
+		if (hit.scene->IsOccluded(shadow)) return BLACK;
 
-		float const cosa = max(0.0f, dot(hit.mN, -dir));
+		float const cosa = max(0.0f, dot(hit.normal, -dir)); 
 		float const attenuation = 1.0f / (dist * dist);
 
 		return cosa * attenuation * light.mPs[i].mColor * light.mPs[i].mIntensity; 
@@ -58,72 +58,72 @@ color evaluatePointLights4(LightData2 const& light, HitInfo const& hit)
 	return result;  
 }
 
-color evaluatePointLights4SIMD(LightData2 const& light, HitInfo const& hit) 
+static color evaluatePointLights4SIMD(LightData2 const& light, Intersection const& hit)
 {
 	return BLACK;
 }
 
-color evaluateSpotlights2(LightData2 const& light, HitInfo const& hit) 
+static color evaluateSpotlights2(LightData2 const& light, Intersection const& hit)
 {
 	for (int i = 0; i < 2; i++)
 	{
-		float3 dir = hit.mI - light.mSs[i].mPosition;
+		float3 dir = hit.point - light.mSs[i].mPosition;
 		float const dist = length(dir);
 		dir = normalize(dir);
 
-		Ray shadow = Ray(hit.mI - dir * Renderer::sEps, -dir, dist - Renderer::sEps);
-		if (hit.mScene->IsOccluded(shadow)) return BLACK;
+		Ray shadow = Ray(hit.point - dir * Renderer::sEps, -dir, dist - Renderer::sEps);
+		if (hit.scene->IsOccluded(shadow)) return BLACK;
 
 		float const theta = dot(dir, light.mSs[i].mDirection);
 		float const fallOff = clamp((theta - SPOTLIGHT_OUTER_ANGLE) / SPOTLIGHT_EPSILON, 0.0f, 1.0f);
-		float const cosa = max(0.0f, dot(hit.mN, -dir));
+		float const cosa = max(0.0f, dot(hit.normal, -dir)); 
 		float const attenuation = 1.0f / (dist * dist);
 
 		return attenuation * cosa * fallOff * light.mSs[i].mColor * light.mSs[i].mIntensity; 
 	}
 }
 
-color evaluateTexturedSpotlight(LightData2 const& light, HitInfo const& hit)  
+static color evaluateTexturedSpotlight(LightData2 const& light, Intersection const& hit)
 {
-	float3 dir			= hit.mI - light.mTs.mPosition;
+	float3 dir			= hit.point - light.mTs.mPosition; 
 	float const dist	= length(dir);  
 	dir					= normalize(dir); 
 	
-	Ray shadow = Ray(hit.mI - dir * Renderer::sEps, -dir, dist - Renderer::sEps); 
-	if (hit.mScene->IsOccluded(shadow)) return BLACK; 
+	Ray shadow = Ray(hit.point - dir * Renderer::sEps, -dir, dist - Renderer::sEps); 
+	if (hit.scene->IsOccluded(shadow)) return BLACK; 
 	
-	float const cosa		= max(0.0f, dot(hit.mN, -dir)); 
+	float const cosa		= max(0.0f, dot(hit.normal, -dir)); 
 	float const attenuation = 1.0f / (dist * dist); 
 	
-	float const dLeft	= distanceToFrustum(light.mTs.mFrustum.mPlanes[0], hit.mI);
-	float const dRight	= distanceToFrustum(light.mTs.mFrustum.mPlanes[1], hit.mI);
-	float const dTop	= distanceToFrustum(light.mTs.mFrustum.mPlanes[2], hit.mI);
-	float const dBottom = distanceToFrustum(light.mTs.mFrustum.mPlanes[3], hit.mI);
+	float const dLeft	= distanceToFrustum(light.mTs.mFrustum.mPlanes[0], hit.point); 
+	float const dRight	= distanceToFrustum(light.mTs.mFrustum.mPlanes[1], hit.point); 
+	float const dTop	= distanceToFrustum(light.mTs.mFrustum.mPlanes[2], hit.point); 
+	float const dBottom = distanceToFrustum(light.mTs.mFrustum.mPlanes[3], hit.point); 
 	float const x = dLeft / (dLeft + dRight);
 	float const y = dTop / (dTop + dBottom);
 	return x >= 0.0f && x <= 1.0f && y >= 0.0f && y <= 1.0f ?   
 		cosa * attenuation * light.mTs.mTexture.Sample(float2(x, y)) * light.mTs.mIntensity : BLACK;
 }
 
-lightFunction lightDispatchTable[lightTypes2::LIGHT_TYPES_COUNT] = 
+lightFunc lightDispatchTable[lightTypes2::LIGHT_TYPES_COUNT] = 
 {
 	evaluatePointLight,
 	evaluateSpotlight 
 };
 
-lightFunction2 lightDispatchTable2[lightTypes3::LIGHT_TYPES_COUNT2] =  
+lightFunc2 lightDispatchTable2[lightTypes3::LIGHT_TYPES_COUNT2] =   
 {
 	evaluatePointLights4, 
 	evaluateSpotlights2, 
 	evaluateTexturedSpotlight 
 };
 
-color evaluateLight(LightData const& light, int const type, HitInfo const& hit)
+static color evaluateLight(LightData const& light, int const type, Intersection const& hit)
 {
 	return lightDispatchTable[type](light, hit);   
 }
 
-color evaluateLight2(LightData2 const& light, int const type, HitInfo const& hit)  
+static color evaluateLight2(LightData2 const& light, int const type, Intersection const& hit) 
 {
 	return lightDispatchTable2[type](light, hit); 
 }
@@ -199,7 +199,7 @@ void Lights::Add(int const type)
 	mCount = mData.size(); 
 }
 
-color Lights::Evaluate(HitInfo const& hit) const
+color Lights::Evaluate(Intersection const& hit) const
 {
 	color result = BLACK;
 	for (int i = 0; i < mCount; i++)
@@ -209,7 +209,7 @@ color Lights::Evaluate(HitInfo const& hit) const
 	return result;
 }
 
-color Lights::EvaluateStochastic(HitInfo const& hit) const 
+color Lights::EvaluateStochastic(Intersection const& hit) const
 {
 	color result = BLACK; 
 	for (int i = 0; i < mSamplesPerPixel; i++)
@@ -231,7 +231,7 @@ void Lights2::Add(int const type)
 	mCount = mData.size(); 
 }
 
-color Lights2::Evaluate(HitInfo const& hit) const
+color Lights2::Evaluate(Intersection const& hit) const  
 {
 	color result = BLACK;
 	for (int i = 0; i < mCount; i++)

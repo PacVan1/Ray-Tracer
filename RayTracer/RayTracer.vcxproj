@@ -143,7 +143,6 @@
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="files.cpp" />
-    <ClCompile Include="hitinfo.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="lights.cpp" />
     <ClCompile Include="lights_stochastic.cpp" />
@@ -166,6 +165,7 @@
     <ClInclude Include="..\lib\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\lib\imgui\imstb_textedit.h" />
     <ClInclude Include="..\lib\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\lib\tinybvh\tiny_bvh.h" />
     <ClInclude Include="..\template\camera.h" />
     <ClInclude Include="..\template\common.h" />
     <ClInclude Include="..\template\opengl.h" />
@@ -177,7 +177,6 @@
     <ClInclude Include="debug.h" />
     <ClInclude Include="directions.h" />
     <ClInclude Include="files.h" />
-    <ClInclude Include="hitinfo.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="lights.h" />
     <ClInclude Include="lights_stochastic.h" />

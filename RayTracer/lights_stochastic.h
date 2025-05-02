@@ -1,7 +1,8 @@
 #pragma once
 
 #include "textures.h" 
-#include "hitinfo.h" 
+
+struct Intersection; 
 
 float constexpr SPOTLIGHT_INNER_ANGLE	= 0.939692620f;    
 float constexpr SPOTLIGHT_OUTER_ANGLE	= 0.887010833f;  
@@ -98,8 +99,8 @@ public:
 public:
 			Lights();
 	void	Add(int const type);  
-	color	Evaluate(HitInfo const& hit) const; 
-	color	EvaluateStochastic(HitInfo const& hit) const;
+	color	Evaluate(Intersection const& hit) const;
+	color	EvaluateStochastic(Intersection const& hit) const;
 };
 
 class Lights2
@@ -112,9 +113,9 @@ public:
 public:
 	Lights2(); 
 	void	Add(int const type);
-	color	Evaluate(HitInfo const& hit) const;
+	color	Evaluate(Intersection const& hit) const;
 };
 
-[[nodiscard]] color evaluateLight(LightData const& light, int const type, HitInfo const& hit);
-[[nodiscard]] color evaluateLight2(LightData2 const& light, int const type, HitInfo const& hit);
+[[nodiscard]] color evaluateLight(LightData const& light, int const type, Intersection const& hit);
+[[nodiscard]] color evaluateLight2(LightData2 const& light, int const type, Intersection const& hit);
 void				transformTexturedSpotlight(LightData2& light, float3 const position, float3 const target); 

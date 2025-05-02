@@ -39,7 +39,7 @@ enum controls : uint8_t
 
 [[nodiscard]] float2	calcSphereUv(float3 const& direction);  
 [[nodiscard]] float2	randomFloat2(); 
-[[nodiscard]] float3	calcIntersection(Ray const& ray);
+[[nodiscard]] float3	calcIntersectionPoint(Ray const& ray); 
 [[nodiscard]] float3	randomUnitOnDisk();
 [[nodiscard]] float3	randomUnitOnDisk(blueSeed const seed); 
 [[nodiscard]] float3	randomFloat3();

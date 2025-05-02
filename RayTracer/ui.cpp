@@ -163,10 +163,10 @@ void Ui::CameraUi() const
 
 void Ui::MaterialsUi() const
 {
-	Dielectric& dielectric = mRenderer->mDielectric;
+	//Dielectric& dielectric = mRenderer->mDielectric;
 
-	ImGui::DragFloat("Refractive Index", &dielectric.mIor, 0.02f, 1.0f, 3.0f);
-	ImGui::DragFloat3("Absorption", dielectric.mAbsorption.cell, 0.02f, 0.0f, 10.0f);
+	//ImGui::DragFloat("Refractive Index", &dielectric.mIor, 0.02f, 1.0f, 3.0f);
+	//ImGui::DragFloat3("Absorption", dielectric.mAbsorption.cell, 0.02f, 0.0f, 10.0f);
 }
 
 void Ui::LightsUi() const

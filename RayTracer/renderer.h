@@ -7,7 +7,6 @@
 #include "camera.h"
 #include "debug.h"
 #include "skydome.h"
-#include "hitinfo.h" 
 #include "textures.h" 
 
 enum renderModes : uint8_t
@@ -72,6 +71,18 @@ struct Settings
 	int		mMaxFrames;
 };
 
+struct Intersection
+{
+	float3			point	= 0.0f;
+	float3			normal	= 0.0f;
+	float3			in		= 0.0f;
+	Material const* mat		= nullptr;
+	Scene const*	scene	= nullptr;
+	float			t		= RAY_FAR;
+	bool			inside	= false;
+	uint8_t			padding[7];
+};
+
 namespace Tmpl8
 {
 class Renderer final : public TheApp
@@ -86,19 +97,11 @@ public:
 	Camera					mCamera;
 	Scene					mScene;
 
-	Metallic				mMetallic;
-	Dielectric				mDielectric; 
-	Glossy					mGlossy;  
-	Glossy2					mGlossy2;  
-	Lambertian				mLambertian;
-	Lambertian2				mLambertian2;
-	Lambertian3				mLambertian3;
-
-	Material*				mSphereMaterial; 
-	Material*				mTorusMaterial; 
-	Material*				mCubeMaterial; 
-	Material*				mFloorMaterial;
-	Material*				mQuadMaterial; 
+	Material				mSphereMaterial; 
+	Material				mTorusMaterial; 
+	Material				mCubeMaterial; 
+	Material				mFloorMaterial;
+	Material				mQuadMaterial; 
 
 	std::vector<PointLight> mPointLights; 
 	std::vector<Spotlight>	mSpotLights; 
@@ -122,42 +125,37 @@ public:
 	float					mAnimTime = 0.0f;  
 
 public:
-	void					Tick( float deltaTime ) override;
-	void					ResetAccumulator(); 
-	void					ResetHistory(); 
+	void						Tick( float deltaTime ) override;
+	void						ResetAccumulator(); 
+	void						ResetHistory(); 
 
-	inline Settings&		GetSettings()			{ return mSet; } 
-	inline DebugViewer2D&	GetDebugViewer()		{ return mDebugViewer; }
+	inline Settings&			GetSettings()			{ return mSet; } 
+	inline DebugViewer2D&		GetDebugViewer()		{ return mDebugViewer; }
 
-	inline int				GetSpp() const			{ return mSpp; }
-	inline int				GetFrame() const		{ return mFrame; }
-	inline float			GetFps() const			{ return mFps; }
-	inline float			GetRps() const			{ return mRps; }
-	inline float			GetAvg() const			{ return mAvg; }
+	inline int					GetSpp() const			{ return mSpp; }
+	inline int					GetFrame() const		{ return mFrame; }
+	inline float				GetFps() const			{ return mFps; }
+	inline float				GetRps() const			{ return mRps; }
+	inline float				GetAvg() const			{ return mAvg; }
 
 private:
-	[[nodiscard]] color		Trace(Ray& primRay) const;  
-	[[nodiscard]] color		Trace(Ray& primRay, blueSeed& seed) const;    
-	[[nodiscard]] color		TraceDebug(Ray& ray, debug debug = {});
-	[[nodiscard]] color		TraceRecursive(Ray& ray, int const bounces = 0) const;
-	[[nodiscard]] color		TraceDebugRecursive(Ray& ray, debug debug = {}, int const bounces = 0);
-	[[nodiscard]] color		TraceNormals(Ray& ray) const; 
-	[[nodiscard]] color		TraceDepth(Ray& ray) const; 
-	[[nodiscard]] color		TraceAlbedo(Ray& ray) const; 
-	[[nodiscard]] color		CalcDirectLight(Scene const& scene, float3 const& intersection, float3 const& normal) const;
-	[[nodiscard]] color		CalcDirectLight(HitInfo const& info) const; 
-	[[nodiscard]] color		CalcDirectLightWithArea(Scene const& scene, float3 const& intersection, float3 const& normal) const;
-	[[nodiscard]] color		CalcDirectLightWithArea(Scene const& scene, HitInfo const& info) const;
-	[[nodiscard]] color		CalcDirectLightWithArea(HitInfo const& info, blueSeed const seed) const;
-	[[nodiscard]] color		CalcQuadLight(Scene const& scene, HitInfo const& info) const;
-	[[nodiscard]] color		CalcQuadLight(Scene const& scene, HitInfo const& info, blueSeed const seed) const;  
-	[[nodiscard]] color		Miss(float3 const direction) const;
-	[[nodiscard]] color		MissIntensity(Scene const& scene, float3 const& intersection, float3 const& normal) const;
-	[[nodiscard]] color		MissIntensity2(Scene const& scene, HitInfo const& info) const;
-	[[nodiscard]] HitInfo	CalcHitInfo(Ray const& ray) const;
-	[[nodiscard]] color		Reproject(Ray const& primRay, color const& sample) const;  
-	[[nodiscard]] color		Reproject2(Ray const& primRay, color const& sample) const; 
-	void					PerformanceReport();  
+	[[nodiscard]] color			Trace(Ray& primRay) const;  
+	[[nodiscard]] color			Trace(Ray& primRay, blueSeed& seed) const;    
+	[[nodiscard]] color			TraceDebug(Ray& ray, debug debug = {});
+	[[nodiscard]] color			TraceNormals(Ray& ray) const; 
+	[[nodiscard]] color			TraceDepth(Ray& ray) const; 
+	[[nodiscard]] color			TraceAlbedo(Ray& ray) const; 
+	[[nodiscard]] color			CalcDirectLight(Intersection const& hit) const; 
+	[[nodiscard]] color			CalcDirectLightWithArea(Intersection const& info) const;
+	[[nodiscard]] color			CalcDirectLightWithArea(Intersection const& hit, blueSeed const seed) const;
+	[[nodiscard]] color			CalcQuadLight(Intersection const& hit) const;
+	[[nodiscard]] color			CalcQuadLight(Intersection const& hit, blueSeed const seed) const; 
+	[[nodiscard]] color			Miss(float3 const direction) const;
+	[[nodiscard]] color			MissIntensity(Intersection const& hit) const; 
+	[[nodiscard]] Intersection	CalcIntersection(Ray const& ray) const;
+	[[nodiscard]] color			Reproject(Ray const& primRay, color const& sample) const;  
+	[[nodiscard]] color			Reproject2(Ray const& primRay, color const& sample) const; 
+	void						PerformanceReport();  
 
 	[[nodiscard]] inline float2		RandomOnPixel(int const x, int const y) const;  
 	[[nodiscard]] inline float2		RandomOnPixel(blueSeed const seed) const;  

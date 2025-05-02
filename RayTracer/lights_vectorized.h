@@ -1,9 +1,10 @@
 #pragma once
 
 #include "textures.h" 
-#include "hitinfo.h" 
 
-#define SIMD_POINT_LIGHTS 
+struct Intersection; 
+
+//#define SIMD_POINT_LIGHTS 
 
 //float constexpr SPOTLIGHT_INNER_ANGLE					= 0.939692620f;
 //float constexpr SPOTLIGHT_OUTER_ANGLE					= 0.887010833f;
@@ -92,8 +93,8 @@ public:
 
 public:
 	void				Add(int const type); 
-	[[nodiscard]] color Evaluate(HitInfo const& hit) const;  
+	[[nodiscard]] color Evaluate(Intersection const& hit) const;
 };
 
-[[nodiscard]] color	evaluateLight(NewLight const& light, int const type, HitInfo const& hit);
+[[nodiscard]] color	evaluateLight(NewLight const& light, int const type, Intersection const& hit);
 void				transformTexturedSpotlight(NewLight& light, float3 const position, float3 const target); 

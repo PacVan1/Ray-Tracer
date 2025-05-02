@@ -52,9 +52,6 @@
     <ClCompile Include="files.cpp">
       <Filter>additional</Filter>
     </ClCompile>
-    <ClCompile Include="hitinfo.cpp">
-      <Filter>additional</Filter>
-    </ClCompile>
     <ClCompile Include="input.cpp">
       <Filter>additional</Filter>
     </ClCompile>
@@ -142,9 +139,6 @@
     <ClInclude Include="files.h">
       <Filter>additional</Filter>
     </ClInclude>
-    <ClInclude Include="hitinfo.h">
-      <Filter>additional</Filter>
-    </ClInclude>
     <ClInclude Include="input.h">
       <Filter>additional</Filter>
     </ClInclude>
@@ -168,6 +162,9 @@
     <ClInclude Include="lights_vectorized.h" />
     <ClInclude Include="directions.h">
       <Filter>additional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\tinybvh\tiny_bvh.h">
+      <Filter>template</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
