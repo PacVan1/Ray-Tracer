@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "skydome.h"
 #include "textures.h" 
+#include "bvh_scene.h" 
 
 enum renderModes : uint8_t
 {
@@ -24,8 +25,8 @@ enum convergeModes : uint8_t
 	CONVERGE_MODES_REPROJECTION
 };
 
-color const		INIT_MISS						= BLACK;  
-int constexpr	INIT_RENDER_MODE				= RENDER_MODES_SHADED;
+color const		INIT_MISS						= WHITE;  
+int constexpr	INIT_RENDER_MODE				= RENDER_MODES_NORMALS;
 int constexpr	INIT_CONVERGE_MODE				= CONVERGE_MODES_ACCUMULATION;           
 float constexpr INIT_EPS						= 1e-3f;
 float constexpr INIT_HISTORY_WEIGHT				= 0.8f; 
@@ -96,6 +97,7 @@ public:
 	DebugViewer2D			mDebugViewer; 
 	Camera					mCamera;
 	Scene					mScene;
+	BVHScene				mBVHScene; 
 
 	Material				mSphereMaterial; 
 	Material				mTorusMaterial; 
@@ -140,11 +142,15 @@ public:
 
 private:
 	[[nodiscard]] color			Trace(Ray& primRay) const;  
+	[[nodiscard]] color			Trace(tinybvh::Ray& primRay); 
 	[[nodiscard]] color			Trace(Ray& primRay, blueSeed& seed) const;    
 	[[nodiscard]] color			TraceDebug(Ray& ray, debug debug = {});
-	[[nodiscard]] color			TraceNormals(Ray& ray) const; 
+	[[nodiscard]] color			TraceNormals(Ray& ray) const;  
+	[[nodiscard]] color			TraceNormals(tinybvh::Ray& ray);  
 	[[nodiscard]] color			TraceDepth(Ray& ray) const; 
+	[[nodiscard]] color			TraceDepth(tinybvh::Ray& ray) const; 
 	[[nodiscard]] color			TraceAlbedo(Ray& ray) const; 
+	[[nodiscard]] color			TraceAlbedo(tinybvh::Ray& ray); 
 	[[nodiscard]] color			CalcDirectLight(Intersection const& hit) const; 
 	[[nodiscard]] color			CalcDirectLightWithArea(Intersection const& info) const;
 	[[nodiscard]] color			CalcDirectLightWithArea(Intersection const& hit, blueSeed const seed) const;
@@ -161,6 +167,7 @@ private:
 	[[nodiscard]] inline float2		RandomOnPixel(blueSeed const seed) const;  
 	[[nodiscard]] inline float2		CenterOfPixel(int const x, int const y) const;   
 	[[nodiscard]] inline bool		DidHit(Ray const& ray) const;
+	[[nodiscard]] inline bool		DidHit(tinybvh::Ray const& ray) const; 
 
 	void					UI() override;
 	void					Input() override;

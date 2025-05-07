@@ -36,7 +36,8 @@ void Renderer::Tick(float deltaTime)
 			{
 				float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
 				Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
-				color const pixel = TraceNormals(primRay);  
+				tinybvh::Ray primRay2 = { primRay.O, primRay.D };
+				color const pixel = TraceNormals(primRay2);  
 				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
 				break;
 			}
@@ -44,7 +45,8 @@ void Renderer::Tick(float deltaTime)
 			{
 				float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
 				Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
-				color const pixel = TraceDepth(primRay);
+				tinybvh::Ray primRay2 = { primRay.O, primRay.D };
+				color const pixel = TraceDepth(primRay2); 
 				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
 				break;
 			}
@@ -52,7 +54,8 @@ void Renderer::Tick(float deltaTime)
 			{
 				float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
 				Ray primRay = mCamera.GetPrimaryRay(pixelCoord); 
-				color const pixel = TraceAlbedo(primRay);
+				tinybvh::Ray primRay2 = { primRay.O, primRay.D }; 
+				color const pixel = TraceAlbedo(primRay2);  
 				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
 				break;
 			}
@@ -64,7 +67,10 @@ void Renderer::Tick(float deltaTime)
 				{
 					float2 const pixelCoord		= mSet.mAaEnabled ? mSet.mBlueNoiseEnabled ? RandomOnPixel(seed) : RandomOnPixel(x, y) : CenterOfPixel(x, y);
 					Ray primRay					= mSet.mDofEnabled ? mSet.mBlueNoiseEnabled ? mCamera.GetPrimaryRayFocused(pixelCoord, seed) : mCamera.GetPrimaryRayFocused(pixelCoord) : mCamera.GetPrimaryRay(pixelCoord);   
-					mAccumulator[pixelIdx]		+= mSet.mBlueNoiseEnabled ? Trace(primRay, seed) : Trace(primRay); 
+					tinybvh::Ray primRay2 = { primRay.O, primRay.D };  
+					color const pixel = Trace(primRay2);  
+					//mAccumulator[pixelIdx]		+= mSet.mBlueNoiseEnabled ? Trace(primRay, seed) : Trace(primRay); 
+					mAccumulator[pixelIdx] += pixel; 
 					color const average			= mAccumulator[pixelIdx] * scale;
 					mScreen->pixels[pixelIdx]	= RGBF32_to_RGB8(average);
 					break;
@@ -201,6 +207,30 @@ color Renderer::Trace(Ray& primRay) const
 	return light;
 }
 
+color Renderer::Trace(tinybvh::Ray& primRay)		
+{
+	color	light		= BLACK;
+	color	throughput	= WHITE;
+	if (!mBVHScene.Intersect(primRay)) return Miss(primRay.D);  
+	tinybvh::Ray ray = primRay;
+	for (int bounce = 0; bounce < mSet.mMaxBounces; bounce++) 
+	{
+		color const emission = BLACK;
+		tinybvh::Ray scattered;
+		color indirect = ray.hit.albedo; 
+		if (scatter(*ray.hit.mat, ray, scattered, indirect))    
+		{ 
+			color const direct = BLACK * ray.hit.albedo; 
+			light += (direct + emission) * throughput;
+			throughput *= indirect; ray = scattered;
+			if (!mBVHScene.Intersect(ray)) return light + Miss(ray.D) * throughput; 
+			continue; 
+		}
+		return light + (BLACK * ray.hit.albedo + emission) * throughput;    
+	}
+	return light;
+}
+
 color Renderer::Trace(Ray& primRay, blueSeed& seed) const    
 {
 	color	light		= BLACK;
@@ -283,7 +313,13 @@ color Renderer::TraceNormals(Ray& ray) const
 	float3 const intersection	= calcIntersectionPoint(ray); 
 	float3 const normal			= mScene.GetNormal(ray.objIdx, intersection, ray.D);
 
-	return (normal + 1) * 0.5f;
+	return (normal + 1.0f) * 0.5f;
+}
+ 
+color Renderer::TraceNormals(tinybvh::Ray& ray)
+{
+	if (!mBVHScene.Intersect(ray)) return Miss(ray.D);
+	return (ray.hit.normal + 1.0f) * 0.5f;  
 }
 
 color Renderer::TraceDepth(Ray& ray) const
@@ -294,13 +330,29 @@ color Renderer::TraceDepth(Ray& ray) const
 	return 0.1f * float3(ray.t, ray.t, ray.t);
 }
 
+color Renderer::TraceDepth(tinybvh::Ray& ray) const 
+{
+	mBVHScene.mTlas.Intersect(ray); 
+	if (!DidHit(ray)) return Miss(ray.D); 
+
+	return 0.01f * float3(ray.hit.t, ray.hit.t, ray.hit.t); 
+}
+
 color Renderer::TraceAlbedo(Ray& ray) const
 {
 	mScene.FindNearest(ray);
-	if (ray.objIdx == -1) return BLACK; // or a fancy sky color
+	if (!DidHit(ray)) return Miss(ray.D); // or a fancy sky color  
+
 	float3 const intersection	= calcIntersectionPoint(ray); 
 	color const	 albedo			= mScene.GetAlbedo(ray.objIdx, intersection);
+
 	return albedo; 
+}
+
+color Renderer::TraceAlbedo(tinybvh::Ray& ray) 
+{
+	if (!mBVHScene.Intersect(ray)) return Miss(ray.D);
+	return ray.hit.albedo; 
 }
 
 color Renderer::CalcDirectLight(Intersection const& hit) const
@@ -588,13 +640,13 @@ void Renderer::Init()
 	mDirLight.mStrength		= 1.0f;
 	mDirLight.mColor		= WHITE;    
 
-	mSphereMaterial = Material(MATERIAL_TYPES_GLOSSY);     
-	mTorusMaterial	= Material(MATERIAL_TYPES_GLOSSY);  
-	mCubeMaterial	= Material(MATERIAL_TYPES_GLOSSY);  
-	mFloorMaterial	= Material(MATERIAL_TYPES_GLOSSY);  
-	mQuadMaterial	= Material(MATERIAL_TYPES_GLOSSY); 
+	mSphereMaterial = Material();     
+	mTorusMaterial	= Material();  
+	mCubeMaterial	= Material();  
+	mFloorMaterial	= Material();  
+	mQuadMaterial	= Material(); 
 
-	mCubeMaterial.emission = WHITE * 2.0f;  
+	mCubeMaterial.mGlossy.emission = WHITE * 2.0f;   
 
 	mSkydome = Skydome("../assets/hdr/kloppenheim_06_puresky_4k.hdr");    
 }
@@ -632,6 +684,11 @@ float2 Renderer::CenterOfPixel(int const x, int const y) const
 bool Renderer::DidHit(Ray const& ray) const  
 {
 	return ray.objIdx != -1; 
+}
+ 
+bool Renderer::DidHit(tinybvh::Ray const& ray) const 
+{
+	return ray.hit.t < BVH_FAR;
 }
 
 void Renderer::Shutdown()

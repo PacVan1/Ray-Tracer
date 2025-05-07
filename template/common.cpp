@@ -23,6 +23,16 @@ float3 calcIntersectionPoint(Ray const& ray)
 	return ray.O + ray.D * ray.t;
 }
 
+float3 calcIntersectionPoint(tinybvh::Ray const& ray) 
+{
+	return ray.O + ray.D * ray.hit.t; 
+}
+
+float3 calcRawNormal(float3 const& p1, float3 const& p2, float3 const& p3)
+{
+	return normalize(cross(p2 - p1, p3 - p1));  
+}
+
 float3 randomUnitOnDisk()
 {
 	while (true)

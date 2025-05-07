@@ -37,28 +37,10 @@
     <ClCompile Include="..\template\tmpl8math.cpp">
       <Filter>template</Filter>
     </ClCompile>
-    <ClCompile Include="lights.cpp">
-      <Filter>additional</Filter>
-    </ClCompile>
     <ClCompile Include="camera.cpp">
       <Filter>additional</Filter>
     </ClCompile>
-    <ClCompile Include="..\template\common.cpp">
-      <Filter>additional</Filter>
-    </ClCompile>
-    <ClCompile Include="debug.cpp">
-      <Filter>additional</Filter>
-    </ClCompile>
-    <ClCompile Include="files.cpp">
-      <Filter>additional</Filter>
-    </ClCompile>
-    <ClCompile Include="input.cpp">
-      <Filter>additional</Filter>
-    </ClCompile>
     <ClCompile Include="materials.cpp">
-      <Filter>additional</Filter>
-    </ClCompile>
-    <ClCompile Include="skydome.cpp">
       <Filter>additional</Filter>
     </ClCompile>
     <ClCompile Include="textures.cpp">
@@ -67,10 +49,40 @@
     <ClCompile Include="ui.cpp">
       <Filter>additional</Filter>
     </ClCompile>
-    <ClCompile Include="noise.cpp" />
-    <ClCompile Include="resources.cpp" />
-    <ClCompile Include="lights_stochastic.cpp" />
-    <ClCompile Include="lights_vectorized.cpp" />
+    <ClCompile Include="files.cpp">
+      <Filter>additional\util</Filter>
+    </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>additional\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\template\common.cpp">
+      <Filter>additional\util</Filter>
+    </ClCompile>
+    <ClCompile Include="noise.cpp">
+      <Filter>additional\util</Filter>
+    </ClCompile>
+    <ClCompile Include="resources.cpp">
+      <Filter>additional\util</Filter>
+    </ClCompile>
+    <ClCompile Include="lights_stochastic.cpp">
+      <Filter>additional\lights</Filter>
+    </ClCompile>
+    <ClCompile Include="lights_vectorized.cpp">
+      <Filter>additional\lights</Filter>
+    </ClCompile>
+    <ClCompile Include="lights.cpp">
+      <Filter>additional\lights</Filter>
+    </ClCompile>
+    <ClCompile Include="skydome.cpp">
+      <Filter>additional\lights</Filter>
+    </ClCompile>
+    <ClCompile Include="debug.cpp">
+      <Filter>additional\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="bvh_scene.cpp" />
+    <ClCompile Include="..\lib\tiny_bvh.cpp">
+      <Filter>additional\util\tinybvh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -124,28 +136,7 @@
     <ClInclude Include="..\template\surface.h">
       <Filter>template</Filter>
     </ClInclude>
-    <ClInclude Include="lights.h">
-      <Filter>additional</Filter>
-    </ClInclude>
-    <ClInclude Include="color.h">
-      <Filter>additional</Filter>
-    </ClInclude>
-    <ClInclude Include="maths.h">
-      <Filter>additional</Filter>
-    </ClInclude>
-    <ClInclude Include="debug.h">
-      <Filter>additional</Filter>
-    </ClInclude>
-    <ClInclude Include="files.h">
-      <Filter>additional</Filter>
-    </ClInclude>
-    <ClInclude Include="input.h">
-      <Filter>additional</Filter>
-    </ClInclude>
     <ClInclude Include="materials.h">
-      <Filter>additional</Filter>
-    </ClInclude>
-    <ClInclude Include="skydome.h">
       <Filter>additional</Filter>
     </ClInclude>
     <ClInclude Include="textures.h">
@@ -155,16 +146,44 @@
       <Filter>additional</Filter>
     </ClInclude>
     <ClInclude Include="noise.h">
-      <Filter>additional</Filter>
+      <Filter>additional\util</Filter>
     </ClInclude>
-    <ClInclude Include="resources.h" />
-    <ClInclude Include="lights_stochastic.h" />
-    <ClInclude Include="lights_vectorized.h" />
+    <ClInclude Include="maths.h">
+      <Filter>additional\util</Filter>
+    </ClInclude>
+    <ClInclude Include="files.h">
+      <Filter>additional\util</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
+      <Filter>additional\util</Filter>
+    </ClInclude>
     <ClInclude Include="directions.h">
-      <Filter>additional</Filter>
+      <Filter>additional\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\tinybvh\tiny_bvh.h">
-      <Filter>template</Filter>
+    <ClInclude Include="color.h">
+      <Filter>additional\util</Filter>
+    </ClInclude>
+    <ClInclude Include="resources.h">
+      <Filter>additional\util</Filter>
+    </ClInclude>
+    <ClInclude Include="lights_vectorized.h">
+      <Filter>additional\lights</Filter>
+    </ClInclude>
+    <ClInclude Include="lights_stochastic.h">
+      <Filter>additional\lights</Filter>
+    </ClInclude>
+    <ClInclude Include="lights.h">
+      <Filter>additional\lights</Filter>
+    </ClInclude>
+    <ClInclude Include="skydome.h">
+      <Filter>additional\lights</Filter>
+    </ClInclude>
+    <ClInclude Include="debug.h">
+      <Filter>additional\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="bvh_scene.h" />
+    <ClInclude Include="..\lib\tiny_bvh.h">
+      <Filter>additional\util\tinybvh</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -179,6 +198,18 @@
     </Filter>
     <Filter Include="additional\shaders">
       <UniqueIdentifier>{822ba477-e6f7-4757-bea0-cb56beff5673}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="additional\util">
+      <UniqueIdentifier>{66f24361-63ee-4552-93f3-00e5da0ac551}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="additional\lights">
+      <UniqueIdentifier>{0df51b52-9d94-4654-b57f-99ad9ebb6d60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="additional\debug">
+      <UniqueIdentifier>{b545e6ae-9010-4960-b4a7-ef2e327c7499}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="additional\util\tinybvh">
+      <UniqueIdentifier>{7584237f-6503-43d1-ad0c-13d6f59e0b59}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

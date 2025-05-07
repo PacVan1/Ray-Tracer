@@ -1,0 +1,6 @@
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\Release\RayTracer.vcxproj.Up2Date
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\assimp-vc143-mt.dll
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\poly2tri.dll
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\minizip.dll
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\zlib1.dll
+C:\Perforce\Ayser245626\Year1\BlockC\Ray-Tracer\RayTracer\x64\pugixml.dll

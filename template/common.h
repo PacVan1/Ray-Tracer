@@ -1,12 +1,28 @@
 #pragma once
 
 #include "maths.h"  
+
+namespace tinybvh
+{
+	using bvhint2 = int2;
+	using bvhint3 = int3;
+	using bvhuint2 = uint2;
+	using bvhvec2 = float2;
+	using bvhvec3 = float3;
+	using bvhvec4 = float4;
+}
+
+#define NO_DOUBLE_PRECISION_SUPPORT    
+#define TINYBVH_USE_CUSTOM_VECTOR_TYPES   
+#include <../lib/tiny_bvh.h> 
+
 #include "files.h" 
 #include "color.h"
 #include "directions.h" 
 #include "noise.h" 
 #include "camera.h" 
 #include "resources.h" 
+#include "materials.h"  
 
 namespace Tmpl8 { class Ray; }
 
@@ -40,6 +56,7 @@ enum controls : uint8_t
 [[nodiscard]] float2	calcSphereUv(float3 const& direction);  
 [[nodiscard]] float2	randomFloat2(); 
 [[nodiscard]] float3	calcIntersectionPoint(Ray const& ray); 
+[[nodiscard]] float3	calcIntersectionPoint(tinybvh::Ray const& ray); 
 [[nodiscard]] float3	randomUnitOnDisk();
 [[nodiscard]] float3	randomUnitOnDisk(blueSeed const seed); 
 [[nodiscard]] float3	randomFloat3();
@@ -54,3 +71,4 @@ enum controls : uint8_t
 [[nodiscard]] float		schlickApprox(float const cosTheta, float const ior);
 [[nodiscard]] float3	refract(float3 const& normal, float3 const& in, float cosTheta, float const ior);  
 [[nodiscard]] float		distanceToFrustum(FrustumPlane const& frustumPlane, float3 const& point);   
+[[nodiscard]] inline bool didHit(tinybvh::Ray const& ray) { return ray.hit.t < BVH_FAR; } 

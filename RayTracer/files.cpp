@@ -13,17 +13,17 @@ FILE* openForRead(char const* path)
 
 void printLoading(char const* path)
 {
-	printf("[LOADING]\t%s\n", path);
+	printf("[LOADING STARTED]\t%s\n", path);
 }
 
 void printSuccess(char const* path)
 {
-	printf("[SUCCESS]\t%s\n", path);
+	printf("[LOADING SUCCESS]\t%s\n", path);
 }
 
 void printFailure(char const* path)
 {
-	printf("[FAILURE]\t%s\n", path); 
+	printf("[LOADING FAILURE]\t%s\n", path); 
 }
 
 void fileNotFound(char const* path) 
@@ -35,7 +35,6 @@ Texture<float3> loadTextureF(char const* path)
 {
 	printLoading(path); 
 	if (!FileExists(path)) fileNotFound(path);  
-	stbi_set_flip_vertically_on_load(true);
 	int width, height, channels;
 	float* data = stbi_loadf(path, &width, &height, &channels, 0);
 	Texture<float3> texture = Texture<float3>(width, height);
@@ -50,7 +49,6 @@ Texture<float3> loadTextureI(char const* path)
 {
 	printLoading(path);
 	if (!FileExists(path)) fileNotFound(path); 
-	stbi_set_flip_vertically_on_load(true); 
 	int width, height, channels; 
 	unsigned char* data = stbi_load(path, &width, &height, &channels, 0);
 	Texture<float3> texture = Texture<float3>(width, height); 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "color.h"
+
 enum textureSampleModes : uint8_t
 {
 	TEXTURE_SAMPLE_MODES_NONE,   
@@ -292,3 +294,41 @@ inline T const& Texture<T>::operator[](int index) const
 {
 	return mData[index];  
 } 
+
+enum textureTypes : uint8_t
+{
+	TEXTURE_TYPES_ALBEDO,
+	TEXTURE_TYPES_NORMAL,  
+	TEXTURE_TYPES_ROUGHNESS
+};
+
+struct PackedTexel 
+{
+	color	albedo;
+	float3	normal;
+	float	roughness; 
+	float	alpha; 
+};
+
+inline PackedTexel operator*(PackedTexel const& a, PackedTexel const& b) 
+{
+	return { a.albedo * b.albedo, a.normal * b.normal, a.roughness * b.roughness, a.alpha * b.alpha };
+} 
+
+inline PackedTexel operator*(PackedTexel const& a, float const b)  
+{
+	return { a.albedo * b, a.normal * b, a.roughness * b, a.alpha * b }; 
+}
+
+inline PackedTexel operator+(PackedTexel const& a, PackedTexel const& b)
+{
+	return { a.albedo + b.albedo, a.normal + b.normal, a.roughness + b.roughness, a.alpha + b.alpha }; 
+}
+
+using AlbedoTexture		= Texture<color>;
+using NormalTexture		= Texture<float3>; 
+using RoughnessTexture	= Texture<float>; 
+using PackedTexture		= Texture<PackedTexel>;
+
+PackedTexture packTexture(AlbedoTexture const& albedo, NormalTexture const& normal, RoughnessTexture roughness, Texture<float> const& alpha);
+PackedTexture packTexture(AlbedoTexture const& albedo, NormalTexture const& normal);

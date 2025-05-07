@@ -570,6 +570,13 @@ class mat4
 {
 public:
 	mat4() = default;
+	mat4(float3 const& a, float3 const& b, float3 const& c)
+	{
+		cell[0]		= a.x; cell[1]		= a.y; cell[2]		= a.z; cell[3]		= 0.0f;
+		cell[4]		= b.x; cell[5]		= b.y; cell[6]		= b.z; cell[7]		= 0.0f;
+		cell[8]		= c.x; cell[9]		= c.y; cell[10]		= c.z; cell[11]		= 0.0f;
+		cell[12]	= 0.0f; cell[13]	= 0.0f; cell[14]	= 0.0f; cell[15]	= 1.0f; 
+	}
 	__declspec(align(64)) float cell[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
 	float& operator [] ( const int idx ) { return cell[idx]; }
 	float operator()( const int i, const int j ) const { return cell[i * 4 + j]; }

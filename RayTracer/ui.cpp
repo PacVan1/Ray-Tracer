@@ -28,7 +28,7 @@ void Ui::General() const
 	{
 		if (ImGui::BeginTabItem("Settings"))		{ SettingsUi();		ImGui::EndTabItem(); } 
 		if (ImGui::BeginTabItem("Camera"))			{ CameraUi();		ImGui::EndTabItem(); }
-		if (ImGui::BeginTabItem("Materials"))		{ MaterialsUi();	ImGui::EndTabItem(); }
+		if (ImGui::BeginTabItem("Scene"))			{ SceneUi(mRenderer->mBVHScene); ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Lights"))			{ LightsUi();		ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Debug"))			{ DebugUi();		ImGui::EndTabItem(); }
 	}
@@ -201,5 +201,37 @@ void Ui::LightsUi() const
 			}
 		}
 		ImGui::TreePop(); // Points Lights 
+	}
+}
+
+void Ui::MaterialUi(Material2& m, int const instIdx) const
+{
+	static int type = m.type;
+	if (ImGui::Combo("Type", &type, STR_MATERIAL_TYPES))
+	{
+		mRenderer->mBVHScene.SetInstanceMaterial(instIdx, type);
+	}
+	switch (MATERIAL_TYPES_DIELECTRIC)
+	{
+	case MATERIAL_TYPES_GLOSSY:
+	{
+		ImGui::ColorEdit3("Albedo", m.glossy.albedo.cell);
+		ImGui::DragFloat("Glossiness", &m.glossy.glossiness, 0.005f, 0.0f, 1.0f);
+		break;
+	}
+	case MATERIAL_TYPES_DIELECTRIC:
+	{
+		ImGui::ColorEdit3("Absorption", m.dielectric.absorption.cell);
+		ImGui::DragFloat("IOR", &m.dielectric.ior, 0.005f, 1.0f, 3.0f);
+		break;
+	}
+	case MATERIAL_TYPES_TEXTURED:
+	{
+		if (ImGui::CollapsingHeader("Texture"))
+		{
+			TextureUi(m.textured.texture, 0);
+		}
+		break;
+	}
 	}
 }
