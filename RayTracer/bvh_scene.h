@@ -20,15 +20,16 @@ struct alignas(32) Tri
 struct Mesh
 {
 	std::vector<Tri>	tris;	// per-triangle attributes
-	std::vector<float4> points; // for BVH traversal purely
+	std::vector<float4> points; // for BVH traversal purely  
 	Material2*			mat;   
+	uint32_t			blasIdx; 
 };
 
 class Model
 {
 public:
 	std::vector<Mesh>		mMeshes;
-	std::vector<Material2>	mMats;    
+	std::vector<Material2>	mMats;  
 
 public:
 					Model(char const* path);  
@@ -60,6 +61,7 @@ public:
 			BVHScene();
 	bool	Intersect(tinybvh::Ray& ray); 
 	void	AddResource(char const* path); 
+	void	AddModelInstance(uint32_t const modelIdx); 
 	void	AddInstance(uint32_t const blasIdx);
 	void	SetInstanceMaterial(uint32_t const instIdx, uint32_t const matType);  
 	void	ResetInstanceMaterial(uint32_t const instIdx); 
@@ -71,8 +73,9 @@ public:
 	[[nodiscard]] inline Mesh const&					GetMesh(uint32_t const blasIdx)	const		{ return *mResources.meshes[blasIdx]; }
 	[[nodiscard]] inline Material2&						GetMaterial(uint32_t const instIdx)			{ return mMatCopies[instIdx]; }
 	[[nodiscard]] inline Material2 const&				GetMaterial(uint32_t const instIdx) const	{ return mMatCopies[instIdx]; }
-	[[nodiscard]] inline Tri&							GetTriangle(tinybvh::Ray& ray)				{ return GetMesh(GetInstance(ray.instIdx).blasIdx).tris[ray.hit.prim]; }    
-	[[nodiscard]] inline Tri const&						GetTriangle(tinybvh::Ray& ray) const		{ return GetMesh(GetInstance(ray.instIdx).blasIdx).tris[ray.hit.prim]; }  
-	[[nodiscard]] inline uint32_t						GetBlasIdx(uint32_t const instIdx) const	{ return GetInstance(instIdx).blasIdx; }
+	[[nodiscard]] inline uint32_t						GetBlasIdx(uint32_t const instIdx) const	{ return GetInstance(instIdx).blasIdx; } 
+	[[nodiscard]] inline Tri&							GetTriangle(tinybvh::Ray& ray)				{ return GetMesh(GetBlasIdx(ray.hit.inst)).tris[ray.hit.prim]; } 
+	[[nodiscard]] inline Tri const&						GetTriangle(tinybvh::Ray& ray) const		{ return GetMesh(GetBlasIdx(ray.hit.inst)).tris[ray.hit.prim]; } 
+	[[nodiscard]] __forceinline bool					IsOccluded(tinybvh::Ray const& ray) const	{ return mTlas.IsOccluded(ray); }
 };
 

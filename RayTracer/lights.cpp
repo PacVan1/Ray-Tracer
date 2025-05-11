@@ -2,6 +2,7 @@
 #include "lights.h"
 
 #include "renderer.h" 
+#include "bvh_scene.h" 
 
 PointLight::PointLight() :
 	mPosition(0.0f),
@@ -24,6 +25,20 @@ float3 PointLight::Intensity(Intersection const& hit) const
 	return cosa * attenuation * mColor * mStrength;
 }
 
+color PointLight::Intensity(BVHScene const& scene, tinybvh::Ray const& ray) const 
+{
+	float3 dir = ray.hit.point - mPosition;  
+	float const dist = length(dir); 
+	dir = normalize(dir); 
+
+	tinybvh::Ray shadow = tinybvh::Ray(ray.hit.point - dir * Renderer::sEps, -dir, dist - Renderer::sEps);  
+	if (scene.IsOccluded(shadow)) return BLACK;
+
+	float const cosa = max(0.0f, dot(ray.hit.normal, -dir));
+	float const attenuation = 1.0f / (dist * dist);
+	return cosa * attenuation * mColor * mStrength;
+}
+
 DirectionalLight::DirectionalLight() :
 	mDirection(normalize(float3(1.0f))),
 	mColor(1.0f),
@@ -35,6 +50,13 @@ float3 DirectionalLight::Intensity(Intersection const& hit) const
 	if (hit.scene->IsOccluded({ hit.point + -mDirection * Renderer::sEps, -mDirection })) return BLACK;
 
 	float const cosa = max(0.0f, dot(hit.normal, -mDirection)); 
+	return cosa * mColor * mStrength;
+}
+
+color DirectionalLight::Intensity(BVHScene const& scene, tinybvh::Ray const& ray) const 
+{
+	if (scene.IsOccluded({ ray.hit.point + -mDirection * Renderer::sEps, -mDirection })) return BLACK;
+	float const cosa = max(0.0f, dot(ray.hit.normal, -mDirection));
 	return cosa * mColor * mStrength;
 }
 
@@ -64,7 +86,21 @@ float3 Spotlight::Intensity(Intersection const& hit) const
 
 	float const cosa = max(0.0f, dot(hit.normal, dir));
 	float const attenuation = 1.0f / (dist * dist);
+	return attenuation * cosa * intensity * mColor * mStrength;
+}
 
+color Spotlight::Intensity(BVHScene const& scene, tinybvh::Ray const& ray) const
+{
+	float3 dir = mPosition - ray.hit.point;  
+	float const dist = length(dir); 
+	dir = normalize(dir);
+
+	if (scene.IsOccluded({ ray.hit.point + -dir * Renderer::sEps, -dir, dist })) return BLACK;
+
+	float const theta		= dot(dir, -mDirection);
+	float const intensity	= clamp((theta - mOuterScalar) / mEpsilon, 0.0f, 1.0f);
+	float const cosa		= max(0.0f, dot(ray.hit.normal, dir)); 
+	float const attenuation = 1.0f / (dist * dist);
 	return attenuation * cosa * intensity * mColor * mStrength;
 }
 
@@ -93,6 +129,27 @@ color TexturedSpotlight::Intensity(Intersection const& hit) const
 	float const y		= dTop / (dTop + dBottom);   
 	return x >= 0.0f && x <= 1.0f && y >= 0.0f && y <= 1.0f ? 
 		mTexture.Sample(float2(x, y)) * cosa * attenuation * mStrength : BLACK;     
+}
+
+color TexturedSpotlight::Intensity(BVHScene const& scene, tinybvh::Ray const& ray) const 
+{
+	float3 dir = ray.hit.point - mPosition;
+	float const dist = length(dir);
+	dir = normalize(dir);
+	
+	if (scene.IsOccluded({ ray.hit.point - dir * Renderer::sEps, -dir, dist - Renderer::sEps })) return BLACK;
+
+	float const cosa = max(0.0f, dot(ray.hit.normal, -dir)); 
+	float const attenuation = 1.0f / (dist * dist);
+
+	float const dLeft	= distanceToFrustum(mFrustum.mPlanes[0], ray.hit.point);
+	float const dRight	= distanceToFrustum(mFrustum.mPlanes[1], ray.hit.point);
+	float const dTop	= distanceToFrustum(mFrustum.mPlanes[2], ray.hit.point); 
+	float const dBottom = distanceToFrustum(mFrustum.mPlanes[3], ray.hit.point); 
+	float const x = dLeft / (dLeft + dRight);
+	float const y = dTop / (dTop + dBottom); 
+	return x >= 0.0f && x <= 1.0f && y >= 0.0f && y <= 1.0f ?
+		mTexture.Sample(float2(x, y)) * cosa * attenuation * mStrength : BLACK;
 }
 
 TexturedSpotlight::TexturedSpotlight() : 

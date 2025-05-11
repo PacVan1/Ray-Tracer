@@ -33,6 +33,7 @@ float constexpr ASPECT_RATIO	= static_cast<float>(SCRWIDTH) / static_cast<float>
 // #define DOUBLESIZE
 
 #define DEBUG_MODE		1
+#define SPLINE_MODE		1
 //#define SINGLE_THREADED 
 
 enum controls : uint8_t

@@ -25,7 +25,9 @@ enum convergeModes : uint8_t
 	CONVERGE_MODES_REPROJECTION
 };
 
-color const		INIT_MISS						= WHITE;  
+inline auto constexpr MOVIE_FILE_PATH = "../assets/spline.txt";
+
+color const		INIT_MISS						= WHITE * 0.4f;  
 int constexpr	INIT_RENDER_MODE				= RENDER_MODES_NORMALS;
 int constexpr	INIT_CONVERGE_MODE				= CONVERGE_MODES_ACCUMULATION;           
 float constexpr INIT_EPS						= 1e-3f;
@@ -98,6 +100,9 @@ public:
 	Camera					mCamera;
 	Scene					mScene;
 	BVHScene				mBVHScene; 
+	Spline					mMovieSpline; 
+	SplineAnimator			mSplineAnimator; 
+	bool					mAnimate; 
 
 	Material				mSphereMaterial; 
 	Material				mTorusMaterial; 
@@ -152,15 +157,17 @@ private:
 	[[nodiscard]] color			TraceAlbedo(Ray& ray) const; 
 	[[nodiscard]] color			TraceAlbedo(tinybvh::Ray& ray); 
 	[[nodiscard]] color			CalcDirectLight(Intersection const& hit) const; 
+	[[nodiscard]] color			CalcDirectLight(tinybvh::Ray const& ray) const; 
 	[[nodiscard]] color			CalcDirectLightWithArea(Intersection const& info) const;
+	[[nodiscard]] color			CalcDirectLightWithArea(tinybvh::Ray const& ray) const; 
 	[[nodiscard]] color			CalcDirectLightWithArea(Intersection const& hit, blueSeed const seed) const;
 	[[nodiscard]] color			CalcQuadLight(Intersection const& hit) const;
 	[[nodiscard]] color			CalcQuadLight(Intersection const& hit, blueSeed const seed) const; 
 	[[nodiscard]] color			Miss(float3 const direction) const;
 	[[nodiscard]] color			MissIntensity(Intersection const& hit) const; 
+	[[nodiscard]] color			MissIntensity(tinybvh::Ray const& ray) const;  
 	[[nodiscard]] Intersection	CalcIntersection(Ray const& ray) const;
 	[[nodiscard]] color			Reproject(Ray const& primRay, color const& sample) const;  
-	[[nodiscard]] color			Reproject2(Ray const& primRay, color const& sample) const; 
 	void						PerformanceReport();  
 
 	[[nodiscard]] inline float2		RandomOnPixel(int const x, int const y) const;  

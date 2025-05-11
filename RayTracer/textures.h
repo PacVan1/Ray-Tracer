@@ -107,7 +107,7 @@ Texture<T>::Texture(T* data, int const width, int const height) :
 template <typename T> 
 Texture<T>::~Texture()  
 {
-	if (mOwnData) FREE64(mData);
+	//if (mOwnData) FREE64(mData);
 }
 
 template <typename T>
@@ -332,3 +332,4 @@ using PackedTexture		= Texture<PackedTexel>;
 
 PackedTexture packTexture(AlbedoTexture const& albedo, NormalTexture const& normal, RoughnessTexture roughness, Texture<float> const& alpha);
 PackedTexture packTexture(AlbedoTexture const& albedo, NormalTexture const& normal);
+PackedTexture packTexture(AlbedoTexture const& albedo);

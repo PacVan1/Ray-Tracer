@@ -7,6 +7,7 @@ namespace tinybvh { struct Ray; }
 
 enum materialTypes : uint8_t
 {
+	MATERIAL_TYPES_NONE, 
 	MATERIAL_TYPES_DIFFUSE,		// cosine-weighted diffuse reflections
 	MATERIAL_TYPES_METALLIC,	// specular reflections
 	MATERIAL_TYPES_DIELECTRIC,	// fresnel reflections and refractions
@@ -80,7 +81,13 @@ public:
 	[[nodiscard]] color	GetEmission() const;
 };   
 
-struct Textured { PackedTexture texture; };
+struct Textured 
+{ 
+	PackedTexture texture; 
+
+	Textured();
+	Textured(Textured const& other); 
+};
 
 struct alignas(32) Material2
 { 
@@ -91,6 +98,7 @@ struct alignas(32) Material2
 		//struct Textured		{ PackedTexture texture; }					textured; 
 		Textured textured;
 	};
+	float	emissivity;
 	uint8_t type;
 
 	Material2();

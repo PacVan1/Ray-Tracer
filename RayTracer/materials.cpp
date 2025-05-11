@@ -6,6 +6,11 @@
 
 typedef bool(*materialFunc)(Material const& mat, Intersection const& hit, Ray& out, color& attenuation);
 
+static bool scatterNone(Material const& mat, Intersection const& hit, Ray& out, color& attenuation) 
+{
+	return false;
+}
+
 static bool scatterDiffuse(Material const& mat, Intersection const& hit, Ray& out, color& attenuation)
 {
 	float3 const reflected = cosineWeightedDiffuseReflection(hit.normal);   
@@ -66,6 +71,7 @@ static bool scatterGlossy(Material const& mat, Intersection const& hit, Ray& out
 
 static materialFunc matDispatchTable[MATERIAL_TYPES_COUNT] =
 {
+	scatterNone,
 	scatterDiffuse, 
 	scatterMetallic, 
 	scatterDielectric, 
@@ -74,6 +80,11 @@ static materialFunc matDispatchTable[MATERIAL_TYPES_COUNT] =
 };
 
 typedef bool(*blueMaterialFunc)(Material const& mat, Intersection const& hit, blueSeed const seed, Ray& out, color& attenuation);
+
+static bool scatterNoneBlue(Material const& mat, Intersection const& hit, blueSeed const seed, Ray& out, color& attenuation) 
+{
+	return false;
+}
 
 static bool scatterDiffuseBlue(Material const& mat, Intersection const& hit, blueSeed const seed, Ray& out, color& attenuation)
 {
@@ -135,6 +146,7 @@ static bool scatterGlossyBlue(Material const& mat, Intersection const& hit, blue
  
 static blueMaterialFunc blueMatDispatchTable[MATERIAL_TYPES_COUNT] = 
 {
+	scatterNoneBlue,
 	scatterDiffuseBlue,
 	scatterMetallicBlue,
 	scatterDielectricBlue,
@@ -143,6 +155,11 @@ static blueMaterialFunc blueMatDispatchTable[MATERIAL_TYPES_COUNT] =
 };
  
 typedef bool(*bvhMaterialFunc)(Material const& mat, tinybvh::Ray const& in, tinybvh::Ray& out, color& attenuation);
+
+static bool bvhScatterNone(Material const& mat, tinybvh::Ray const& in, tinybvh::Ray& out, color& attenuation)
+{
+	return false;
+}
 
 static bool bvhScatterDiffuse(Material const& mat, tinybvh::Ray const& in, tinybvh::Ray& out, color& attenuation)
 {
@@ -217,6 +234,7 @@ static bool bvhScatterTextured(Material const& mat, tinybvh::Ray const& in, tiny
 
 static bvhMaterialFunc bvhMatDispatchTable[MATERIAL_TYPES_COUNT] =
 {
+	bvhScatterNone, 
 	bvhScatterDiffuse, 
 	bvhScatterMetallic, 
 	bvhScatterDielectric, 
@@ -226,14 +244,19 @@ static bvhMaterialFunc bvhMatDispatchTable[MATERIAL_TYPES_COUNT] =
 
 typedef bool(*bvhMaterial2Func)(Material2 const& mat, tinybvh::Ray const& in, tinybvh::Ray& out, color& attenuation);  
 
+static bool bvhScatterNone2(Material2 const& mat, tinybvh::Ray const& in, tinybvh::Ray& out, color& attenuation)
+{
+	return false;
+}
+
 static bool bvhScatterDiffuse2(Material2 const& mat, tinybvh::Ray const& in, tinybvh::Ray& out, color& attenuation)
 {
-	//float3 const reflected = cosineWeightedDiffuseReflection(in.hit.normal);
-	//float3 const brdf = mat.mDiffuse.albedo / PI;
-	//float const  pdf = dot(in.hit.normal, reflected) / PI;
-	//out = tinybvh::Ray(in.hit.point + reflected * Renderer::sEps, reflected);
-	//attenuation = brdf * (dot(in.hit.normal, reflected) / pdf);
-	return false; // true
+	float3 const reflected = cosineWeightedDiffuseReflection(in.hit.normal); 
+	float3 const brdf = in.hit.albedo / PI;   
+	float const  pdf = dot(in.hit.normal, reflected) / PI;
+	out = tinybvh::Ray(in.hit.point + reflected * Renderer::sEps, reflected); 
+	attenuation = brdf * (dot(in.hit.normal, reflected) / pdf); 
+	return true;
 }
 
 static bool bvhScatterMetallic2(Material2 const& mat, tinybvh::Ray const& in, tinybvh::Ray& out, color& attenuation)
@@ -299,6 +322,7 @@ static bool bvhScatterTextured2(Material2 const& mat, tinybvh::Ray const& in, ti
 
 static bvhMaterial2Func bvhMat2DispatchTable[MATERIAL_TYPES_COUNT] = 
 {
+	bvhScatterNone2,
 	bvhScatterDiffuse2,
 	bvhScatterMetallic2,
 	bvhScatterDielectric2,
@@ -419,6 +443,7 @@ Material2::Material2()
 	}
 
 	type = INIT_DEFAULT_MATERIAL_TYPE;
+	emissivity = 0.0f;
 }
 Material2::Material2(Material2 const& other)
 {
@@ -431,6 +456,7 @@ Material2::Material2(Material2 const& other)
 	}
 
 	this->type = other.type;
+	emissivity = 0.0f;
 }
 Material2::Material2(int const type)
 {
@@ -443,6 +469,7 @@ Material2::Material2(int const type)
 	}
 
 	this->type = type;
+	emissivity = 0.0f;
 }
 Material2::~Material2() 
 {
@@ -453,4 +480,14 @@ Material2::~Material2()
 	case MATERIAL_TYPES_TEXTURED:	textured.~Textured();		break; 
 	default: break;
 	}
+}
+
+Textured::Textured() : 
+	texture(PackedTexture())
+{}
+
+Textured::Textured(Textured const& other) : 
+	texture(other.texture)
+{
+	texture.mData = other.texture.mData;
 }

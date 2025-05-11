@@ -1,6 +1,7 @@
 #pragma once
 
 struct Intersection; 
+class BVHScene; 
 
 enum lightTypes : uint8_t
 {
@@ -19,6 +20,7 @@ public:
 public:
 							PointLight();
 	[[nodiscard]] float3	Intensity(Intersection const& hit) const;
+	[[nodiscard]] color		Intensity(BVHScene const& scene, tinybvh::Ray const& ray) const;
 };
 
 class DirectionalLight
@@ -31,6 +33,7 @@ public:
 public:
 							DirectionalLight();
 	[[nodiscard]] float3	Intensity(Intersection const& hit) const;
+	[[nodiscard]] color		Intensity(BVHScene const& scene, tinybvh::Ray const& ray) const;
 };
 
 class Spotlight 
@@ -50,6 +53,7 @@ private:
 public:
 							Spotlight(); 
 	[[nodiscard]] float3	Intensity(Intersection const& hit) const;
+	[[nodiscard]] color		Intensity(BVHScene const& scene, tinybvh::Ray const& ray) const;
 	void					DirectionFromLookAt();
 };
 
@@ -80,5 +84,6 @@ public:
 public:
 						TexturedSpotlight(); 
 	[[nodiscard]] color	Intensity(Intersection const& hit) const; 
+	[[nodiscard]] color	Intensity(BVHScene const& scene, tinybvh::Ray const& ray) const;
 	void				Update();
 };

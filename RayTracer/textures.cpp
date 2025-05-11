@@ -28,3 +28,11 @@ PackedTexture packTexture(AlbedoTexture const& albedo, NormalTexture const& norm
 	}
 	return packed;
 }
+
+PackedTexture packTexture(AlbedoTexture const& albedo)
+{
+	PackedTexture packed = PackedTexture(albedo.mWidth, albedo.mHeight);
+	uint const size = packed.mWidth * packed.mHeight;
+	for (int i = 0; i < size; i++) packed.mData[i].albedo = albedo.mData[i];
+	return packed;
+}

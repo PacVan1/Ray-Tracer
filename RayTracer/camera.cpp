@@ -1,6 +1,8 @@
 #include "precomp.h"
 #include "camera.h"
 
+#include "bvh_scene.h"
+
 Camera::Camera() :
 	mPosition(INIT_CAMERA_POSITION),
 	mTarget(INIT_CAMERA_TARGET), 
@@ -16,7 +18,7 @@ Camera::Camera() :
 	mUp(0.0f),
 	mDefocusDiskU(0.0f),
 	mDefocusDiskV(0.0f),
-	mDefocusAngle(INIT_CAMERA_DEFOCUS_ANGLE),
+	mDefocusRadius(INIT_CAMERA_DEFOCUS_RADIUS),
 	mFocusDist(INIT_CAMERA_FOCUS_DIST),
 	mSpeed(INIT_CAMERA_SPEED),
 	mSensitivity(INIT_CAMERA_SENSITIVITY), 
@@ -25,7 +27,7 @@ Camera::Camera() :
 	UpdateBasisVectors();
 	UpdateViewport();
 	UpdateDefocusDisk();
-	UpdateFrustum();
+	BuildFrustum();
 }
 
 bool Camera::Update(float const dt)
@@ -61,7 +63,15 @@ void Camera::Focus(Scene const& scene)
 	UpdateViewport(); 
 }
 
-Ray Camera::GetPrimaryRay(float2 const pixel) const
+void Camera::Focus(BVHScene const& scene)
+{
+	tinybvh::Ray ray = { mPosition, mAhead };
+	scene.mTlas.Intersect(ray); 
+	mFocusDist = min(ray.hit.t, INIT_CAMERA_MAX_FOCUS_DIST);
+	UpdateViewport();
+}
+
+Ray Camera::GenPrimaryRay(float2 const pixel) const
 {
 	float const u = (pixel.x + 0.5f) * (1.0f / SCRWIDTH);
 	float const v = (pixel.y + 0.5f) * (1.0f / SCRHEIGHT);
@@ -69,7 +79,7 @@ Ray Camera::GetPrimaryRay(float2 const pixel) const
 	return { mPosition, normalize(target - mPosition) };
 }
 
-Ray Camera::GetPrimaryRayFocused(float2 const pixel) const
+Ray Camera::GenPrimaryRayFocused(float2 const pixel) const
 {
 	float const u = (pixel.x + 0.5f) * (1.0f / SCRWIDTH);
 	float const v = (pixel.y + 0.5f) * (1.0f / SCRHEIGHT);
@@ -79,48 +89,42 @@ Ray Camera::GetPrimaryRayFocused(float2 const pixel) const
 	return { point, normalize(target - point) };
 }
 
-Ray Camera::GetPrimaryRayFocused(float2 const pixel, blueSeed const seed) const
+Ray	Camera::GenPrimaryRayFocused(float2 const pixel, blueSeed const seed) const 
 {
 	float const u = (pixel.x + 0.5f) * (1.0f / SCRWIDTH);
 	float const v = (pixel.y + 0.5f) * (1.0f / SCRHEIGHT);
-	float3 const random = randomUnitOnDisk(seed); 
+	float3 const random = randomUnitOnDisk(seed);
+	float3 const point = mPosition + random.x * mDefocusDiskU + random.y * mDefocusDiskV;
+	float3 const target = mTopLeft + u * mViewportU + v * mViewportV;
+	return { point, normalize(target - point) };
+}
+
+tinybvh::Ray Camera::GenPrimaryRayTinyBVH(float2 const pixel) const
+{
+	float const u = (pixel.x + 0.5f) * (1.0f / SCRWIDTH);
+	float const v = (pixel.y + 0.5f) * (1.0f / SCRHEIGHT);
+	float3 const target = mTopLeft + u * mViewportU + v * mViewportV;
+	return { mPosition, normalize(target - mPosition) };
+}
+
+tinybvh::Ray Camera::GenPrimaryRayFocusedTinyBVH(float2 const pixel) const
+{
+	float const u = (pixel.x + 0.5f) * (1.0f / SCRWIDTH);
+	float const v = (pixel.y + 0.5f) * (1.0f / SCRHEIGHT);
+	float3 const random = randomUnitOnDisk();
+	float3 const point = mPosition + random.x * mDefocusDiskU + random.y * mDefocusDiskV;
+	float3 const target = mTopLeft + u * mViewportU + v * mViewportV;
+	return { point, normalize(target - point) };
+}
+
+tinybvh::Ray Camera::GenPrimaryRayFocusedTinyBVH(float2 const pixel, blueSeed const seed) const
+{
+	float const u = (pixel.x + 0.5f) * (1.0f / SCRWIDTH);
+	float const v = (pixel.y + 0.5f) * (1.0f / SCRHEIGHT);
+	float3 const random = randomUnitOnDisk(seed);
 	float3 const point = mPosition + random.x * mDefocusDiskU + random.y * mDefocusDiskV;
 	float3 const target = mTopLeft + u * mViewportU + v * mViewportV;
 	return { point, normalize(target - point) }; 
-}
-
-void Camera::SetPosition(float3 const position)
-{
-	mPosition = position; 
-	UpdateBasisVectors();
-	UpdateViewport();
-	UpdateDefocusDisk();
-}
-
-void Camera::SetTarget(float3 const target)
-{
-	mTarget = target;
-	UpdateBasisVectors();
-	UpdateViewport();
-	UpdateDefocusDisk();
-}
-
-void Camera::SetFocusDist(float const focusDist)
-{
-	mFocusDist = focusDist;
-	UpdateViewport(); 
-}
-
-void Camera::SetDefocusAngle(float const defocusAngle)
-{
-	mDefocusAngle = defocusAngle;
-	UpdateDefocusDisk();
-}
-
-void Camera::SetFov(float const fov)
-{
-	mFov = fov;
-	UpdateViewport(); 
 }
 
 void Camera::UpdateBasisVectors()
@@ -147,11 +151,11 @@ void Camera::UpdateViewport()
 
 void Camera::UpdateDefocusDisk()
 {
-	mDefocusDiskU = mRight * mDefocusAngle; 
-	mDefocusDiskV = mUp * mDefocusAngle; 
+	mDefocusDiskU = mRight * mDefocusRadius; 
+	mDefocusDiskV = mUp * mDefocusRadius; 
 }
 
-void Camera::UpdateFrustum()
+void Camera::BuildFrustum()
 {
 	Frustum frustum = {}; 
 	frustum.mPlanes[0].mNormal = cross(mTopLeft - mBottomLeft, mTopLeft - mPosition);  // left
@@ -164,4 +168,38 @@ void Camera::UpdateFrustum()
 	}
 	mPrevFrustum	= frustum;   
 	mPrevPosition	= mPosition;  
+}
+
+void Camera::SetPosition(float3 const position)
+{
+	mPosition = position;
+	UpdateBasisVectors(); 
+	UpdateDefocusDisk(); 
+	UpdateViewport(); 
+}
+
+void Camera::SetTarget(float3 const target)
+{
+	mTarget = target; 
+	UpdateBasisVectors(); 
+	UpdateDefocusDisk();
+	UpdateViewport();
+}
+
+void Camera::SetDefocusRadius(float const radius)
+{
+	mDefocusRadius = radius;
+	UpdateDefocusDisk(); 
+}
+
+void Camera::SetFocusDist(float const dist)
+{
+	mFocusDist = dist; 
+	UpdateViewport();
+}
+
+void Camera::SetFov(float const fov)
+{
+	mFov = fov;
+	UpdateViewport(); 
 }

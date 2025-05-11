@@ -11,6 +11,11 @@ FILE* openForRead(char const* path)
 	return file; 
 }
 
+void printSaving(char const* path)
+{
+	printf("[SAVING STARTED]\t%s\n", path);
+}
+
 void printLoading(char const* path)
 {
 	printf("[LOADING STARTED]\t%s\n", path);

@@ -153,6 +153,7 @@
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="resources.cpp" />
     <ClCompile Include="skydome.cpp" />
+    <ClCompile Include="spline.cpp" />
     <ClCompile Include="textures.cpp" />
     <ClCompile Include="bvh_scene.cpp" />
     <ClCompile Include="ui.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="renderer.h" />
     <ClInclude Include="resources.h" />
     <ClInclude Include="skydome.h" />
+    <ClInclude Include="spline.h" />
     <ClInclude Include="textures.h" />
     <ClInclude Include="bvh_scene.h" />
     <ClInclude Include="ui.h" />

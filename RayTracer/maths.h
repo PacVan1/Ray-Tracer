@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tmpl8math.h" 
+#include "spline.h"
 
 //struct Tri;
 

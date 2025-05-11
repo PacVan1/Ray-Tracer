@@ -35,7 +35,7 @@ void Renderer::Tick(float deltaTime)
 			case RENDER_MODES_NORMALS:
 			{
 				float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
-				Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
+				Ray primRay = mCamera.GenPrimaryRay(pixelCoord);
 				tinybvh::Ray primRay2 = { primRay.O, primRay.D };
 				color const pixel = TraceNormals(primRay2);  
 				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
@@ -44,7 +44,7 @@ void Renderer::Tick(float deltaTime)
 			case RENDER_MODES_DEPTH:
 			{
 				float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
-				Ray primRay = mCamera.GetPrimaryRay(pixelCoord);
+				Ray primRay = mCamera.GenPrimaryRay(pixelCoord);
 				tinybvh::Ray primRay2 = { primRay.O, primRay.D };
 				color const pixel = TraceDepth(primRay2); 
 				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
@@ -53,7 +53,7 @@ void Renderer::Tick(float deltaTime)
 			case RENDER_MODES_ALBEDO:
 			{
 				float2 const pixelCoord = float2(static_cast<float>(x), static_cast<float>(y));
-				Ray primRay = mCamera.GetPrimaryRay(pixelCoord); 
+				Ray primRay = mCamera.GenPrimaryRay(pixelCoord); 
 				tinybvh::Ray primRay2 = { primRay.O, primRay.D }; 
 				color const pixel = TraceAlbedo(primRay2);  
 				mScreen->pixels[pixelIdx] = RGBF32_to_RGB8(pixel);
@@ -66,7 +66,7 @@ void Renderer::Tick(float deltaTime)
 				case CONVERGE_MODES_ACCUMULATION:
 				{
 					float2 const pixelCoord		= mSet.mAaEnabled ? mSet.mBlueNoiseEnabled ? RandomOnPixel(seed) : RandomOnPixel(x, y) : CenterOfPixel(x, y);
-					Ray primRay					= mSet.mDofEnabled ? mSet.mBlueNoiseEnabled ? mCamera.GetPrimaryRayFocused(pixelCoord, seed) : mCamera.GetPrimaryRayFocused(pixelCoord) : mCamera.GetPrimaryRay(pixelCoord);   
+					Ray primRay					= mSet.mDofEnabled ? mSet.mBlueNoiseEnabled ? mCamera.GenPrimaryRayFocused(pixelCoord, seed) : mCamera.GenPrimaryRayFocused(pixelCoord) : mCamera.GenPrimaryRay(pixelCoord);    
 					tinybvh::Ray primRay2 = { primRay.O, primRay.D };  
 					color const pixel = Trace(primRay2);  
 					//mAccumulator[pixelIdx]		+= mSet.mBlueNoiseEnabled ? Trace(primRay, seed) : Trace(primRay); 
@@ -78,7 +78,7 @@ void Renderer::Tick(float deltaTime)
 				case CONVERGE_MODES_REPROJECTION:
 				{
 					float2 const pixelCoord		= CenterOfPixel(x, y);  
-					Ray primRay					= mCamera.GetPrimaryRay(pixelCoord);   
+					Ray primRay					= mCamera.GenPrimaryRay(pixelCoord);    
 					color const sample			= mSet.mBlueNoiseEnabled ? Trace(primRay, seed) : Trace(primRay); 
 					color const reprojected		= Reproject(primRay, sample); 
 					mAccumulator[pixelIdx]		= reprojected; 
@@ -88,7 +88,7 @@ void Renderer::Tick(float deltaTime)
 				default:
 				{
 					float2 const pixelCoord = mSet.mAaEnabled ? mSet.mBlueNoiseEnabled ? RandomOnPixel(seed) : RandomOnPixel(x, y) : CenterOfPixel(x, y); 
-					Ray primRay				= mSet.mDofEnabled ? mSet.mBlueNoiseEnabled ? mCamera.GetPrimaryRayFocused(pixelCoord, seed) : mCamera.GetPrimaryRayFocused(pixelCoord) : mCamera.GetPrimaryRay(pixelCoord);
+					Ray primRay				= mSet.mDofEnabled ? mSet.mBlueNoiseEnabled ? mCamera.GenPrimaryRayFocused(pixelCoord, seed) : mCamera.GenPrimaryRayFocused(pixelCoord) : mCamera.GenPrimaryRay(pixelCoord);
 					color sample			= BLACK; 
 
 					if (mSet.mDebugViewerEnabled && y == mDebugViewer.mRow && x % mDebugViewer.mEvery == 0)
@@ -125,7 +125,7 @@ void Renderer::Tick(float deltaTime)
 
 	if (mSet.mConvergeMode == CONVERGE_MODES_REPROJECTION) 
 	{
-		mCamera.UpdateFrustum(); 
+		mCamera.BuildFrustum();  
 		mCamera.Update(deltaTime); 
 		swap(mHistory, mAccumulator);   
 
@@ -134,7 +134,8 @@ void Renderer::Tick(float deltaTime)
 	{
 		if (mCamera.Update(deltaTime))
 		{
-			if (mSet.mAutoFocusEnabled) mCamera.Focus(mScene); 
+			//if (mSet.mAutoFocusEnabled) mCamera.Focus(mScene); 
+			if (mSet.mAutoFocusEnabled) mCamera.Focus(mBVHScene); 
 			ResetAccumulator(); 
 		}
 	}
@@ -146,6 +147,18 @@ void Renderer::Tick(float deltaTime)
 		}
 	}
 	PerformanceReport();
+
+	if (mAnimate)
+	{
+		mCamera.SetPosition(mSplineAnimator.interpNode.position);  
+		mCamera.SetTarget(mSplineAnimator.interpNode.target);  
+		mSet.mSkydomeEnabled = mSplineAnimator.interpNode.skydomeEnabled; 
+		ResetAccumulator();  
+		if (mSplineAnimator.Play(deltaTime))
+		{
+			mAnimate = false;
+		}
+	}
 
 #else
 	mTimer.reset();
@@ -215,18 +228,19 @@ color Renderer::Trace(tinybvh::Ray& primRay)
 	tinybvh::Ray ray = primRay;
 	for (int bounce = 0; bounce < mSet.mMaxBounces; bounce++) 
 	{
-		color const emission = BLACK;
+		float const emissivity = ray.hit.mat->emissivity;
 		tinybvh::Ray scattered;
 		color indirect = ray.hit.albedo; 
 		if (scatter(*ray.hit.mat, ray, scattered, indirect))    
 		{ 
-			color const direct = BLACK * ray.hit.albedo; 
-			light += (direct + emission) * throughput;
+			//if (dot(ray.hit.normal, ray.D) < 0.0f) indirect *= expf(-0.06f * ray.hit.t); 
+			color const direct = CalcDirectLight(ray) * ray.hit.albedo;  
+			light += (direct + ray.hit.albedo * emissivity) * throughput;
 			throughput *= indirect; ray = scattered;
 			if (!mBVHScene.Intersect(ray)) return light + Miss(ray.D) * throughput; 
 			continue; 
 		}
-		return light + (BLACK * ray.hit.albedo + emission) * throughput;    
+		return light + (CalcDirectLightWithArea(ray) * ray.hit.albedo + ray.hit.albedo * emissivity) * throughput; 
 	}
 	return light;
 }
@@ -365,6 +379,15 @@ color Renderer::CalcDirectLight(Intersection const& hit) const
 	return result;
 }  
 
+color Renderer::CalcDirectLight(tinybvh::Ray const& ray) const
+{
+	color result = BLACK; 
+	if (mSet.mDirLightEnabled)	result += mDirLight.Intensity(mBVHScene, ray); 
+	if (mSet.mTexturedSpotlightEnabled) result += mTexturedSpotlight.Intensity(mBVHScene, ray); 
+
+	return result; 
+}
+
 color Renderer::CalcDirectLightWithArea(Intersection const& hit) const
 {
 	color result = BLACK;
@@ -375,6 +398,17 @@ color Renderer::CalcDirectLightWithArea(Intersection const& hit) const
 
 	return result;
 } 
+
+color Renderer::CalcDirectLightWithArea(tinybvh::Ray const& ray) const
+{
+	color result = BLACK;
+	result += CalcDirectLight(ray); 
+
+	//if (mSet.mQuadLightEnabled) result += CalcQuadLight(hit);
+	result += mSet.mSkydomeEnabled ? mSkydome.Intensity(mBVHScene, ray) : MissIntensity(ray); 
+
+	return result;
+}
 
 color Renderer::CalcDirectLightWithArea(Intersection const& hit, blueSeed const seed) const  
 {
@@ -433,6 +467,14 @@ color Renderer::MissIntensity(Intersection const& hit) const
 	return cosa * mMiss;
 }
 
+color Renderer::MissIntensity(tinybvh::Ray const& ray) const
+{
+	float3 const random = randomUnitOnHemisphere(ray.hit.normal); 
+	if (mBVHScene.IsOccluded({ ray.hit.point + random * sEps, random })) return BLACK; 
+	float const cosa = max(0.0f, dot(ray.hit.normal, random)); 
+	return cosa * mMiss;
+}
+
 Intersection Renderer::CalcIntersection(Ray const& ray) const
 {
 	Intersection hit; 
@@ -483,10 +525,11 @@ color Renderer::Reproject(Ray const& primRay, color const& sample) const
 	float historyWeight = 0.0f;
 
 	float3 const primI	= calcIntersectionPoint(primRay);
-	float const dLeft	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[0], primI);   
-	float const dRight	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[1], primI);   
-	float const dTop	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[2], primI);   
-	float const dBottom = distanceToFrustum(mCamera.mPrevFrustum.mPlanes[3], primI); 
+	Frustum const& frustum = mCamera.GetPrevFrustum();  
+	float const dLeft	= distanceToFrustum(frustum.mPlanes[0], primI); 
+	float const dRight	= distanceToFrustum(frustum.mPlanes[1], primI);
+	float const dTop	= distanceToFrustum(frustum.mPlanes[2], primI);
+	float const dBottom = distanceToFrustum(frustum.mPlanes[3], primI);
 	float x = dLeft / (dLeft + dRight); 
 	float y = dTop  / (dTop + dBottom);  
 	float const prevX	= SCRWIDTH * x - 1.0f; 
@@ -496,7 +539,7 @@ color Renderer::Reproject(Ray const& primRay, color const& sample) const
 
 	if (prevX >= 1 && prevX <= SCRWIDTH - 2 && prevY >= 1 && prevY <= SCRHEIGHT - 2)  
 	{
-		Ray repRay = Ray(mCamera.mPrevPosition, normalize(primI - mCamera.mPrevPosition)); 
+		Ray repRay = Ray(mCamera.GetPrevPosition(), normalize(primI - mCamera.GetPrevPosition())); 
 		mScene.FindNearest(repRay);
 		float3 const repI = calcIntersectionPoint(repRay); 
 		if (sqrLength(primI - repI) < 0.0001f)  
@@ -508,48 +551,6 @@ color Renderer::Reproject(Ray const& primRay, color const& sample) const
 	}
 
 	return historyWeight * historySample + (1.0f - historyWeight) * sample;
-}
-
-color Renderer::Reproject2(Ray const& primRay, color const& sample) const 
-{
-	if (!DidHit(primRay)) return sample;
-
-	float3 const primI	= calcIntersectionPoint(primRay);
-	float const dLeft	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[0], primI);
-	float const dRight	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[1], primI);
-	float const dTop	= distanceToFrustum(mCamera.mPrevFrustum.mPlanes[2], primI);
-	float const dBottom = distanceToFrustum(mCamera.mPrevFrustum.mPlanes[3], primI);
-	float const prevX	= (SCRWIDTH * dLeft) / (dLeft + dRight) - 1.0f;
-	float const prevY	= (SCRHEIGHT * dTop) / (dTop + dBottom) - 1.0f;
-
-	if (prevX >= 1 && prevX <= SCRWIDTH - 2 && prevY >= 1 && prevY <= SCRHEIGHT - 2)
-	{
-		Ray repRay = Ray(mCamera.mPrevPosition, normalize(primI - mCamera.mPrevPosition));
-		mScene.FindNearest(repRay);
-		float3 const repI = calcIntersectionPoint(repRay); 
-		if (sqrLength(primI - repI) < 0.0001f)
-		{
-			//int2 const prev = int2(static_cast<int>(prevX), static_cast<int>(prevY));  
-			//
-			//color minColor = 9999.0f, maxColor = -9999.0f;  
-			//color prevColor = mHistory[prev.x + prev.y * SCRWIDTH];  
-			//
-			//for (int y = -1; y < 1; y++) for (int x = -1; x < 1; x++) 
-			//{
-			//	color const color = mHistory[(prev.x + x) + (prev.y + y) * SCRWIDTH]; 
-			//	//prevColor = mHistory[(prev.x + x) + (prev.y + y) * SCRWIDTH]; 
-			//	minColor = minColor < color ? minColor : color;      
-			//	maxColor = std::max(maxColor, color);  
-			//}
-			
-			//color const prevColorClamped = clamp(prevColor, minColor, maxColor);  
-			//return sample * 0.1f * prevColorClamped * 0.9f; 
-
-			//return prevColor; 
-		}
-	}
-
-	return sample; 
 }
 
 void Renderer::ResetAccumulator()
@@ -596,6 +597,7 @@ void Renderer::Init()
 	ResourceManager::Init();  
 	InitUi();
 	InitAccumulator(); 
+	mSplineAnimator = SplineAnimator(&mMovieSpline);  
 
 	//lights2.Add(LIGHT_TYPES_TEXTURED_SPOTLIGHT2); 
 	//lights2.mData[0].mTs.mIntensity = 20.0f;     

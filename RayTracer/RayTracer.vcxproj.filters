@@ -83,6 +83,7 @@
     <ClCompile Include="..\lib\tiny_bvh.cpp">
       <Filter>additional\util\tinybvh</Filter>
     </ClCompile>
+    <ClCompile Include="spline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\imgui\imconfig.h">
@@ -184,6 +185,9 @@
     <ClInclude Include="bvh_scene.h" />
     <ClInclude Include="..\lib\tiny_bvh.h">
       <Filter>additional\util\tinybvh</Filter>
+    </ClInclude>
+    <ClInclude Include="spline.h">
+      <Filter>additional</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

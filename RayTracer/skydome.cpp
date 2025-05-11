@@ -2,6 +2,7 @@
 #include "skydome.h"
 
 #include "renderer.h" 
+#include "bvh_scene.h"
 
 Skydome::Skydome()
 {}
@@ -27,6 +28,14 @@ color Skydome::Intensity(Intersection const& hit, blueSeed const seed) const
 	float3 const random = randomUnitOnHemisphere(hit.normal, seed);
 	if (hit.scene->IsOccluded({ hit.point + random * Renderer::sEps, random })) return BLACK; 
 	float const cosa = max(0.0f, dot(hit.normal, random)); 
+	return cosa * Sample(random);
+}
+
+color Skydome::Intensity(BVHScene const& scene, tinybvh::Ray const& ray) const
+{
+	float3 const random = randomUnitOnHemisphere(ray.hit.normal);  
+	if (scene.IsOccluded({ ray.hit.point + random * Renderer::sEps, random })) return BLACK;  
+	float const cosa = max(0.0f, dot(ray.hit.normal, random)); 
 	return cosa * Sample(random);
 }
 

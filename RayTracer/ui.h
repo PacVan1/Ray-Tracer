@@ -15,12 +15,12 @@ ImGuiWindowFlags_NoMove |
 ImGuiWindowFlags_NoFocusOnAppearing |
 ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-inline auto constexpr STR_RENDER_MODES = "Normals\0Depth\0Albedo\0Shaded\0";
-inline auto constexpr STR_CONVERGE_MODES = "None\0Accumulation\0Reprojection\0";
-inline auto constexpr STR_SAMPLE_MODES = "None\0Unsafe/Fast\0Looped\0Clamped\0";
-inline auto constexpr STR_FILTER_MODES = "None\0Nearest\0Linear\0";
-inline auto constexpr STR_LIGHT_TYPES = "Point\0Directional\0Spot\0";
-inline auto constexpr STR_MATERIAL_TYPES = "Diffuse\0Metallic\0Dielectric\0Glossy\0Textured\0";
+inline auto constexpr STR_RENDER_MODES		= "Normals\0Depth\0Albedo\0Shaded\0";
+inline auto constexpr STR_CONVERGE_MODES	= "None\0Accumulation\0Reprojection\0";
+inline auto constexpr STR_SAMPLE_MODES		= "None\0Unsafe/Fast\0Looped\0Clamped\0";
+inline auto constexpr STR_FILTER_MODES		= "None\0Nearest\0Linear\0";
+inline auto constexpr STR_LIGHT_TYPES		= "Point\0Directional\0Spot\0";
+inline auto constexpr STR_MATERIAL_TYPES	= "None\0Diffuse\0Metallic\0Dielectric\0Glossy\0Textured\0";
 
 class Ui
 {
@@ -37,6 +37,7 @@ private:
 	void	CameraUi() const;
 	void	MaterialsUi() const;
 	void	LightsUi() const;
+	void	MovieUi() const; 
 
 	template <typename T>
 	void	TextureUi(Texture<T>& texture, int const id = 0) const;
@@ -70,7 +71,7 @@ inline void Ui::InstanceUi(BVHScene& s, int const instIdx) const
 	ImGui::Text("InstIdx: %d", instIdx);
 	if (ImGui::CollapsingHeader("Material"))
 	{
-		MaterialUi(s.mMatCopies[instIdx]);
+		MaterialUi(s.GetMaterial(instIdx));
 	}
 }
 

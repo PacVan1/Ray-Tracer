@@ -12,7 +12,8 @@ void Model::Load(char const* path)
 	static uint constexpr PROCESS_FLAGS =
 		aiProcess_Triangulate |
 		//aiProcess_DropNormals |  
-		aiProcess_GenNormals |  
+		aiProcess_FixInfacingNormals | 
+		aiProcess_GenNormals |   
 		//aiProcess_GenSmoothNormals |  
 		//aiProcess_MakeLeftHanded	|
 		aiProcess_FlipUVs |
@@ -37,8 +38,8 @@ void Model::ConvertAIMesh(aiMesh const& aiMesh, Mesh& mesh) const
 {
 	mesh.tris.resize(aiMesh.mNumFaces); 
 	mesh.tris.reserve(aiMesh.mNumFaces);
-	mesh.points.resize(aiMesh.mNumFaces * 3);  
-	mesh.points.reserve(aiMesh.mNumFaces * 3);  
+	mesh.points.resize(aiMesh.mNumFaces * 3);   
+	mesh.points.reserve(aiMesh.mNumFaces * 3);   
 	for (int tri = 0; tri < aiMesh.mNumFaces; tri++)
  	{
 		aiFace const& face = aiMesh.mFaces[tri];
@@ -49,7 +50,7 @@ void Model::ConvertAIMesh(aiMesh const& aiMesh, Mesh& mesh) const
 			mesh.tris[tri].points[vtx].x = aiMesh.mVertices[idx].x; 
 			mesh.tris[tri].points[vtx].y = aiMesh.mVertices[idx].y;
 			mesh.tris[tri].points[vtx].z = aiMesh.mVertices[idx].z; 
-			mesh.points[tri * 3 + vtx] = mesh.tris[tri].points[vtx]; 
+			mesh.points[tri * 3 + vtx] = mesh.tris[tri].points[vtx];  
 			// normals:
 			mesh.tris[tri].normals[vtx].x = aiMesh.mNormals[idx].x;
 			mesh.tris[tri].normals[vtx].y = aiMesh.mNormals[idx].y;
@@ -58,7 +59,7 @@ void Model::ConvertAIMesh(aiMesh const& aiMesh, Mesh& mesh) const
 			if (aiMesh.HasTextureCoords(0))
 			{
 				mesh.tris[tri].texCoords[vtx].x = aiMesh.mTextureCoords[0][idx].x; 
-				mesh.tris[tri].texCoords[vtx].y = aiMesh.mTextureCoords[0][idx].y; 
+				mesh.tris[tri].texCoords[vtx].y = aiMesh.mTextureCoords[0][idx].y;  
 			}
 			// tangents and bitangents:
 			if (aiMesh.HasTangentsAndBitangents())  
@@ -79,12 +80,12 @@ void Model::ConvertAIMaterial(aiScene const& scene, aiMesh const& aiMesh, Mesh& 
 	if (aiMesh.mMaterialIndex >= 0)
 	{
 		aiMaterial& aiMat = *scene.mMaterials[aiMesh.mMaterialIndex]; 
-		AlbedoTexture albedo = LoadAIMaterialTexture(aiMat, aiTextureType_DIFFUSE); 
-		NormalTexture normal = LoadAIMaterialTexture(aiMat, aiTextureType_NORMALS); 
+		AlbedoTexture albedo = LoadAIMaterialTexture(aiMat, aiTextureType_DIFFUSE);
+		//NormalTexture normal = LoadAIMaterialTexture(aiMat, aiTextureType_NORMALS); 
 		//Texture<float> roughness; 
 		//Texture<float> alpha;
 		mMats.emplace_back(MATERIAL_TYPES_TEXTURED);
-		mMats.back().textured.texture = packTexture(albedo, normal);
+		mMats.back().textured.texture = packTexture(albedo);
 	}
 	else
 	{
@@ -95,9 +96,13 @@ void Model::ConvertAIMaterial(aiScene const& scene, aiMesh const& aiMesh, Mesh& 
 
 Texture<float3> Model::LoadAIMaterialTexture(aiMaterial const& aiMat, aiTextureType const type) 
 {
-	aiString str; aiMat.GetTexture(type, 0, &str); 
-	Texture<float3> texture = loadTextureF((directory + str.C_Str()).c_str()); 
-	return texture;  
+	if (aiMat.GetTextureCount(type) > 0)
+	{
+		aiString str; aiMat.GetTexture(type, 0, &str); 
+		Texture<float3> texture = loadTextureF((directory + str.C_Str()).c_str()); 
+		return texture;  
+	}
+	return Texture<float3>();
 }
 
 void Model::TraverseAINode(aiNode const& node, aiScene const& scene)
@@ -105,9 +110,10 @@ void Model::TraverseAINode(aiNode const& node, aiScene const& scene)
 	for (int i = 0; i < node.mNumMeshes; i++) 
 	{
 		aiMesh const& aiMesh = *scene.mMeshes[node.mMeshes[i]];
-		Mesh mesh; ConvertAIMesh(aiMesh, mesh);
-		ConvertAIMaterial(scene, aiMesh, mesh);
-		mMeshes.push_back(mesh);
+		mMeshes.emplace_back(); ConvertAIMesh(aiMesh, mMeshes.back());
+		//ConvertAIMaterial(scene, aiMesh, mMeshes.emplace_back());
+		mMats.emplace_back(MATERIAL_TYPES_DIFFUSE);
+		mMeshes.back().mat = &mMats.back(); 
 	}
 	for (int i = 0; i < node.mNumChildren; i++)
 	{
@@ -119,11 +125,22 @@ BVHScene::BVHScene()
 {
 	//AddResource("../assets/models/stanford_dragon_pbr/scene.gltf");  
 	AddResource("../assets/models/marble_bust_01_4k.gltf/marble_bust_01_4k.gltf");   
+	//AddResource("../assets/models/stanford_dragon/Dragon.obj");    
+	//AddResource("../assets/models/the-utah-teapot/source/teapot/teapot.obj");      
+	//AddResource("../assets/models/high_poly_sphere/ico_sphere_high_poly.obj");      
+	//AddResource("../assets/models/Katanas/scene.gltf");     
+	//AddResource("../assets/models/vampire/dancing_vampire.dae");    
+	//AddResource("../assets/models/RAINIER AK/scene.gltf");    
+	//AddResource("../assets/models/Combat Robot/scene.gltf");    
 	//AddResource("../assets/models/cube/cube.gltf");  
-	for (int i = 0; i < mResources.meshes.size(); i++)
-	{
-		AddInstance(i);  
-	}
+	AddModelInstance(0); 
+	//for (int x = 0; x < 10; x++) for (int y = 0; y < 10; y++) for (int z = 0; z < 10; z++)
+	//{
+	//	AddModelInstance(1);  
+	//	mInstances.back().transform[ 3] = x * 2.0f; 
+	//	mInstances.back().transform[ 7] = y * 2.0f; 
+	//	mInstances.back().transform[11] = z * 2.0f;
+	//}
 	Rebuild();  
 }
 
@@ -133,16 +150,16 @@ bool BVHScene::Intersect(tinybvh::Ray& ray)
 	if (!didHit(ray)) return false; 
 
 	Tri const& tri	= GetTriangle(ray);
-	Material2& mat	= GetMaterial(ray.instIdx);  
+	Material2& mat	= GetMaterial(ray.hit.inst);  
 
 	float const w1 = ray.hit.u, w2 = ray.hit.v, w3 = 1.0f - w1 - w2; 
-	float3 const nInterp = normalize(berp(w1, w2, w3, tri.normals[1], tri.normals[2], tri.normals[0])); 
-	//float3 const nInterp = calcFlatNormal(tri.points[0], tri.points[1], tri.points[2]); 
+	//float3 const nInterp = normalize(berp(w1, w2, w3, tri.normals[1], tri.normals[2], tri.normals[0]));
+	float3 const nInterp = calcFlatNormal(tri.points[0], tri.points[1], tri.points[2]);  
 
 	if (mat.type == MATERIAL_TYPES_TEXTURED)   
 	{
-		//float2 const tcInterp	= berp(w1, w2, w3, tri.texCoords[1], tri.texCoords[2], tri.texCoords[0]);     
-		//PackedTexel const texel = mat.textured.texture.Sample(tcInterp); 
+		float2 const tcInterp	= berp(w1, w2, w3, tri.texCoords[1], tri.texCoords[2], tri.texCoords[0]);      
+		PackedTexel const texel = mat.textured.texture.Sample(tcInterp);  
 		//float3 const texelN		= normalize(texel.normal * 2.0f - 1.0f);
 
 		//float3 tInterp	= normalize(berp(w1, w2, w3, tri.tangents[1], tri.tangents[2], tri.tangents[0]));    
@@ -179,18 +196,18 @@ bool BVHScene::Intersect(tinybvh::Ray& ray)
 		//ray.hit.normal = normalize(float3(tangent * texelN.x + bitangent * texelN.y + normal * texelN.z));    
 		//ray.hit.normal = normal;  
 
-		float const u = ray.hit.u, v = ray.hit.v; 
-		float2 const texCoord	= (1.0f - u - v) * tri.texCoords[0] + u * tri.texCoords[1] + v * tri.texCoords[2]; 
-		PackedTexel const texel = mat.textured.texture.Sample(texCoord); 
-		float3 texelN			= normalize(normalize(texel.normal) * 2.0f - 1.0f);
-		texelN.y = -texelN.y;
-		float3 tangent			= normalize((1.0f - u - v) * tri.tangents[0] + u * tri.tangents[1]	 + v * tri.tangents[2]);   
-		float3 const normal		= normalize((1.0f - u - v) * tri.normals[0]	 + u * tri.normals[1]	 + v * tri.normals[2]);   
-		tangent = normalize(tangent - dot(tangent, normal) * normal);
-		float3 bitangent = -cross(normal, tangent);  
+		//float const u = ray.hit.u, v = ray.hit.v; 
+		//float2 const texCoord	= (1.0f - u - v) * tri.texCoords[0] + u * tri.texCoords[1] + v * tri.texCoords[2]; 
+		//PackedTexel const texel = mat.textured.texture.Sample(texCoord); 
+		//float3 texelN			= normalize(normalize(texel.normal) * 2.0f - 1.0f);
+		//texelN.y = -texelN.y;
+		//float3 tangent			= normalize((1.0f - u - v) * tri.tangents[0] + u * tri.tangents[1]	 + v * tri.tangents[2]);   
+		//float3 const normal		= normalize((1.0f - u - v) * tri.normals[0]	 + u * tri.normals[1]	 + v * tri.normals[2]);   
+		//tangent = normalize(tangent - dot(tangent, normal) * normal);
+		//float3 bitangent = -cross(normal, tangent);  
 		//float handedness = (dot(-cross(normal, tangent), bitangent) < 0.0f) ? -1.0f : 1.0f; 
 		//bitangent *= handedness; 
-		ray.hit.normal = normalize(tangent * texelN.x + bitangent * texelN.y + normal * texelN.z); 
+		//ray.hit.normal = normalize(tangent * texelN.x + bitangent * texelN.y + normal * texelN.z); 
 		ray.hit.normal = calcFlatNormal(tri.points[0], tri.points[1], tri.points[2]); 
 
 		//ray.hit.normal = normalize(TransformVector(texel.normal * 2.0f - 1.0f, tbn)); 
@@ -220,31 +237,38 @@ void BVHScene::AddResource(char const* path)
 		tinybvh::BVH8_CPU* bvh = new tinybvh::BVH8_CPU();   
 		bvh->Build(mesh.points.data(), mesh.tris.size());  
 		mResources.blasses.push_back(bvh);    
+		mesh.blasIdx = mResources.blasses.size() - 1;
 	}
 	printf("[RESOURCE ADDED]\t%s\n", path);
+}
+
+void BVHScene::AddModelInstance(uint32_t const modelIdx) 
+{
+	std::vector<Mesh> const& meshes = mResources.models[modelIdx].mMeshes; 
+	for (int i = 0; i < meshes.size(); i++)
+	{
+		mInstances.emplace_back(meshes[i].blasIdx);
+		mMatCopies.emplace_back(*meshes[i].mat);
+	}
 }
 
 void BVHScene::AddInstance(uint32_t const blasIdx)
 {
 	mInstances.emplace_back(blasIdx); 
-	mMatCopies.emplace_back(*GetMesh(blasIdx).mat);   
-	//mMatCopies[0].mType = GetMesh(blasIdx).mat->mType; 
-	//mMatCopies.emplace_back(MATERIAL_TYPES_DIFFUSE);  
+	mMatCopies.emplace_back(*GetMesh(blasIdx).mat);     
 }
 
 void BVHScene::SetInstanceMaterial(uint32_t const instIdx, uint32_t const matType)
 {
 	if (mMatCopies[instIdx].type != matType)
 	{
-		//mMatCopies[instIdx] = Material2(matType); 
 		new (&mMatCopies[instIdx]) Material2(matType);
 	}
-	printf("Changed\n");
 }
 
 void BVHScene::ResetInstanceMaterial(uint32_t const instIdx)
 {
-	new (&mMatCopies[instIdx]) Material2(*GetMesh(GetBlasIdx(instIdx)).mat);
+	mMatCopies[instIdx] = *GetMesh(GetBlasIdx(instIdx)).mat;
 }
 
 void BVHScene::Rebuild()

@@ -31,6 +31,7 @@ void Ui::General() const
 		if (ImGui::BeginTabItem("Scene"))			{ SceneUi(mRenderer->mBVHScene); ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Lights"))			{ LightsUi();		ImGui::EndTabItem(); }
 		if (ImGui::BeginTabItem("Debug"))			{ DebugUi();		ImGui::EndTabItem(); }
+		if (ImGui::BeginTabItem("Movie"))			{ MovieUi(); ImGui::EndTabItem(); }
 	}
 
 	ImGui::End(); 
@@ -124,39 +125,32 @@ void Ui::SettingsUi() const
 
 void Ui::CameraUi() const
 {
-	Camera& camera = mRenderer->mCamera;  
-	float3 position = camera.GetPosition();
-	if (ImGui::DragFloat3("Position", position.cell, 0.1f))
+	Camera& c = mRenderer->mCamera;   
+	if (ImGui::DragFloat3("Position", c.mPosition.cell, 0.1f)) 
 	{
-		camera.SetPosition(position);
-		mRenderer->ResetAccumulator();
-		camera.Focus(mRenderer->mScene);
+		c.SetPosition(c.mPosition); 
+		mRenderer->ResetAccumulator(); 
 	}
-	float3 target = camera.GetTarget();
-	if (ImGui::DragFloat3("Target", target.cell, 0.1f))
+	if (ImGui::DragFloat3("Target", c.mTarget.cell, 0.1f))
 	{
-		camera.SetTarget(target);
-		mRenderer->ResetAccumulator();
-		camera.Focus(mRenderer->mScene); 
+		c.SetTarget(c.mTarget);
+		mRenderer->ResetAccumulator(); 
 	}
-	if (ImGui::DragFloat("Speed", &camera.mSpeed, 0.01f, 0.0f, 10.0f));
-	if (ImGui::DragFloat("Sensitivity", &camera.mSensitivity, 0.01f, 0.0f, 10.0f));
-	float focusDist = camera.GetFocusDist();
-	if (ImGui::DragFloat("Focus distance", &focusDist, 0.01f, 0.0f, INIT_CAMERA_FOCUS_DIST))
+	if (ImGui::DragFloat("Speed", &c.mSpeed, 0.01f, 0.0f, 10.0f));
+	if (ImGui::DragFloat("Sensitivity", &c.mSensitivity, 0.01f, 0.0f, 10.0f));
+	if (ImGui::DragFloat("Focus distance", &c.mFocusDist, 0.01f, 0.0f, INIT_CAMERA_FOCUS_DIST))
 	{
-		camera.SetFocusDist(focusDist);
+		c.SetFocusDist(c.mFocusDist);
 		mRenderer->ResetAccumulator();
 	}
-	float defocusAngle = camera.GetDefocusAngle();
-	if (ImGui::DragFloat("Defocus angle", &defocusAngle, 0.005f, 0.0f, INIT_CAMERA_MAX_FOCUS_DIST))
+	if (ImGui::DragFloat("Defocus angle", &c.mDefocusRadius, 0.005f, 0.0f, INIT_CAMERA_MAX_FOCUS_DIST))
 	{
-		camera.SetDefocusAngle(defocusAngle);
+		c.SetDefocusRadius(c.mDefocusRadius);
 		mRenderer->ResetAccumulator();
 	}
-	float fov = camera.GetFov();
-	if (ImGui::DragFloat("Field of view", &fov, 0.2f, 0.0f, INIT_CAMERA_MAX_FOV)) 
+	if (ImGui::DragFloat("Field of view", &c.mFov, 0.2f, 0.0f, INIT_CAMERA_MAX_FOV))
 	{
-		camera.SetFov(fov);
+		c.SetFov(c.mFov); 
 		mRenderer->ResetAccumulator();
 	}
 }
@@ -204,6 +198,59 @@ void Ui::LightsUi() const
 	}
 }
 
+void Ui::MovieUi() const
+{
+	std::vector<SplineNode>& nodes = mRenderer->mMovieSpline.nodes; 
+
+	ImGui::Separator(); 
+	if (ImGui::Button("Play"))
+	{
+		mRenderer->mAnimate = true; 
+		mRenderer->mSplineAnimator.Reset(); 
+	}
+	ImGui::SameLine(); 
+	if (ImGui::Button("Save"))
+	{
+		save(mRenderer->mMovieSpline, MOVIE_FILE_PATH); 
+	}
+	ImGui::SameLine(); 
+	if (ImGui::Button("Load"))
+	{
+		load(mRenderer->mMovieSpline, MOVIE_FILE_PATH);   
+	}
+	ImGui::SameLine(); 
+	if (ImGui::Button("Add node"))
+	{
+		SplineNode const node = { mRenderer->mCamera.mPosition, mRenderer->mCamera.mTarget };
+		nodes.emplace_back(node); 
+	}
+	ImGui::SameLine(); 
+	if (ImGui::Button("Clear"))
+	{
+		clear(mRenderer->mMovieSpline); 
+	}
+	ImGui::Separator();
+	if (ImGui::CollapsingHeader("Interpolated node"))
+	{
+		ImGui::DragFloat3("Position", mRenderer->mSplineAnimator.interpNode.position.cell);
+		ImGui::DragFloat3("Target", mRenderer->mSplineAnimator.interpNode.target.cell); 
+	}
+	ImGui::Separator(); 
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		if (ImGui::CollapsingHeader((std::string("Node ") + std::to_string(i)).c_str()))
+		{
+			if (ImGui::Button("Go to"))
+			{
+				mRenderer->mCamera.SetPosition(nodes[i].position);
+				mRenderer->mCamera.SetTarget(nodes[i].target); 
+			}
+			ImGui::DragFloat3("Position", nodes[i].position.cell);
+			ImGui::DragFloat3("Target", nodes[i].target.cell);
+		}
+	}
+}
+
 void Ui::MaterialUi(Material2& m, int const instIdx) const
 {
 	static int type = m.type;
@@ -211,7 +258,12 @@ void Ui::MaterialUi(Material2& m, int const instIdx) const
 	{
 		mRenderer->mBVHScene.SetInstanceMaterial(instIdx, type);
 	}
-	switch (MATERIAL_TYPES_DIELECTRIC)
+	if (ImGui::Button("Reset"))
+	{
+		mRenderer->mBVHScene.ResetInstanceMaterial(instIdx); 
+	}
+	if (ImGui::DragFloat("Emissivity", &m.emissivity, 0.001f, 0.0f)) mRenderer->ResetAccumulator();  
+	switch (m.type)
 	{
 	case MATERIAL_TYPES_GLOSSY:
 	{
@@ -221,7 +273,7 @@ void Ui::MaterialUi(Material2& m, int const instIdx) const
 	}
 	case MATERIAL_TYPES_DIELECTRIC:
 	{
-		ImGui::ColorEdit3("Absorption", m.dielectric.absorption.cell);
+		ImGui::ColorEdit3("Absorptance", m.dielectric.absorption.cell);
 		ImGui::DragFloat("IOR", &m.dielectric.ior, 0.005f, 1.0f, 3.0f);
 		break;
 	}
